@@ -1,0 +1,103 @@
+<div align="center">
+
+![Extension icon](Resources/Public/Icons/Extension.svg)
+
+# TYPO3 extension `typo3_login_warning`
+
+[![Latest Stable Version](https://typo3-badges.dev/badge/typo3_login_warning/version/shields.svg)](https://extensions.typo3.org/extension/typo3_login_warning)
+[![Supported TYPO3 versions](https://typo3-badges.dev/badge/typo3_login_warning/typo3/shields.svg)](https://extensions.typo3.org/extension/typo3_login_warning)
+[![Coverage](https://img.shields.io/coverallsCoverage/github/xima-media/typo3-login-warning?logo=coveralls)](https://coveralls.io/github/xima-media/typo3-login-warning)
+[![CGL](https://img.shields.io/github/actions/workflow/status/xima-media/typo3-login-warning/cgl.yml?label=cgl&logo=github)](https://github.com/xima-media/typo3-login-warning/actions/workflows/cgl.yml)
+[![Tests](https://img.shields.io/github/actions/workflow/status/xima-media/typo3-login-warning/tests.yml?label=tests&logo=github)](https://github.com/xima-media/typo3-login-warning/actions/workflows/tests.yml)
+[![License](https://poser.pugx.org/xima/typo3-login-warning/license)](LICENSE.md)
+
+</div>
+
+This extension extends the TYPO3 backend login [warning_mode](https://docs.typo3.org/m/typo3/reference-coreapi/main/en-us/Security/GuidelinesIntegrators/GlobalTypo3Options.html#security-global-typo3-options-warning-mode) functionality with several improvements:
+
+- **new ip address** based warning mode
+
+> [!WARNING]
+> This package is in early development and may change significantly.
+
+## 🔥 Installation
+
+### Requirements
+
+* TYPO3 >= 13.4
+* PHP 8.2+
+
+### Composer
+
+[![Packagist](https://img.shields.io/packagist/v/move-elevator/typo3-login-warning?label=version&logo=packagist)](https://packagist.org/packages/move-elevator/typo3-login-warning)
+[![Packagist Downloads](https://img.shields.io/packagist/dt/move-elevator/typo3-login-warning?color=brightgreen)](https://packagist.org/packages/move-elevator/typo3-login-warning)
+
+``` bash
+composer require move-elevator/typo3-login-warning
+```
+
+### TER
+
+[![TER version](https://typo3-badges.dev/badge/typo3_login_warning/version/shields.svg)](https://extensions.typo3.org/extension/typo3_login_warning)
+[![TER downloads](https://typo3-badges.dev/badge/typo3_login_warning/downloads/shields.svg)](https://extensions.typo3.org/extension/typo3_login_warning)
+
+Download the zip file from [TYPO3 extension repository (TER)](https://extensions.typo3.org/extension/typo3_login_warning).
+
+## Configuration
+
+Add a warning trigger in your `ext_localconf.php`:
+
+```php
+use MoveElevator\Typo3LoginWarning\Configuration;
+use MoveElevator\Typo3LoginWarning\Notification\EmailNotification;
+use MoveElevator\Typo3LoginWarning\Trigger\NewIp;
+
+// Simple configuration
+$GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['trigger'] = [
+    NewIp::class
+];
+
+// Extended example configuration 
+$GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['trigger'] = [
+    NewIp::class => [
+        'hashIpAddress' => false,
+        'whitelist' => [
+            '192.168.97.5',
+        ],
+        'notification' => [
+            EmailNotification::class => [
+                'recipient' => 'test123@test.de',
+            ],
+        ],
+    ],
+];
+```
+
+## Concepts
+
+### Trigger
+
+The following triggers are available:
+
+- `NewIp`: Triggers a warning email if a backend user logs in from a new IP address. The IP address will be stored can be hashed for privacy reasons. You can also define a whitelist of IP addresses that will not trigger a warning.
+
+> [!TIP]
+> You can implement your own trigger by implementing the `MoveElevator\Typo3LoginWarning\Trigger\TriggerInterface`.
+
+### Notification
+
+The following notification methods are available:
+
+- `EmailNotification`: Sends a warning email to a defined recipient.
+
+> [!TIP]
+> You can implement more notification methods by implementing the `MoveElevator\Typo3LoginWarning\Notification\NotificationInterface`.
+
+## 🧑‍💻 Contributing
+
+Please have a look at [`CONTRIBUTING.md`](CONTRIBUTING.md).
+
+## ⭐ License
+
+This project is licensed
+under [GNU General Public License 2.0 (or later)](LICENSE.md).

@@ -1,0 +1,14 @@
+services:
+  _defaults:
+    autowire: true
+    autoconfigure: true
+    public: false
+  MoveElevator\Typo3LoginWarning\:
+    resource: "../Classes/*"
+    exclude: "../Classes/Domain/Model/*"
+
+  MoveElevator\Typo3LoginWarning\Notification\EmailNotification:
+    public: true
+
+  MoveElevator\Typo3LoginWarning\Trigger\NewIp:
+    public: true

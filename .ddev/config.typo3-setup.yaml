@@ -1,0 +1,8 @@
+type: php
+docroot: .Build
+webserver_type: apache-fpm
+additional_hostnames:
+  - 13.typo3-login-warning
+hooks:
+   post-start:
+    - exec: mkdir -p /var/www/html/.Build/ && cp /var/www/html/.ddev/.setup/templates/* /var/www/html/.Build/
