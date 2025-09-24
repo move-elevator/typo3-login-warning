@@ -10,7 +10,7 @@ Thank you for considering contributing to this project! Every contribution is we
 
 ```bash
 # Clone repository
-git clone https://github.com/xima-media/typo3-login-warning.git
+git clone https://github.com/move-elevator/typo3-login-warning.git
 cd typo3-login-warning
 
 # Start the project with DDEV
@@ -62,14 +62,13 @@ For testing the extension, you need to set up the TYPO3 instances.
 ddev install all
 
 # Or install specific TYPO3 versions
-ddev install 12
 ddev install 13
 
 # Open the overview page
 ddev launch
 
 # Run TYPO3 specific commands
-ddev 12 typo3 cache:flush
+ddev 13 typo3 cache:flush
 ddev 13 composer install
 ddev all typo3 database:updateschema
 ```
