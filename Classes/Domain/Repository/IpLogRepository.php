@@ -35,9 +35,7 @@ use TYPO3\CMS\Core\Database\ConnectionPool;
  */
 class IpLogRepository
 {
-    public function __construct(private ConnectionPool $connectionPool)
-    {
-    }
+    public function __construct(private ConnectionPool $connectionPool) {}
 
     /**
      * @param int $userId
