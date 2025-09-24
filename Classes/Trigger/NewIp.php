@@ -3,7 +3,7 @@
 /*
  * This file is part of the TYPO3 CMS extension "typo3_login_warning".
  *
- * Copyright (C) 2025 Konrad Michalik <hej@konradmichalik.dev>
+ * Copyright (C) 2025 Konrad Michalik <km@move-elevator.de>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,7 +26,14 @@ use MoveElevator\Typo3LoginWarning\Domain\Repository\IpLogRepository;
 use TYPO3\CMS\Core\Authentication\AbstractUserAuthentication;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
-readonly class NewIp implements TriggerInterface
+readonly
+/**
+ * NewIp.
+ *
+ * @author Konrad Michalik <hej@konradmichalik.dev>
+ * @license GPL-2.0
+ */
+class NewIp implements TriggerInterface
 {
     public function __construct(
         private IpLogRepository $ipLogRepository,

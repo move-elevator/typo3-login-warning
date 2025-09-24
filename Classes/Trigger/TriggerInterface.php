@@ -3,7 +3,7 @@
 /*
  * This file is part of the TYPO3 CMS extension "typo3_login_warning".
  *
- * Copyright (C) 2025 Konrad Michalik <hej@konradmichalik.dev>
+ * Copyright (C) 2025 Konrad Michalik <km@move-elevator.de>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,6 +23,13 @@ namespace MoveElevator\Typo3LoginWarning\Trigger;
 
 use TYPO3\CMS\Core\Authentication\AbstractUserAuthentication;
 
+
+/**
+ * TriggerInterface.
+ *
+ * @author Konrad Michalik <hej@konradmichalik.dev>
+ * @license GPL-2.0
+ */
 interface TriggerInterface
 {
     public function isTriggered(AbstractUserAuthentication $user, array $configuration = []): bool;

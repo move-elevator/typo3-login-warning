@@ -5,7 +5,7 @@ declare(strict_types=1);
 /*
  * This file is part of the TYPO3 CMS extension "typo3_login_warning".
  *
- * Copyright (C) 2025 Konrad Michalik <hej@konradmichalik.dev>
+ * Copyright (C) 2025 Konrad Michalik <km@move-elevator.de>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,6 +34,14 @@ use Psr\Log\LoggerInterface;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Authentication\Event\AfterUserLoggedInEvent;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+
+
+/**
+ * LoginNotificationTest.
+ *
+ * @author Konrad Michalik <hej@konradmichalik.dev>
+ * @license GPL-2.0
+ */
 
 final class LoginNotificationTest extends TestCase
 {
@@ -81,7 +89,13 @@ final class LoginNotificationTest extends TestCase
         $request = $this->createMock(ServerRequestInterface::class);
         $event = new AfterUserLoggedInEvent($user, $request);
 
-        $invalidTrigger = new class () {};
+        $invalidTrigger = new
+/**
+ * @author Konrad Michalik <hej@konradmichalik.dev>
+ * @license GPL-2.0
+ */
+
+class () {};
         GeneralUtility::addInstance(get_class($invalidTrigger), $invalidTrigger);
 
         $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['trigger'] = [
@@ -154,7 +168,12 @@ final class LoginNotificationTest extends TestCase
         $trigger = $this->createMock(TriggerInterface::class);
         $trigger->expects(self::once())->method('isTriggered')->willReturn(true);
 
-        $invalidNotifier = new class () {};
+        $invalidNotifier = new
+/**
+ * @author Konrad Michalik <hej@konradmichalik.dev>
+ * @license GPL-2.0
+ */
+class () {};
 
         GeneralUtility::addInstance(TriggerInterface::class, $trigger);
         GeneralUtility::addInstance(get_class($invalidNotifier), $invalidNotifier);
