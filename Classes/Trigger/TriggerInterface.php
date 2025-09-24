@@ -23,7 +23,6 @@ namespace MoveElevator\Typo3LoginWarning\Trigger;
 
 use TYPO3\CMS\Core\Authentication\AbstractUserAuthentication;
 
-
 /**
  * TriggerInterface.
  *

@@ -24,7 +24,6 @@ namespace MoveElevator\Typo3LoginWarning\Notification;
 use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Core\Authentication\AbstractUserAuthentication;
 
-
 /**
  * NotifierInterface.
  *

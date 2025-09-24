@@ -35,14 +35,12 @@ use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Authentication\Event\AfterUserLoggedInEvent;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
-
 /**
  * LoginNotificationTest.
  *
  * @author Konrad Michalik <hej@konradmichalik.dev>
  * @license GPL-2.0
  */
-
 final class LoginNotificationTest extends TestCase
 {
     private LoggerInterface&MockObject $logger;
@@ -94,7 +92,6 @@ final class LoginNotificationTest extends TestCase
  * @author Konrad Michalik <hej@konradmichalik.dev>
  * @license GPL-2.0
  */
-
 class () {};
         GeneralUtility::addInstance(get_class($invalidTrigger), $invalidTrigger);
 

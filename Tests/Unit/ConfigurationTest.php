@@ -26,7 +26,6 @@ namespace MoveElevator\Typo3LoginWarning\Tests\Unit;
 use MoveElevator\Typo3LoginWarning\Configuration;
 use PHPUnit\Framework\TestCase;
 
-
 /**
  * ConfigurationTest.
  *
