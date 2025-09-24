@@ -44,13 +44,11 @@ class NewIp implements TriggerInterface
     public function isTriggered(AbstractUserAuthentication $user, array $configuration = []): bool
     {
         $userArray = $user->user;
-        if (array_key_exists('whitelist', $configuration) && is_array($configuration['whitelist'])) {
-            if (in_array($this->getIpAddress(false), $configuration['whitelist'], true)) {
-                return false;
-            }
+        if (array_key_exists('whitelist', $configuration) && is_array($configuration['whitelist']) && in_array($this->getIpAddress(false), $configuration['whitelist'], true)) {
+            return false;
         }
 
-        $ipAddress = $this->getIpAddress(array_key_exists('hashIpAddress', $configuration) ? (bool)$configuration['hashIpAddress'] : true);
+        $ipAddress = $this->getIpAddress(!array_key_exists('hashIpAddress', $configuration) || (bool)$configuration['hashIpAddress']);
         if (!$this->ipLogRepository->findByUserAndIp((int)$userArray['uid'], $ipAddress)) {
             $this->ipLogRepository->addUserIp((int)$userArray['uid'], $ipAddress);
             return true;

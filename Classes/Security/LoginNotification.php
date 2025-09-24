@@ -58,12 +58,10 @@ final class LoginNotification implements LoggerAwareInterface
 
         // Check configured triggers
         foreach ($GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['trigger'] as $triggerClass => $triggerConfiguration) {
-
-            $triggerHasConfiguraton = !is_int($triggerClass);
-            if ($triggerHasConfiguraton) {
+            $triggerHasConfiguration = !is_int($triggerClass);
+            if ($triggerHasConfiguration) {
                 $currentTriggerConfiguration = $triggerConfiguration;
             } else {
-                // Default configuration
                 $triggerClass = $triggerConfiguration;
                 $currentTriggerConfiguration = [];
             }
@@ -87,6 +85,7 @@ final class LoginNotification implements LoggerAwareInterface
             return;
         }
 
+        // Fallback to global notification configuration
         if (!array_key_exists('notification', $currentTriggerConfiguration)) {
             $currentTriggerConfiguration = [
                 'notification' => $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['_notification'],
