@@ -43,7 +43,7 @@ composer require move-elevator/typo3-login-warning
 
 Download the zip file from [TYPO3 extension repository (TER)](https://extensions.typo3.org/extension/typo3_login_warning).
 
-## Configuration
+## 🧰 Configuration
 
 Add a warning trigger in your `ext_localconf.php`:
 
@@ -53,6 +53,7 @@ use MoveElevator\Typo3LoginWarning\Notification\EmailNotification;
 use MoveElevator\Typo3LoginWarning\Trigger\NewIp;
 
 // Simple configuration
+// (EmailNotification will be used with "warning_email_addr" configuration)
 $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['trigger'] = [
     NewIp::class
 ];
@@ -73,13 +74,17 @@ $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['trigger'] = [
 ];
 ```
 
-## Concepts
+## 💡 Concepts
 
 ### Trigger
+
+Triggers are used to detect certain login events. If a trigger matches, a notification will be sent.
 
 The following triggers are available:
 
 - `NewIp`: Triggers a warning email if a backend user logs in from a new IP address. The IP address will be stored can be hashed for privacy reasons. You can also define a whitelist of IP addresses that will not trigger a warning.
+
+![email.jpg](Documentation/Images/email.jpg)
 
 > [!TIP]
 > You can implement your own trigger by implementing the `MoveElevator\Typo3LoginWarning\Trigger\TriggerInterface`.
