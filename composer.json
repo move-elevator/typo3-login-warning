@@ -19,9 +19,7 @@
 		"symfony/mailer": "^7.0",
 		"symfony/mime": "^7.0",
 		"typo3/cms-backend": "^13.0",
-		"typo3/cms-beuser": "^13.0",
 		"typo3/cms-core": "^13.0",
-		"typo3/cms-fluid": "^13.0",
 		"typo3fluid/fluid": "^4.0"
 	},
 	"require-dev": {
