@@ -76,13 +76,13 @@ final class NewIpTest extends TestCase
         $this->ipLogRepository
             ->expects(self::once())
             ->method('findByUserAndIp')
-            ->with(123, self::isString())
+            ->with(123, self::matchesRegularExpression('/.*/'))
             ->willReturn(false);
 
         $this->ipLogRepository
             ->expects(self::once())
             ->method('addUserIp')
-            ->with(123, self::isString());
+            ->with(123, self::matchesRegularExpression('/.*/'));
 
         $result = $this->subject->isTriggered($user, $configuration);
 
@@ -99,7 +99,7 @@ final class NewIpTest extends TestCase
         $this->ipLogRepository
             ->expects(self::once())
             ->method('findByUserAndIp')
-            ->with(123, self::isString())
+            ->with(123, self::matchesRegularExpression('/.*/'))
             ->willReturn(true);
 
         $this->ipLogRepository
@@ -121,13 +121,13 @@ final class NewIpTest extends TestCase
         $this->ipLogRepository
             ->expects(self::once())
             ->method('findByUserAndIp')
-            ->with(123, self::isString())
+            ->with(123, self::matchesRegularExpression('/.*/'))
             ->willReturn(false);
 
         $this->ipLogRepository
             ->expects(self::once())
             ->method('addUserIp')
-            ->with(123, self::isString());
+            ->with(123, self::matchesRegularExpression('/.*/'));
 
         $result = $this->subject->isTriggered($user, $configuration);
 
@@ -144,13 +144,13 @@ final class NewIpTest extends TestCase
         $this->ipLogRepository
             ->expects(self::once())
             ->method('findByUserAndIp')
-            ->with(123, self::isString())
+            ->with(123, self::matchesRegularExpression('/.*/'))
             ->willReturn(false);
 
         $this->ipLogRepository
             ->expects(self::once())
             ->method('addUserIp')
-            ->with(123, self::isString());
+            ->with(123, self::matchesRegularExpression('/.*/'));
 
         $result = $this->subject->isTriggered($user, $configuration);
 
