@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "47f997a4adb34896c67295053913d50c",
+    "content-hash": "10507f53295826cb5f0898c4ad9d2d24",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -5418,69 +5418,6 @@
             "time": "2025-09-09T08:43:17+00:00"
         },
         {
-            "name": "typo3/cms-dashboard",
-            "version": "v13.4.18",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/TYPO3-CMS/dashboard.git",
-                "reference": "2f8f38693d03d8c6f2d67a7a7e87bfed76535a17"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/TYPO3-CMS/dashboard/zipball/2f8f38693d03d8c6f2d67a7a7e87bfed76535a17",
-                "reference": "2f8f38693d03d8c6f2d67a7a7e87bfed76535a17",
-                "shasum": ""
-            },
-            "require": {
-                "typo3/cms-backend": "13.4.18",
-                "typo3/cms-core": "13.4.18",
-                "typo3/cms-extbase": "13.4.18",
-                "typo3/cms-fluid": "13.4.18",
-                "typo3/cms-frontend": "13.4.18"
-            },
-            "conflict": {
-                "typo3/cms": "*"
-            },
-            "type": "typo3-cms-framework",
-            "extra": {
-                "typo3/cms": {
-                    "Package": {
-                        "serviceProvider": "TYPO3\\CMS\\Dashboard\\ServiceProvider",
-                        "partOfFactoryDefault": true
-                    },
-                    "extension-key": "dashboard"
-                },
-                "branch-alias": {
-                    "dev-main": "13.4.x-dev"
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "TYPO3\\CMS\\Dashboard\\": "Classes/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "GPL-2.0-or-later"
-            ],
-            "authors": [
-                {
-                    "name": "TYPO3 Core Team",
-                    "email": "typo3cms@typo3.org",
-                    "role": "Developer"
-                }
-            ],
-            "description": "TYPO3 CMS Dashboard - TYPO3 backend module used to configure and create backend widgets.",
-            "homepage": "https://typo3.org",
-            "support": {
-                "chat": "https://typo3.org/help",
-                "docs": "https://docs.typo3.org/c/typo3/cms-dashboard/main/en-us/",
-                "issues": "https://forge.typo3.org",
-                "source": "https://github.com/typo3/typo3"
-            },
-            "time": "2025-09-09T08:43:17+00:00"
-        },
-        {
             "name": "typo3/cms-extbase",
             "version": "v13.4.18",
             "source": {
@@ -5609,76 +5546,6 @@
             "support": {
                 "chat": "https://typo3.org/help",
                 "docs": "https://docs.typo3.org/other/typo3/view-helper-reference/main/en-us/",
-                "issues": "https://forge.typo3.org",
-                "source": "https://github.com/typo3/typo3"
-            },
-            "time": "2025-09-09T08:43:17+00:00"
-        },
-        {
-            "name": "typo3/cms-frontend",
-            "version": "v13.4.18",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/TYPO3-CMS/frontend.git",
-                "reference": "f5c566f93472f9d88c61060a9b210b7341232a5d"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/TYPO3-CMS/frontend/zipball/f5c566f93472f9d88c61060a9b210b7341232a5d",
-                "reference": "f5c566f93472f9d88c61060a9b210b7341232a5d",
-                "shasum": ""
-            },
-            "require": {
-                "ext-libxml": "*",
-                "typo3/cms-core": "13.4.18"
-            },
-            "conflict": {
-                "typo3/cms": "*"
-            },
-            "suggest": {
-                "typo3/cms-adminpanel": "Provides additional information and functionality for backend users in the frontend."
-            },
-            "type": "typo3-cms-framework",
-            "extra": {
-                "typo3/cms": {
-                    "Package": {
-                        "protected": true,
-                        "serviceProvider": "TYPO3\\CMS\\Frontend\\ServiceProvider",
-                        "partOfFactoryDefault": true,
-                        "partOfMinimalUsableSystem": true
-                    },
-                    "extension-key": "frontend"
-                },
-                "branch-alias": {
-                    "dev-main": "13.4.x-dev"
-                },
-                "typo3/class-alias-loader": {
-                    "class-alias-maps": [
-                        "Migrations/Code/ClassAliasMap.php"
-                    ]
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "TYPO3\\CMS\\Frontend\\": "Classes/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "GPL-2.0-or-later"
-            ],
-            "authors": [
-                {
-                    "name": "TYPO3 Core Team",
-                    "email": "typo3cms@typo3.org",
-                    "role": "Developer"
-                }
-            ],
-            "description": "TYPO3 CMS Frontend",
-            "homepage": "https://typo3.org",
-            "support": {
-                "chat": "https://typo3.org/help",
-                "docs": "https://docs.typo3.org",
                 "issues": "https://forge.typo3.org",
                 "source": "https://github.com/typo3/typo3"
             },
@@ -11544,6 +11411,69 @@
             "time": "2025-09-09T08:43:17+00:00"
         },
         {
+            "name": "typo3/cms-dashboard",
+            "version": "v13.4.18",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/TYPO3-CMS/dashboard.git",
+                "reference": "2f8f38693d03d8c6f2d67a7a7e87bfed76535a17"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/TYPO3-CMS/dashboard/zipball/2f8f38693d03d8c6f2d67a7a7e87bfed76535a17",
+                "reference": "2f8f38693d03d8c6f2d67a7a7e87bfed76535a17",
+                "shasum": ""
+            },
+            "require": {
+                "typo3/cms-backend": "13.4.18",
+                "typo3/cms-core": "13.4.18",
+                "typo3/cms-extbase": "13.4.18",
+                "typo3/cms-fluid": "13.4.18",
+                "typo3/cms-frontend": "13.4.18"
+            },
+            "conflict": {
+                "typo3/cms": "*"
+            },
+            "type": "typo3-cms-framework",
+            "extra": {
+                "typo3/cms": {
+                    "Package": {
+                        "serviceProvider": "TYPO3\\CMS\\Dashboard\\ServiceProvider",
+                        "partOfFactoryDefault": true
+                    },
+                    "extension-key": "dashboard"
+                },
+                "branch-alias": {
+                    "dev-main": "13.4.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "TYPO3\\CMS\\Dashboard\\": "Classes/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "GPL-2.0-or-later"
+            ],
+            "authors": [
+                {
+                    "name": "TYPO3 Core Team",
+                    "email": "typo3cms@typo3.org",
+                    "role": "Developer"
+                }
+            ],
+            "description": "TYPO3 CMS Dashboard - TYPO3 backend module used to configure and create backend widgets.",
+            "homepage": "https://typo3.org",
+            "support": {
+                "chat": "https://typo3.org/help",
+                "docs": "https://docs.typo3.org/c/typo3/cms-dashboard/main/en-us/",
+                "issues": "https://forge.typo3.org",
+                "source": "https://github.com/typo3/typo3"
+            },
+            "time": "2025-09-09T08:43:17+00:00"
+        },
+        {
             "name": "typo3/cms-extensionmanager",
             "version": "v13.4.18",
             "source": {
@@ -11848,6 +11778,76 @@
             "support": {
                 "chat": "https://typo3.org/help",
                 "docs": "https://docs.typo3.org/c/typo3/cms-form/main/en-us",
+                "issues": "https://forge.typo3.org",
+                "source": "https://github.com/typo3/typo3"
+            },
+            "time": "2025-09-09T08:43:17+00:00"
+        },
+        {
+            "name": "typo3/cms-frontend",
+            "version": "v13.4.18",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/TYPO3-CMS/frontend.git",
+                "reference": "f5c566f93472f9d88c61060a9b210b7341232a5d"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/TYPO3-CMS/frontend/zipball/f5c566f93472f9d88c61060a9b210b7341232a5d",
+                "reference": "f5c566f93472f9d88c61060a9b210b7341232a5d",
+                "shasum": ""
+            },
+            "require": {
+                "ext-libxml": "*",
+                "typo3/cms-core": "13.4.18"
+            },
+            "conflict": {
+                "typo3/cms": "*"
+            },
+            "suggest": {
+                "typo3/cms-adminpanel": "Provides additional information and functionality for backend users in the frontend."
+            },
+            "type": "typo3-cms-framework",
+            "extra": {
+                "typo3/cms": {
+                    "Package": {
+                        "protected": true,
+                        "serviceProvider": "TYPO3\\CMS\\Frontend\\ServiceProvider",
+                        "partOfFactoryDefault": true,
+                        "partOfMinimalUsableSystem": true
+                    },
+                    "extension-key": "frontend"
+                },
+                "branch-alias": {
+                    "dev-main": "13.4.x-dev"
+                },
+                "typo3/class-alias-loader": {
+                    "class-alias-maps": [
+                        "Migrations/Code/ClassAliasMap.php"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "TYPO3\\CMS\\Frontend\\": "Classes/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "GPL-2.0-or-later"
+            ],
+            "authors": [
+                {
+                    "name": "TYPO3 Core Team",
+                    "email": "typo3cms@typo3.org",
+                    "role": "Developer"
+                }
+            ],
+            "description": "TYPO3 CMS Frontend",
+            "homepage": "https://typo3.org",
+            "support": {
+                "chat": "https://typo3.org/help",
+                "docs": "https://docs.typo3.org",
                 "issues": "https://forge.typo3.org",
                 "source": "https://github.com/typo3/typo3"
             },
