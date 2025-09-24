@@ -6,9 +6,9 @@
 
 [![Latest Stable Version](https://typo3-badges.dev/badge/typo3_login_warning/version/shields.svg)](https://extensions.typo3.org/extension/typo3_login_warning)
 [![Supported TYPO3 versions](https://typo3-badges.dev/badge/typo3_login_warning/typo3/shields.svg)](https://extensions.typo3.org/extension/typo3_login_warning)
-[![Coverage](https://img.shields.io/coverallsCoverage/github/xima-media/typo3-login-warning?logo=coveralls)](https://coveralls.io/github/xima-media/typo3-login-warning)
-[![CGL](https://img.shields.io/github/actions/workflow/status/xima-media/typo3-login-warning/cgl.yml?label=cgl&logo=github)](https://github.com/xima-media/typo3-login-warning/actions/workflows/cgl.yml)
-[![Tests](https://img.shields.io/github/actions/workflow/status/xima-media/typo3-login-warning/tests.yml?label=tests&logo=github)](https://github.com/xima-media/typo3-login-warning/actions/workflows/tests.yml)
+[![Coverage](https://img.shields.io/coverallsCoverage/github/move-elevator/typo3-login-warning?logo=coveralls)](https://coveralls.io/github/move-elevator/typo3-login-warning)
+[![CGL](https://img.shields.io/github/actions/workflow/status/move-elevator/typo3-login-warning/cgl.yml?label=cgl&logo=github)](https://github.com/move-elevator/typo3-login-warning/actions/workflows/cgl.yml)
+[![Tests](https://img.shields.io/github/actions/workflow/status/move-elevator/typo3-login-warning/tests.yml?label=tests&logo=github)](https://github.com/move-elevator/typo3-login-warning/actions/workflows/tests.yml)
 [![License](https://poser.pugx.org/xima/typo3-login-warning/license)](LICENSE.md)
 
 </div>
