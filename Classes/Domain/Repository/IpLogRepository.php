@@ -27,7 +27,6 @@ use Doctrine\DBAL\Exception;
 use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 
-readonly
 /**
  * IpLogRepository.
  *

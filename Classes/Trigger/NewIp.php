@@ -26,7 +26,6 @@ use MoveElevator\Typo3LoginWarning\Domain\Repository\IpLogRepository;
 use TYPO3\CMS\Core\Authentication\AbstractUserAuthentication;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
-readonly
 /**
  * NewIp.
  *
