@@ -12,3 +12,6 @@ services:
 
   MoveElevator\Typo3LoginWarning\Detector\NewIpDetector:
     public: true
+
+  MoveElevator\Typo3LoginWarning\Detector\LongTimeNoSeeDetector:
+    public: true

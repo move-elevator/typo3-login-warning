@@ -20,11 +20,14 @@
  */
 
 use MoveElevator\Typo3LoginWarning\Configuration;
-use MoveElevator\Typo3LoginWarning\Notification\EmailNotification;
+use MoveElevator\Typo3LoginWarning\Detector\LongTimeNoSeeDetector;
 use MoveElevator\Typo3LoginWarning\Detector\NewIpDetector;
+use MoveElevator\Typo3LoginWarning\Notification\EmailNotification;
 
 // For testing purposes we disable the login rate limit
 $GLOBALS['TYPO3_CONF_VARS']['BE']['loginRateLimit'] = 0;
+
+$GLOBALS['TYPO3_CONF_VARS']['BE']['warning_email_addr'] = 'test456@test.de';
 
 // Example configuration
 $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['detector'] = [
@@ -39,4 +42,5 @@ $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['detector'] = [
             ],
         ],
     ],
+    LongTimeNoSeeDetector::class => [],
 ];
