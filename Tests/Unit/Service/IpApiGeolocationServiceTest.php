@@ -29,14 +29,12 @@ use Psr\Http\Message\StreamInterface;
 use Psr\Log\NullLogger;
 use TYPO3\CMS\Core\Http\RequestFactory;
 
-
 /**
  * IpApiGeolocationServiceTest.
  *
  * @author Konrad Michalik <hej@konradmichalik.dev>
  * @license GPL-2.0
  */
-
 class IpApiGeolocationServiceTest extends TestCase
 {
     private IpApiGeolocationService $subject;
