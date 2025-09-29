@@ -16,6 +16,7 @@
 This extension extends the TYPO3 backend login [warning_mode](https://docs.typo3.org/m/typo3/reference-coreapi/main/en-us/Security/GuidelinesIntegrators/GlobalTypo3Options.html#security-global-typo3-options-warning-mode) functionality with several improvements:
 
 - **new ip address** based warning mode
+- **long time no see** notification
 
 > [!WARNING]
 > This package is in early development and may change significantly.
