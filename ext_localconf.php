@@ -20,14 +20,14 @@
  */
 
 use MoveElevator\Typo3LoginWarning\Configuration;
+use MoveElevator\Typo3LoginWarning\Detector\NewIpDetector;
 use MoveElevator\Typo3LoginWarning\Notification\EmailNotification;
-use MoveElevator\Typo3LoginWarning\Trigger\NewIp;
 
 $GLOBALS['TYPO3_CONF_VARS']['MAIL']['templateRootPaths'][500] = 'EXT:' . Configuration::EXT_KEY . '/Resources/Private/Templates/Email';
 
-// default configuration for triggers
-$GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['_trigger'] = [
-    NewIp::class => [
+// default configuration for detectors
+$GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['_detector'] = [
+    NewIpDetector::class => [
         'hashIpAddress' => true,
         'fetchGeolocation' => true,
         'whitelist' => [],
@@ -41,4 +41,4 @@ $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['_notification'] 
     ],
 ];
 
-$GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['trigger'] = [];
+$GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['detector'] = [];

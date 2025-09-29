@@ -19,17 +19,17 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-namespace MoveElevator\Typo3LoginWarning\Trigger;
+namespace MoveElevator\Typo3LoginWarning\Detector;
 
 use TYPO3\CMS\Core\Authentication\AbstractUserAuthentication;
 
 /**
- * TriggerInterface.
+ * DetectorInterface.
  *
  * @author Konrad Michalik <hej@konradmichalik.dev>
  * @license GPL-2.0
  */
-interface TriggerInterface
+interface DetectorInterface
 {
-    public function isTriggered(AbstractUserAuthentication $user, array $configuration = []): bool;
+    public function detect(AbstractUserAuthentication $user, array $configuration = []): bool;
 }

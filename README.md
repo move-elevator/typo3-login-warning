@@ -45,22 +45,22 @@ Download the zip file from [TYPO3 extension repository (TER)](https://extensions
 
 ## 🧰 Configuration
 
-Add a warning trigger in your `ext_localconf.php`:
+Add a warning detector in your `ext_localconf.php`:
 
 ```php
 use MoveElevator\Typo3LoginWarning\Configuration;
 use MoveElevator\Typo3LoginWarning\Notification\EmailNotification;
-use MoveElevator\Typo3LoginWarning\Trigger\NewIp;
+use MoveElevator\Typo3LoginWarning\Detector\NewIpDetector;
 
 // Simple configuration
 // (EmailNotification will be used with "warning_email_addr" configuration)
-$GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['trigger'] = [
-    NewIp::class
+$GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['detector'] = [
+    NewIpDetector::class
 ];
 
 // Extended example configuration 
-$GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['trigger'] = [
-    NewIp::class => [
+$GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['detector'] = [
+    NewIpDetector::class => [
         'hashIpAddress' => false,
         'fetchGeolocation' => false,
         'whitelist' => [
@@ -77,18 +77,18 @@ $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['trigger'] = [
 
 ## 💡 Concepts
 
-### Trigger
+### Detectors
 
-Triggers are used to detect certain login events. If a trigger matches, a notification will be sent.
+Detectors are used to detect certain login events. If a detector matches, a notification will be sent.
 
-The following triggers are available:
+The following detectors are available:
 
-- `NewIp`: Triggers a warning email if a backend user logs in from a new IP address. The IP address will be stored and can be hashed for privacy reasons. You can also define a whitelist of IP addresses that will not trigger a warning. An ip geolocation lookup can be enabled to add more information to the notification email.
+- `NewIpDetector`: Detects logins from new IP addresses and triggers a warning email. The IP address will be stored and can be hashed for privacy reasons. You can also define a whitelist of IP addresses that will not trigger a warning. An ip geolocation lookup can be enabled to add more information to the notification email.
 
 ![email.jpg](Documentation/Images/email.jpg)
 
 > [!TIP]
-> You can implement your own trigger by implementing the `MoveElevator\Typo3LoginWarning\Trigger\TriggerInterface`.
+> You can implement your own detector by implementing the `MoveElevator\Typo3LoginWarning\Detector\DetectorInterface`.
 
 ### Notification
 
