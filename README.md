@@ -51,14 +51,16 @@ Add a warning detector in your `ext_localconf.php`:
 use MoveElevator\Typo3LoginWarning\Configuration;
 use MoveElevator\Typo3LoginWarning\Notification\EmailNotification;
 use MoveElevator\Typo3LoginWarning\Detector\NewIpDetector;
+use MoveElevator\Typo3LoginWarning\Detector\LongTimeNoSeeDetector;
 
 // Simple configuration
 // (EmailNotification will be used with "warning_email_addr" configuration)
 $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['detector'] = [
-    NewIpDetector::class
+    NewIpDetector::class,
+    LongTimeNoSeeDetector::class
 ];
 
-// Extended example configuration 
+// Extended example configuration
 $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['detector'] = [
     NewIpDetector::class => [
         'hashIpAddress' => false,
@@ -69,6 +71,14 @@ $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['detector'] = [
         'notification' => [
             EmailNotification::class => [
                 'recipient' => 'test123@test.de',
+            ],
+        ],
+    ],
+    LongTimeNoSeeDetector::class => [
+        'thresholdDays' => 180,
+        'notification' => [
+            EmailNotification::class => [
+                'recipient' => 'admin@example.com',
             ],
         ],
     ],
@@ -84,6 +94,7 @@ Detectors are used to detect certain login events. If a detector matches, a noti
 The following detectors are available:
 
 - `NewIpDetector`: Detects logins from new IP addresses and triggers a warning email. The IP address will be stored and can be hashed for privacy reasons. You can also define a whitelist of IP addresses that will not trigger a warning. An ip geolocation lookup can be enabled to add more information to the notification email.
+- `LongTimeNoSeeDetector`: Detects logins after a long period of inactivity (default: 365 days).
 
 ![email.jpg](Documentation/Images/email.jpg)
 

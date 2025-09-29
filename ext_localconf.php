@@ -20,6 +20,7 @@
  */
 
 use MoveElevator\Typo3LoginWarning\Configuration;
+use MoveElevator\Typo3LoginWarning\Detector\LongTimeNoSeeDetector;
 use MoveElevator\Typo3LoginWarning\Detector\NewIpDetector;
 use MoveElevator\Typo3LoginWarning\Notification\EmailNotification;
 
@@ -31,6 +32,9 @@ $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['_detector'] = [
         'hashIpAddress' => true,
         'fetchGeolocation' => true,
         'whitelist' => [],
+    ],
+    LongTimeNoSeeDetector::class => [
+        'thresholdDays' => 365,
     ],
 ];
 

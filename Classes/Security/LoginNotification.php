@@ -25,6 +25,7 @@ namespace MoveElevator\Typo3LoginWarning\Security;
 
 use MoveElevator\Typo3LoginWarning\Configuration;
 use MoveElevator\Typo3LoginWarning\Detector\DetectorInterface;
+use MoveElevator\Typo3LoginWarning\Detector\LongTimeNoSeeDetector;
 use MoveElevator\Typo3LoginWarning\Detector\NewIpDetector;
 use MoveElevator\Typo3LoginWarning\Notification\NotifierInterface;
 use Psr\Log\LoggerAwareInterface;
@@ -111,6 +112,9 @@ final class LoginNotification implements LoggerAwareInterface
             $additionalData = [];
             if ($currentDetector instanceof NewIpDetector) {
                 $additionalData['locationData'] = $currentDetector->getLocationData();
+            }
+            if ($currentDetector instanceof LongTimeNoSeeDetector) {
+                $additionalData['daysSinceLastLogin'] = $currentDetector->getDaysSinceLastLogin();
             }
 
             $notifier->notify(
