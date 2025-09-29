@@ -54,6 +54,7 @@ final class LoginNotificationTest extends TestCase
 
         $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['trigger'] = [];
         $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['_notification'] = [];
+        $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['_trigger'] = [];
     }
 
     public function testEmailAtLoginDoesNothingForNonBackendUsers(): void
@@ -124,6 +125,9 @@ class () {};
         $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['trigger'] = [
             TriggerInterface::class => [],
         ];
+        $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['_trigger'] = [
+            TriggerInterface::class => [],
+        ];
 
         $this->subject->emailAtLogin($event);
 
@@ -141,12 +145,15 @@ class () {};
         $trigger->expects(self::once())->method('isTriggered')->willReturn(true);
 
         $notifier = $this->createMock(NotifierInterface::class);
-        $notifier->expects(self::once())->method('notify')->with($user, $request, TriggerInterface::class, []);
+        $notifier->expects(self::once())->method('notify')->with($user, $request, self::anything(), [], []);
 
         GeneralUtility::addInstance(TriggerInterface::class, $trigger);
         GeneralUtility::addInstance(NotifierInterface::class, $notifier);
 
         $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['trigger'] = [
+            TriggerInterface::class => [],
+        ];
+        $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['_trigger'] = [
             TriggerInterface::class => [],
         ];
         $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['_notification'] = [
@@ -178,6 +185,9 @@ class () {};
         $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['trigger'] = [
             TriggerInterface::class => [],
         ];
+        $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['_trigger'] = [
+            TriggerInterface::class => [],
+        ];
         $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['_notification'] = [
             get_class($invalidNotifier) => [],
         ];
@@ -207,8 +217,9 @@ class () {};
         $notifier->expects(self::once())->method('notify')->with(
             $user,
             $request,
-            TriggerInterface::class,
-            $customNotificationConfig
+            self::anything(),
+            $customNotificationConfig,
+            []
         );
 
         GeneralUtility::addInstance(TriggerInterface::class, $trigger);

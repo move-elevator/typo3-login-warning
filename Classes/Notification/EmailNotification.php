@@ -45,7 +45,7 @@ class EmailNotification implements NotifierInterface, LoggerAwareInterface
         private readonly MailerInterface $mailer,
     ) {}
 
-    public function notify(AbstractUserAuthentication $user, ServerRequestInterface $request, string $triggerClass, array $configuration = []): void
+    public function notify(AbstractUserAuthentication $user, ServerRequestInterface $request, string $triggerClass, array $configuration = [], array $additionalValues = []): void
     {
         if (!$user instanceof BackendUserAuthentication) {
             return;
@@ -65,17 +65,22 @@ class EmailNotification implements NotifierInterface, LoggerAwareInterface
         }
 
         $recipients = explode(',', $recipients);
+        $values = [
+            'user' => $user->user,
+            'prefix' => $user->isAdmin() ? '[AdminLoginWarning]' : '[LoginWarning]',
+            'language' => $user->user['lang'] ?? 'default',
+            'headline' => $headline,
+        ];
+
+        if ($additionalValues !== []) {
+            $values = array_merge($values, $additionalValues);
+        }
 
         $email = GeneralUtility::makeInstance(FluidEmail::class)
             ->to(...$recipients)
             ->setRequest($request)
             ->setTemplate(sprintf('LoginNotification/%s', basename(str_replace('\\', '/', $triggerClass))))
-            ->assignMultiple([
-                'user' => $user->user,
-                'prefix' => $user->isAdmin() ? '[AdminLoginWarning]' : '[LoginWarning]',
-                'language' => $user->user['lang'] ?? 'default',
-                'headline' => $headline,
-            ]);
+            ->assignMultiple($values);
         try {
             $this->mailer->send($email);
         } catch (TransportException $e) {

@@ -24,6 +24,7 @@ declare(strict_types=1);
 namespace MoveElevator\Typo3LoginWarning\Tests\Unit\Trigger;
 
 use MoveElevator\Typo3LoginWarning\Domain\Repository\IpLogRepository;
+use MoveElevator\Typo3LoginWarning\Service\IpApiGeolocationService;
 use MoveElevator\Typo3LoginWarning\Trigger\NewIp;
 use MoveElevator\Typo3LoginWarning\Trigger\TriggerInterface;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -38,18 +39,24 @@ use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
  */
 final class NewIpTest extends TestCase
 {
-    private IpLogRepository&MockObject $ipLogRepository;
-    private NewIp $subject;
-
     protected function setUp(): void
     {
-        $this->ipLogRepository = $this->createMock(IpLogRepository::class);
-        $this->subject = new NewIp($this->ipLogRepository);
+        parent::setUp();
+        // Clean slate for each test
+        unset($GLOBALS['_SERVER']['REMOTE_ADDR']);
+    }
+
+    protected function tearDown(): void
+    {
+        parent::tearDown();
+        unset($GLOBALS['_SERVER']['REMOTE_ADDR']);
     }
 
     public function testImplementsTriggerInterface(): void
     {
-        self::assertInstanceOf(TriggerInterface::class, $this->subject);
+        $ipLogRepository = $this->createMock(IpLogRepository::class);
+        $subject = new NewIp($ipLogRepository);
+        self::assertInstanceOf(TriggerInterface::class, $subject);
     }
 
     public function testIsTriggeredReturnsFalseWhenIpIsWhitelisted(): void
@@ -61,7 +68,9 @@ final class NewIpTest extends TestCase
 
         $GLOBALS['_SERVER']['REMOTE_ADDR'] = '192.168.1.1';
 
-        $result = $this->subject->isTriggered($user, $configuration);
+        $ipLogRepository = $this->createMock(IpLogRepository::class);
+        $subject = new NewIp($ipLogRepository);
+        $result = $subject->isTriggered($user, $configuration);
 
         self::assertFalse($result);
     }
@@ -73,18 +82,20 @@ final class NewIpTest extends TestCase
 
         $GLOBALS['_SERVER']['REMOTE_ADDR'] = '192.168.1.100';
 
-        $this->ipLogRepository
+        $ipLogRepository = $this->createMock(IpLogRepository::class);
+        $ipLogRepository
             ->expects(self::once())
             ->method('findByUserAndIp')
             ->with(123, self::matchesRegularExpression('/.*/'))
             ->willReturn(false);
 
-        $this->ipLogRepository
+        $ipLogRepository
             ->expects(self::once())
             ->method('addUserIp')
             ->with(123, self::matchesRegularExpression('/.*/'));
 
-        $result = $this->subject->isTriggered($user, $configuration);
+        $subject = new NewIp($ipLogRepository);
+        $result = $subject->isTriggered($user, $configuration);
 
         self::assertTrue($result);
     }
@@ -96,17 +107,19 @@ final class NewIpTest extends TestCase
 
         $GLOBALS['_SERVER']['REMOTE_ADDR'] = '192.168.1.100';
 
-        $this->ipLogRepository
+        $ipLogRepository = $this->createMock(IpLogRepository::class);
+        $ipLogRepository
             ->expects(self::once())
             ->method('findByUserAndIp')
             ->with(123, self::matchesRegularExpression('/.*/'))
             ->willReturn(true);
 
-        $this->ipLogRepository
+        $ipLogRepository
             ->expects(self::never())
             ->method('addUserIp');
 
-        $result = $this->subject->isTriggered($user, $configuration);
+        $subject = new NewIp($ipLogRepository);
+        $result = $subject->isTriggered($user, $configuration);
 
         self::assertFalse($result);
     }
@@ -118,18 +131,20 @@ final class NewIpTest extends TestCase
 
         $GLOBALS['_SERVER']['REMOTE_ADDR'] = '192.168.1.100';
 
-        $this->ipLogRepository
+        $ipLogRepository = $this->createMock(IpLogRepository::class);
+        $ipLogRepository
             ->expects(self::once())
             ->method('findByUserAndIp')
             ->with(123, self::matchesRegularExpression('/.*/'))
             ->willReturn(false);
 
-        $this->ipLogRepository
+        $ipLogRepository
             ->expects(self::once())
             ->method('addUserIp')
             ->with(123, self::matchesRegularExpression('/.*/'));
 
-        $result = $this->subject->isTriggered($user, $configuration);
+        $subject = new NewIp($ipLogRepository);
+        $result = $subject->isTriggered($user, $configuration);
 
         self::assertTrue($result);
     }
@@ -141,20 +156,95 @@ final class NewIpTest extends TestCase
 
         $GLOBALS['_SERVER']['REMOTE_ADDR'] = '192.168.1.100';
 
-        $this->ipLogRepository
+        $ipLogRepository = $this->createMock(IpLogRepository::class);
+        $ipLogRepository
             ->expects(self::once())
             ->method('findByUserAndIp')
             ->with(123, self::matchesRegularExpression('/.*/'))
             ->willReturn(false);
 
-        $this->ipLogRepository
+        $ipLogRepository
             ->expects(self::once())
             ->method('addUserIp')
             ->with(123, self::matchesRegularExpression('/.*/'));
 
-        $result = $this->subject->isTriggered($user, $configuration);
+        $subject = new NewIp($ipLogRepository);
+        $result = $subject->isTriggered($user, $configuration);
 
         self::assertTrue($result);
+    }
+
+    public function testIsTriggeredDoesNotFetchGeolocationWhenDisabled(): void
+    {
+        $user = $this->createMockUser(['uid' => 123]);
+        $configuration = [
+            'hashIpAddress' => true,
+            'fetchGeolocation' => false,
+        ];
+
+        $GLOBALS['_SERVER']['REMOTE_ADDR'] = '192.168.1.1';
+
+        $ipLogRepository = $this->createMock(IpLogRepository::class);
+        $geolocationService = $this->createMock(IpApiGeolocationService::class);
+
+        $ipLogRepository
+            ->expects(self::once())
+            ->method('findByUserAndIp')
+            ->willReturn(false);
+
+        $geolocationService
+            ->expects(self::never())
+            ->method('getLocationData');
+
+        $ipLogRepository
+            ->expects(self::once())
+            ->method('addUserIp');
+
+        $subject = new NewIp($ipLogRepository, $geolocationService);
+        $result = $subject->isTriggered($user, $configuration);
+
+        self::assertTrue($result);
+        self::assertNull($subject->getLocationData());
+    }
+
+    public function testGetLocationDataReturnsNullInitially(): void
+    {
+        $ipLogRepository = $this->createMock(IpLogRepository::class);
+        $subject = new NewIp($ipLogRepository);
+        self::assertNull($subject->getLocationData());
+    }
+
+    public function testIsTriggeredDoesNotFetchGeolocationForPrivateIps(): void
+    {
+        $user = $this->createMockUser(['uid' => 123]);
+        $configuration = [
+            'hashIpAddress' => true,
+            'fetchGeolocation' => true,
+        ];
+
+        $GLOBALS['_SERVER']['REMOTE_ADDR'] = '192.168.1.1';
+
+        $ipLogRepository = $this->createMock(IpLogRepository::class);
+        $geolocationService = $this->createMock(IpApiGeolocationService::class);
+
+        $ipLogRepository
+            ->expects(self::once())
+            ->method('findByUserAndIp')
+            ->willReturn(false);
+
+        $geolocationService
+            ->expects(self::never())
+            ->method('getLocationData');
+
+        $ipLogRepository
+            ->expects(self::once())
+            ->method('addUserIp');
+
+        $subject = new NewIp($ipLogRepository, $geolocationService);
+        $result = $subject->isTriggered($user, $configuration);
+
+        self::assertTrue($result);
+        self::assertNull($subject->getLocationData());
     }
 
     private function createMockUser(array $userData): BackendUserAuthentication&MockObject

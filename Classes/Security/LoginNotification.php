@@ -25,6 +25,7 @@ namespace MoveElevator\Typo3LoginWarning\Security;
 
 use MoveElevator\Typo3LoginWarning\Configuration;
 use MoveElevator\Typo3LoginWarning\Notification\NotifierInterface;
+use MoveElevator\Typo3LoginWarning\Trigger\NewIp;
 use MoveElevator\Typo3LoginWarning\Trigger\TriggerInterface;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
@@ -75,8 +76,12 @@ final class LoginNotification implements LoggerAwareInterface
                 continue;
             }
 
+            // Merge with trigger default configuration
+            $defaultConfig = $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['_trigger'][$trigger::class] ?? [];
+            $currentTriggerConfiguration = array_merge($defaultConfig, $currentTriggerConfiguration);
+
             if ($trigger->isTriggered($currentUser, $currentTriggerConfiguration)) {
-                $currentTrigger = $triggerClass;
+                $currentTrigger = $trigger;
                 break;
             }
         }
@@ -103,11 +108,17 @@ final class LoginNotification implements LoggerAwareInterface
                 continue;
             }
 
+            $additionalData = [];
+            if ($currentTrigger instanceof NewIp) {
+                $additionalData['locationData'] = $currentTrigger->getLocationData();
+            }
+
             $notifier->notify(
                 $currentUser,
                 $event->getRequest() ?? $GLOBALS['TYPO3_REQUEST'] ?? ServerRequestFactory::fromGlobals()->withAttribute('applicationType', SystemEnvironmentBuilder::REQUESTTYPE_BE),
-                $currentTrigger,
-                $notificationConfiguration
+                $currentTrigger::class,
+                $notificationConfiguration,
+                $additionalData
             );
         }
     }
