@@ -23,6 +23,7 @@ namespace MoveElevator\Typo3LoginWarning\Trigger;
 
 use Doctrine\DBAL\Exception;
 use MoveElevator\Typo3LoginWarning\Domain\Repository\IpLogRepository;
+use MoveElevator\Typo3LoginWarning\Service\IpApiGeolocationService;
 use TYPO3\CMS\Core\Authentication\AbstractUserAuthentication;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
@@ -34,8 +35,11 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  */
 class NewIp implements TriggerInterface
 {
+    private ?array $locationData = null;
+
     public function __construct(
         private IpLogRepository $ipLogRepository,
+        private ?IpApiGeolocationService $geolocationService = null,
     ) {}
 
     /**
@@ -50,6 +54,9 @@ class NewIp implements TriggerInterface
 
         $ipAddress = $this->getIpAddress(!array_key_exists('hashIpAddress', $configuration) || (bool)$configuration['hashIpAddress']);
         if (!$this->ipLogRepository->findByUserAndIp((int)$userArray['uid'], $ipAddress)) {
+            if ($this->shouldFetchGeoLocation($configuration)) {
+                $this->locationData = $this->geolocationService?->getLocationData($this->getIpAddress(false));
+            }
             $this->ipLogRepository->addUserIp((int)$userArray['uid'], $ipAddress);
             return true;
         }
@@ -65,5 +72,15 @@ class NewIp implements TriggerInterface
         }
 
         return $ipAddress;
+    }
+
+    public function getLocationData(): ?array
+    {
+        return $this->locationData;
+    }
+
+    private function shouldFetchGeoLocation(array $configuration): bool
+    {
+        return ($configuration['fetchGeolocation'] ?? false) === true && $this->geolocationService !== null;
     }
 }

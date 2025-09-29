@@ -29,6 +29,7 @@ $GLOBALS['TYPO3_CONF_VARS']['MAIL']['templateRootPaths'][500] = 'EXT:' . Configu
 $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['_trigger'] = [
     NewIp::class => [
         'hashIpAddress' => true,
+        'fetchGeolocation' => true,
         'whitelist' => [],
     ],
 ];

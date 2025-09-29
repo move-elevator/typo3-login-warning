@@ -1,6 +1,15 @@
 <f:layout name="SystemEmail" />
+<f:variable name="locationData">
+    <f:spaceless>
+    <f:if condition="{additinalData.locationData} && {additinalData.locationData.city}} && {additinalData.locationData.country}">
+        <f:then>
+            ({locationData.city}, {locationData.country})
+        </f:then>
+    </f:if>
+    </f:spaceless>
+</f:variable>
 <f:section name="Subject">{prefix} Login at "{typo3.sitename}" from new IP address</f:section>
 <f:section name="Title">{headline}</f:section>
 <f:section name="Main">{introduction}
-The user "{user.username}" logged in from a new IP address "{normalizedParams.remoteAddress}" at the site "{typo3.sitename}".
+The user "{user.username}" logged in from a new IP address "{normalizedParams.remoteAddress}"{locationData} at the site "{typo3.sitename}".
 </f:section>

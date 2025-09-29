@@ -24,6 +24,7 @@ declare(strict_types=1);
 namespace MoveElevator\Typo3LoginWarning\Tests\Unit\Trigger;
 
 use MoveElevator\Typo3LoginWarning\Domain\Repository\IpLogRepository;
+use MoveElevator\Typo3LoginWarning\Service\IpApiGeolocationService;
 use MoveElevator\Typo3LoginWarning\Trigger\NewIp;
 use MoveElevator\Typo3LoginWarning\Trigger\TriggerInterface;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -39,12 +40,14 @@ use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 final class NewIpTest extends TestCase
 {
     private IpLogRepository&MockObject $ipLogRepository;
+    private IpApiGeolocationService&MockObject $geolocationService;
     private NewIp $subject;
 
     protected function setUp(): void
     {
         $this->ipLogRepository = $this->createMock(IpLogRepository::class);
-        $this->subject = new NewIp($this->ipLogRepository);
+        $this->geolocationService = $this->createMock(IpApiGeolocationService::class);
+        $this->subject = new NewIp($this->ipLogRepository, $this->geolocationService);
     }
 
     public function testImplementsTriggerInterface(): void
@@ -155,6 +158,76 @@ final class NewIpTest extends TestCase
         $result = $this->subject->isTriggered($user, $configuration);
 
         self::assertTrue($result);
+    }
+
+    public function testIsTriggeredFetchesGeolocationDataWhenConfigured(): void
+    {
+        $user = $this->createMockUser(['uid' => 123]);
+        $configuration = [
+            'hashIpAddress' => true,
+            'fetchGeolocation' => true,
+        ];
+
+        $GLOBALS['_SERVER']['REMOTE_ADDR'] = '192.168.1.1';
+
+        $locationData = [
+            'country' => 'United States',
+            'city' => 'Mountain View',
+        ];
+
+        $this->ipLogRepository
+            ->expects(self::once())
+            ->method('findByUserAndIp')
+            ->willReturn(false);
+
+        $this->geolocationService
+            ->expects(self::once())
+            ->method('getLocationData')
+            ->with('192.168.1.1')
+            ->willReturn($locationData);
+
+        $this->ipLogRepository
+            ->expects(self::once())
+            ->method('addUserIp');
+
+        $result = $this->subject->isTriggered($user, $configuration);
+
+        self::assertTrue($result);
+        self::assertEquals($locationData, $this->subject->getLocationData());
+    }
+
+    public function testIsTriggeredDoesNotFetchGeolocationWhenDisabled(): void
+    {
+        $user = $this->createMockUser(['uid' => 123]);
+        $configuration = [
+            'hashIpAddress' => true,
+            'fetchGeolocation' => false,
+        ];
+
+        $GLOBALS['_SERVER']['REMOTE_ADDR'] = '192.168.1.1';
+
+        $this->ipLogRepository
+            ->expects(self::once())
+            ->method('findByUserAndIp')
+            ->willReturn(false);
+
+        $this->geolocationService
+            ->expects(self::never())
+            ->method('getLocationData');
+
+        $this->ipLogRepository
+            ->expects(self::once())
+            ->method('addUserIp');
+
+        $result = $this->subject->isTriggered($user, $configuration);
+
+        self::assertTrue($result);
+        self::assertNull($this->subject->getLocationData());
+    }
+
+    public function testGetLocationDataReturnsNullInitially(): void
+    {
+        self::assertNull($this->subject->getLocationData());
     }
 
     private function createMockUser(array $userData): BackendUserAuthentication&MockObject

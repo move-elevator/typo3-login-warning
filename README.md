@@ -62,6 +62,7 @@ $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['trigger'] = [
 $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['trigger'] = [
     NewIp::class => [
         'hashIpAddress' => false,
+        'fetchGeolocation' => false,
         'whitelist' => [
             '192.168.97.5',
         ],
@@ -82,7 +83,7 @@ Triggers are used to detect certain login events. If a trigger matches, a notifi
 
 The following triggers are available:
 
-- `NewIp`: Triggers a warning email if a backend user logs in from a new IP address. The IP address will be stored can be hashed for privacy reasons. You can also define a whitelist of IP addresses that will not trigger a warning.
+- `NewIp`: Triggers a warning email if a backend user logs in from a new IP address. The IP address will be stored and can be hashed for privacy reasons. You can also define a whitelist of IP addresses that will not trigger a warning. An ip geolocation lookup can be enabled to add more information to the notification email.
 
 ![email.jpg](Documentation/Images/email.jpg)
 
