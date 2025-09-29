@@ -21,14 +21,14 @@
 
 use MoveElevator\Typo3LoginWarning\Configuration;
 use MoveElevator\Typo3LoginWarning\Notification\EmailNotification;
-use MoveElevator\Typo3LoginWarning\Trigger\NewIp;
+use MoveElevator\Typo3LoginWarning\Detector\NewIpDetector;
 
 // For testing purposes we disable the login rate limit
 $GLOBALS['TYPO3_CONF_VARS']['BE']['loginRateLimit'] = 0;
 
 // Example configuration
-$GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['trigger'] = [
-    NewIp::class => [
+$GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['detector'] = [
+    NewIpDetector::class => [
         //        'hashIpAddress' => true,
         //        'whitelist' => [
         //            '192.168.97.5',

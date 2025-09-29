@@ -10,5 +10,5 @@ services:
   MoveElevator\Typo3LoginWarning\Notification\EmailNotification:
     public: true
 
-  MoveElevator\Typo3LoginWarning\Trigger\NewIp:
+  MoveElevator\Typo3LoginWarning\Detector\NewIpDetector:
     public: true
