@@ -124,6 +124,9 @@ class OutOfOfficeDetector implements DetectorInterface
     {
         $date = $time->format('Y-m-d');
         $holidays = $configuration['holidays'] ?? [];
+        if (!is_array($holidays)) {
+            return false;
+        }
         return in_array($date, $holidays, true);
     }
 
@@ -131,6 +134,9 @@ class OutOfOfficeDetector implements DetectorInterface
     {
         $date = $time->format('Y-m-d');
         $vacationPeriods = $configuration['vacationPeriods'] ?? [];
+        if (!is_array($vacationPeriods)) {
+            return false;
+        }
 
         foreach ($vacationPeriods as $period) {
             if (is_array($period) && count($period) === 2) {
