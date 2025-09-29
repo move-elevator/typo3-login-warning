@@ -27,6 +27,7 @@ use MoveElevator\Typo3LoginWarning\Configuration;
 use MoveElevator\Typo3LoginWarning\Detector\DetectorInterface;
 use MoveElevator\Typo3LoginWarning\Detector\LongTimeNoSeeDetector;
 use MoveElevator\Typo3LoginWarning\Detector\NewIpDetector;
+use MoveElevator\Typo3LoginWarning\Detector\OutOfOfficeDetector;
 use MoveElevator\Typo3LoginWarning\Notification\NotifierInterface;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
@@ -115,6 +116,9 @@ final class LoginNotification implements LoggerAwareInterface
             }
             if ($currentDetector instanceof LongTimeNoSeeDetector) {
                 $additionalData['daysSinceLastLogin'] = $currentDetector->getDaysSinceLastLogin();
+            }
+            if ($currentDetector instanceof OutOfOfficeDetector) {
+                $additionalData['violationDetails'] = $currentDetector->getViolationDetails();
             }
 
             $notifier->notify(

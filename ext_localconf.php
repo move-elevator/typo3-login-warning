@@ -22,6 +22,7 @@
 use MoveElevator\Typo3LoginWarning\Configuration;
 use MoveElevator\Typo3LoginWarning\Detector\LongTimeNoSeeDetector;
 use MoveElevator\Typo3LoginWarning\Detector\NewIpDetector;
+use MoveElevator\Typo3LoginWarning\Detector\OutOfOfficeDetector;
 use MoveElevator\Typo3LoginWarning\Notification\EmailNotification;
 
 $GLOBALS['TYPO3_CONF_VARS']['MAIL']['templateRootPaths'][500] = 'EXT:' . Configuration::EXT_KEY . '/Resources/Private/Templates/Email';
@@ -35,6 +36,18 @@ $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['_detector'] = [
     ],
     LongTimeNoSeeDetector::class => [
         'thresholdDays' => 365,
+    ],
+    OutOfOfficeDetector::class => [
+        'workingHours' => [
+            'monday' => ['07:00', '19:00'],
+            'tuesday' => ['07:00', '19:00'],
+            'wednesday' => ['07:00', '19:00'],
+            'thursday' => ['07:00', '19:00'],
+            'friday' => ['07:00', '19:00'],
+        ],
+        'timezone' => $GLOBALS['TYPO3_CONF_VARS']['SYS']['phpTimeZone'] ?? 'UTC',
+        'holidays' => [],
+        'vacationPeriods' => [],
     ],
 ];
 
