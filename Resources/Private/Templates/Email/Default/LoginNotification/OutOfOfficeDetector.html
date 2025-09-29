@@ -1,0 +1,56 @@
+<f:layout name="SystemEmail"/>
+<f:section name="Subject">{prefix} Out-of-office login at "{typo3.sitename}"</f:section>
+<f:section name="Title">{headline}</f:section>
+<f:section name="Main">
+    <h4>{introduction}</h4>
+    <p>The user <em>"{user.username}"</em> logged in outside office hours at the site "{typo3.sitename}".</p>
+
+    <f:if condition="{violationDetails}">
+        <f:switch expression="{violationDetails.type}">
+            <f:case value="holiday">
+                <ul>
+                    <li><strong>Violation type:</strong> Login on holiday</li>
+                    <li><strong>Date:</strong> {violationDetails.date}</li>
+                    <li><strong>Time:</strong> {violationDetails.time}</li>
+                </ul>
+            </f:case>
+            <f:case value="vacation">
+                <ul>
+                    <li><strong>Violation type:</strong> Login during vacation period</li>
+                    <li><strong>Date:</strong> {violationDetails.date}</li>
+                    <li><strong>Time:</strong> {violationDetails.time}</li>
+                </ul>
+            </f:case>
+            <f:case value="outside_hours">
+                <ul>
+                    <li><strong>Violation type:</strong> Login outside working hours</li>
+                    <li><strong>Login time:</strong> {violationDetails.dayOfWeek}, {violationDetails.date} at
+                        {violationDetails.time}
+                    </li>
+                    <f:if condition="{violationDetails.workingHours}">
+                        <f:then>
+                            <li><strong>Working hours for {violationDetails.dayOfWeek}:</strong>
+                                <f:if condition="{violationDetails.workingHours.0.0}">
+                                    <f:then>
+                                        <f:for each="{violationDetails.workingHours}" as="timeRange">
+                                            {timeRange.0} - {timeRange.1}
+                                            <f:if condition="{timeRange_iterator.isLast}">
+                                                <f:else>,</f:else>
+                                            </f:if>
+                                        </f:for>
+                                    </f:then>
+                                    <f:else>
+                                        {violationDetails.workingHours.0} - {violationDetails.workingHours.1}
+                                    </f:else>
+                                </f:if>
+                            </li>
+                        </f:then>
+                        <f:else>
+                            <li><strong>Working hours:</strong> {violationDetails.dayOfWeek} is not a working day</li>
+                        </f:else>
+                    </f:if>
+                </ul>
+            </f:case>
+        </f:switch>
+    </f:if>
+</f:section>

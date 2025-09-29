@@ -1,0 +1,23 @@
+<f:layout name="SystemEmail" />
+<f:section name="Subject">{prefix} Out-of-office login at "{typo3.sitename}"</f:section>
+<f:section name="Title">{headline}</f:section>
+<f:section name="Main">{introduction}
+The user "{user.username}" logged in outside office hours at the site "{typo3.sitename}".
+
+<f:if condition="{violationDetails}">
+<f:switch expression="{violationDetails.type}">
+<f:case value="holiday">Violation type: Login on holiday
+Date: {violationDetails.date}
+Time: {violationDetails.time}</f:case>
+<f:case value="vacation">Violation type: Login during vacation period
+Date: {violationDetails.date}
+Time: {violationDetails.time}</f:case>
+<f:case value="outside_hours">Violation type: Login outside working hours
+Login time: {violationDetails.dayOfWeek}, {violationDetails.date} at {violationDetails.time}
+<f:if condition="{violationDetails.workingHours}">
+<f:then>Working hours for {violationDetails.dayOfWeek}: <f:if condition="{violationDetails.workingHours.0.0}"><f:then><f:for each="{violationDetails.workingHours}" as="timeRange">{timeRange.0} - {timeRange.1}<f:if condition="{timeRange_iterator.isLast}"><f:else>, </f:else></f:if></f:for></f:then><f:else>{violationDetails.workingHours.0} - {violationDetails.workingHours.1}</f:else></f:if></f:then>
+<f:else>Working hours: {violationDetails.dayOfWeek} is not a working day</f:else>
+</f:if></f:case>
+</f:switch>
+</f:if>
+</f:section>

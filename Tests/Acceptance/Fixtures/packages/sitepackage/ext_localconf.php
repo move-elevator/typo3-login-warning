@@ -22,6 +22,7 @@
 use MoveElevator\Typo3LoginWarning\Configuration;
 use MoveElevator\Typo3LoginWarning\Detector\LongTimeNoSeeDetector;
 use MoveElevator\Typo3LoginWarning\Detector\NewIpDetector;
+use MoveElevator\Typo3LoginWarning\Detector\OutOfOfficeDetector;
 use MoveElevator\Typo3LoginWarning\Notification\EmailNotification;
 
 // For testing purposes we disable the login rate limit
@@ -43,4 +44,10 @@ $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['detector'] = [
         ],
     ],
     LongTimeNoSeeDetector::class => [],
+    OutOfOfficeDetector::class => [
+        'workingHours' => [
+            'monday' => [['09:00', '12:00'], ['16:00', '17:00']],
+        ],
+        'timezone' => 'Europe/Berlin',
+    ],
 ];
