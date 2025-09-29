@@ -48,14 +48,21 @@ class NewIp implements TriggerInterface
     public function isTriggered(AbstractUserAuthentication $user, array $configuration = []): bool
     {
         $userArray = $user->user;
-        if (array_key_exists('whitelist', $configuration) && is_array($configuration['whitelist']) && in_array($this->getIpAddress(false), $configuration['whitelist'], true)) {
+        if (
+            array_key_exists('whitelist', $configuration) &&
+            is_array($configuration['whitelist']) &&
+            in_array($this->getIpAddress(false), $configuration['whitelist'], true)
+        ) {
             return false;
         }
 
-        $ipAddress = $this->getIpAddress(!array_key_exists('hashIpAddress', $configuration) || (bool)$configuration['hashIpAddress']);
+        $shouldHashIp = !array_key_exists('hashIpAddress', $configuration) || (bool)$configuration['hashIpAddress'];
+        $ipAddress = $this->getIpAddress($shouldHashIp);
+        $rawIpAddress = $shouldHashIp ? $this->getIpAddress(false) : $ipAddress;
+
         if (!$this->ipLogRepository->findByUserAndIp((int)$userArray['uid'], $ipAddress)) {
-            if ($this->shouldFetchGeoLocation($configuration)) {
-                $this->locationData = $this->geolocationService?->getLocationData($this->getIpAddress(false));
+            if ($this->shouldFetchGeolocation($configuration, $rawIpAddress)) {
+                $this->locationData = $this->geolocationService?->getLocationData($rawIpAddress);
             }
             $this->ipLogRepository->addUserIp((int)$userArray['uid'], $ipAddress);
             return true;
@@ -79,8 +86,16 @@ class NewIp implements TriggerInterface
         return $this->locationData;
     }
 
-    private function shouldFetchGeoLocation(array $configuration): bool
+    private function shouldFetchGeolocation(array $configuration, string $rawIp): bool
     {
-        return ($configuration['fetchGeolocation'] ?? false) === true && $this->geolocationService !== null;
+        if (($configuration['fetchGeolocation'] ?? false) !== true || $this->geolocationService === null) {
+            return false;
+        }
+        // Only for public, non-reserved IPs
+        return filter_var(
+            $rawIp,
+            FILTER_VALIDATE_IP,
+            FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE
+        ) !== false;
     }
 }
