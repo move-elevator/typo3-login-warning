@@ -24,9 +24,9 @@ declare(strict_types=1);
 namespace MoveElevator\Typo3LoginWarning\Tests\Unit\Security;
 
 use MoveElevator\Typo3LoginWarning\Configuration;
+use MoveElevator\Typo3LoginWarning\Detector\DetectorInterface;
 use MoveElevator\Typo3LoginWarning\Notification\NotifierInterface;
 use MoveElevator\Typo3LoginWarning\Security\LoginNotification;
-use MoveElevator\Typo3LoginWarning\Trigger\TriggerInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ServerRequestInterface;
@@ -52,9 +52,9 @@ final class LoginNotificationTest extends TestCase
         $this->subject = new LoginNotification();
         $this->subject->setLogger($this->logger);
 
-        $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['trigger'] = [];
+        $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['detector'] = [];
         $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['_notification'] = [];
-        $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['_trigger'] = [];
+        $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['_detector'] = [];
     }
 
     public function testEmailAtLoginDoesNothingForNonBackendUsers(): void
@@ -74,11 +74,11 @@ final class LoginNotificationTest extends TestCase
         $request = $this->createMock(ServerRequestInterface::class);
         $event = new AfterUserLoggedInEvent($user, $request);
 
-        $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['trigger'] = [];
+        $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['detector'] = [];
 
         $this->subject->emailAtLogin($event);
 
-        // Should complete without errors when no triggers are configured
+        // Should complete without errors when no detectors are configured
         $this->addToAssertionCount(1);
     }
 
@@ -96,7 +96,7 @@ final class LoginNotificationTest extends TestCase
 class () {};
         GeneralUtility::addInstance(get_class($invalidTrigger), $invalidTrigger);
 
-        $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['trigger'] = [
+        $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['detector'] = [
             get_class($invalidTrigger) => [],
         ];
 
@@ -117,16 +117,16 @@ class () {};
         $request = $this->createMock(ServerRequestInterface::class);
         $event = new AfterUserLoggedInEvent($user, $request);
 
-        $trigger = $this->createMock(TriggerInterface::class);
-        $trigger->expects(self::once())->method('isTriggered')->willReturn(false);
+        $detector = $this->createMock(DetectorInterface::class);
+        $detector->expects(self::once())->method('detect')->willReturn(false);
 
-        GeneralUtility::addInstance(TriggerInterface::class, $trigger);
+        GeneralUtility::addInstance(DetectorInterface::class, $detector);
 
-        $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['trigger'] = [
-            TriggerInterface::class => [],
+        $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['detector'] = [
+            DetectorInterface::class => [],
         ];
-        $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['_trigger'] = [
-            TriggerInterface::class => [],
+        $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['_detector'] = [
+            DetectorInterface::class => [],
         ];
 
         $this->subject->emailAtLogin($event);
@@ -141,20 +141,20 @@ class () {};
         $request = $this->createMock(ServerRequestInterface::class);
         $event = new AfterUserLoggedInEvent($user, $request);
 
-        $trigger = $this->createMock(TriggerInterface::class);
-        $trigger->expects(self::once())->method('isTriggered')->willReturn(true);
+        $detector = $this->createMock(DetectorInterface::class);
+        $detector->expects(self::once())->method('detect')->willReturn(true);
 
         $notifier = $this->createMock(NotifierInterface::class);
         $notifier->expects(self::once())->method('notify')->with($user, $request, self::anything(), [], []);
 
-        GeneralUtility::addInstance(TriggerInterface::class, $trigger);
+        GeneralUtility::addInstance(DetectorInterface::class, $detector);
         GeneralUtility::addInstance(NotifierInterface::class, $notifier);
 
-        $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['trigger'] = [
-            TriggerInterface::class => [],
+        $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['detector'] = [
+            DetectorInterface::class => [],
         ];
-        $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['_trigger'] = [
-            TriggerInterface::class => [],
+        $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['_detector'] = [
+            DetectorInterface::class => [],
         ];
         $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['_notification'] = [
             NotifierInterface::class => [],
@@ -169,8 +169,8 @@ class () {};
         $request = $this->createMock(ServerRequestInterface::class);
         $event = new AfterUserLoggedInEvent($user, $request);
 
-        $trigger = $this->createMock(TriggerInterface::class);
-        $trigger->expects(self::once())->method('isTriggered')->willReturn(true);
+        $detector = $this->createMock(DetectorInterface::class);
+        $detector->expects(self::once())->method('detect')->willReturn(true);
 
         $invalidNotifier = new
 /**
@@ -179,14 +179,14 @@ class () {};
  */
 class () {};
 
-        GeneralUtility::addInstance(TriggerInterface::class, $trigger);
+        GeneralUtility::addInstance(DetectorInterface::class, $detector);
         GeneralUtility::addInstance(get_class($invalidNotifier), $invalidNotifier);
 
-        $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['trigger'] = [
-            TriggerInterface::class => [],
+        $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['detector'] = [
+            DetectorInterface::class => [],
         ];
-        $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['_trigger'] = [
-            TriggerInterface::class => [],
+        $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['_detector'] = [
+            DetectorInterface::class => [],
         ];
         $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['_notification'] = [
             get_class($invalidNotifier) => [],
@@ -209,8 +209,8 @@ class () {};
         $request = $this->createMock(ServerRequestInterface::class);
         $event = new AfterUserLoggedInEvent($user, $request);
 
-        $trigger = $this->createMock(TriggerInterface::class);
-        $trigger->expects(self::once())->method('isTriggered')->willReturn(true);
+        $detector = $this->createMock(DetectorInterface::class);
+        $detector->expects(self::once())->method('detect')->willReturn(true);
 
         $notifier = $this->createMock(NotifierInterface::class);
         $customNotificationConfig = ['recipient' => 'custom@example.com'];
@@ -222,11 +222,11 @@ class () {};
             []
         );
 
-        GeneralUtility::addInstance(TriggerInterface::class, $trigger);
+        GeneralUtility::addInstance(DetectorInterface::class, $detector);
         GeneralUtility::addInstance(NotifierInterface::class, $notifier);
 
-        $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['trigger'] = [
-            TriggerInterface::class => [
+        $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['detector'] = [
+            DetectorInterface::class => [
                 'notification' => [
                     NotifierInterface::class => $customNotificationConfig,
                 ],

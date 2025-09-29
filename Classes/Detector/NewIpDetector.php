@@ -19,7 +19,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-namespace MoveElevator\Typo3LoginWarning\Trigger;
+namespace MoveElevator\Typo3LoginWarning\Detector;
 
 use Doctrine\DBAL\Exception;
 use MoveElevator\Typo3LoginWarning\Domain\Repository\IpLogRepository;
@@ -28,12 +28,12 @@ use TYPO3\CMS\Core\Authentication\AbstractUserAuthentication;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
- * NewIp.
+ * NewIpDetector.
  *
  * @author Konrad Michalik <hej@konradmichalik.dev>
  * @license GPL-2.0
  */
-class NewIp implements TriggerInterface
+class NewIpDetector implements DetectorInterface
 {
     private ?array $locationData = null;
 
@@ -45,7 +45,7 @@ class NewIp implements TriggerInterface
     /**
      * @throws Exception
      */
-    public function isTriggered(AbstractUserAuthentication $user, array $configuration = []): bool
+    public function detect(AbstractUserAuthentication $user, array $configuration = []): bool
     {
         $userArray = $user->user;
         if (

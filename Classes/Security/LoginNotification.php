@@ -24,9 +24,9 @@ declare(strict_types=1);
 namespace MoveElevator\Typo3LoginWarning\Security;
 
 use MoveElevator\Typo3LoginWarning\Configuration;
+use MoveElevator\Typo3LoginWarning\Detector\DetectorInterface;
+use MoveElevator\Typo3LoginWarning\Detector\NewIpDetector;
 use MoveElevator\Typo3LoginWarning\Notification\NotifierInterface;
-use MoveElevator\Typo3LoginWarning\Trigger\NewIp;
-use MoveElevator\Typo3LoginWarning\Trigger\TriggerInterface;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use TYPO3\CMS\Core\Attribute\AsEventListener;
@@ -54,51 +54,51 @@ final class LoginNotification implements LoggerAwareInterface
         }
         $currentUser = $event->getUser();
 
-        $currentTrigger = null;
-        $currentTriggerConfiguration = [];
+        $currentDetector = null;
+        $currentDetectorConfiguration = [];
 
-        // Check configured triggers
-        foreach ($GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['trigger'] as $triggerClass => $triggerConfiguration) {
-            $triggerHasConfiguration = !is_int($triggerClass);
-            if ($triggerHasConfiguration) {
-                $currentTriggerConfiguration = $triggerConfiguration;
+        // Check configured detectors
+        foreach ($GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['detector'] as $detectorClass => $detectorConfiguration) {
+            $detectorHasConfiguration = !is_int($detectorClass);
+            if ($detectorHasConfiguration) {
+                $currentDetectorConfiguration = $detectorConfiguration;
             } else {
-                $triggerClass = $triggerConfiguration;
-                $currentTriggerConfiguration = [];
+                $detectorClass = $detectorConfiguration;
+                $currentDetectorConfiguration = [];
             }
 
-            $trigger = GeneralUtility::makeInstance($triggerClass);
+            $detector = GeneralUtility::makeInstance($detectorClass);
 
-            if (!$trigger instanceof TriggerInterface) {
-                $this->logger->warning('Configured trigger class "{class}" does not implement MoveElevator\Typo3LoginWarning\Security\TriggerInterface', [
-                    'class' => $triggerClass,
+            if (!$detector instanceof DetectorInterface) {
+                $this->logger->warning('Configured detector class "{class}" does not implement MoveElevator\Typo3LoginWarning\Detector\DetectorInterface', [
+                    'class' => $detectorClass,
                 ]);
                 continue;
             }
 
-            // Merge with trigger default configuration
-            $defaultConfig = $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['_trigger'][$trigger::class] ?? [];
-            $currentTriggerConfiguration = array_merge($defaultConfig, $currentTriggerConfiguration);
+            // Merge with detector default configuration
+            $defaultConfig = $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['_detector'][$detector::class] ?? [];
+            $currentDetectorConfiguration = array_merge($defaultConfig, $currentDetectorConfiguration);
 
-            if ($trigger->isTriggered($currentUser, $currentTriggerConfiguration)) {
-                $currentTrigger = $trigger;
+            if ($detector->detect($currentUser, $currentDetectorConfiguration)) {
+                $currentDetector = $detector;
                 break;
             }
         }
 
-        if ($currentTrigger === null) {
+        if ($currentDetector === null) {
             return;
         }
 
         // Fallback to global notification configuration
-        if (!array_key_exists('notification', $currentTriggerConfiguration)) {
-            $currentTriggerConfiguration = [
+        if (!array_key_exists('notification', $currentDetectorConfiguration)) {
+            $currentDetectorConfiguration = [
                 'notification' => $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['_notification'],
             ];
         }
 
         // Send notifications
-        foreach ($currentTriggerConfiguration['notification'] as $notificationClass => $notificationConfiguration) {
+        foreach ($currentDetectorConfiguration['notification'] as $notificationClass => $notificationConfiguration) {
             $notifier = GeneralUtility::makeInstance($notificationClass);
 
             if (!$notifier instanceof NotifierInterface) {
@@ -109,14 +109,14 @@ final class LoginNotification implements LoggerAwareInterface
             }
 
             $additionalData = [];
-            if ($currentTrigger instanceof NewIp) {
-                $additionalData['locationData'] = $currentTrigger->getLocationData();
+            if ($currentDetector instanceof NewIpDetector) {
+                $additionalData['locationData'] = $currentDetector->getLocationData();
             }
 
             $notifier->notify(
                 $currentUser,
                 $event->getRequest() ?? $GLOBALS['TYPO3_REQUEST'] ?? ServerRequestFactory::fromGlobals()->withAttribute('applicationType', SystemEnvironmentBuilder::REQUESTTYPE_BE),
-                $currentTrigger::class,
+                $currentDetector::class,
                 $notificationConfiguration,
                 $additionalData
             );
