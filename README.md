@@ -9,7 +9,7 @@
 [![Coverage](https://img.shields.io/coverallsCoverage/github/move-elevator/typo3-login-warning?logo=coveralls)](https://coveralls.io/github/move-elevator/typo3-login-warning)
 [![CGL](https://img.shields.io/github/actions/workflow/status/move-elevator/typo3-login-warning/cgl.yml?label=cgl&logo=github)](https://github.com/move-elevator/typo3-login-warning/actions/workflows/cgl.yml)
 [![Tests](https://img.shields.io/github/actions/workflow/status/move-elevator/typo3-login-warning/tests.yml?label=tests&logo=github)](https://github.com/move-elevator/typo3-login-warning/actions/workflows/tests.yml)
-[![License](https://poser.pugx.org/xima/typo3-login-warning/license)](LICENSE.md)
+[![License](https://poser.pugx.org/move-elevator/typo3-login-warning/license)](LICENSE.md)
 
 </div>
 
