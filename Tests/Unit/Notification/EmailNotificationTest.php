@@ -137,15 +137,24 @@ final class EmailNotificationTest extends TestCase
         $user = $this->createMockBackendUser(['uid' => 123]);
         $configuration = ['recipient' => 'admin1@example.com,admin2@example.com'];
 
-        $fluidEmail = $this->createMock(FluidEmail::class);
-        $fluidEmail->expects(self::once())->method('to')->with('admin1@example.com', 'admin2@example.com')->willReturnSelf();
-        $fluidEmail->expects(self::once())->method('setRequest')->willReturnSelf();
-        $fluidEmail->expects(self::once())->method('setTemplate')->willReturnSelf();
-        $fluidEmail->expects(self::once())->method('assignMultiple')->willReturnSelf();
+        // Expect two separate FluidEmail instances (one for each recipient)
+        $fluidEmail1 = $this->createMock(FluidEmail::class);
+        $fluidEmail1->expects(self::once())->method('to')->with('admin1@example.com')->willReturnSelf();
+        $fluidEmail1->expects(self::once())->method('setRequest')->willReturnSelf();
+        $fluidEmail1->expects(self::once())->method('setTemplate')->willReturnSelf();
+        $fluidEmail1->expects(self::once())->method('assignMultiple')->willReturnSelf();
 
-        GeneralUtility::addInstance(FluidEmail::class, $fluidEmail);
+        $fluidEmail2 = $this->createMock(FluidEmail::class);
+        $fluidEmail2->expects(self::once())->method('to')->with('admin2@example.com')->willReturnSelf();
+        $fluidEmail2->expects(self::once())->method('setRequest')->willReturnSelf();
+        $fluidEmail2->expects(self::once())->method('setTemplate')->willReturnSelf();
+        $fluidEmail2->expects(self::once())->method('assignMultiple')->willReturnSelf();
 
-        $this->mailer->expects(self::once())->method('send');
+        GeneralUtility::addInstance(FluidEmail::class, $fluidEmail1);
+        GeneralUtility::addInstance(FluidEmail::class, $fluidEmail2);
+
+        // Expect two separate send calls
+        $this->mailer->expects(self::exactly(2))->method('send');
 
         $this->subject->notify($user, $this->request, 'TestTrigger', $configuration);
     }
@@ -166,6 +175,39 @@ final class EmailNotificationTest extends TestCase
         GeneralUtility::addInstance(FluidEmail::class, $fluidEmail);
 
         $this->mailer->expects(self::once())->method('send');
+
+        $this->subject->notify($user, $this->request, 'TestTrigger', $configuration);
+    }
+
+    public function testNotifyUserSetsIsUserNotificationFlag(): void
+    {
+        $user = $this->createMockBackendUser(['uid' => 123, 'email' => 'user@example.com']);
+        $configuration = [
+            'recipient' => 'admin@example.com',
+            'notifyUser' => true,
+        ];
+
+        // Expect two emails: one for admin, one for user
+        $adminEmail = $this->createMock(FluidEmail::class);
+        $adminEmail->expects(self::once())->method('to')->with('admin@example.com')->willReturnSelf();
+        $adminEmail->expects(self::once())->method('setRequest')->willReturnSelf();
+        $adminEmail->expects(self::once())->method('setTemplate')->willReturnSelf();
+        $adminEmail->expects(self::once())->method('assignMultiple')->with(
+            self::callback(fn(array $vars) => $vars['isUserNotification'] === false)
+        )->willReturnSelf();
+
+        $userEmail = $this->createMock(FluidEmail::class);
+        $userEmail->expects(self::once())->method('to')->with('user@example.com')->willReturnSelf();
+        $userEmail->expects(self::once())->method('setRequest')->willReturnSelf();
+        $userEmail->expects(self::once())->method('setTemplate')->willReturnSelf();
+        $userEmail->expects(self::once())->method('assignMultiple')->with(
+            self::callback(fn(array $vars) => $vars['isUserNotification'] === true)
+        )->willReturnSelf();
+
+        GeneralUtility::addInstance(FluidEmail::class, $adminEmail);
+        GeneralUtility::addInstance(FluidEmail::class, $userEmail);
+
+        $this->mailer->expects(self::exactly(2))->method('send');
 
         $this->subject->notify($user, $this->request, 'TestTrigger', $configuration);
     }

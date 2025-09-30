@@ -59,50 +59,71 @@ class EmailNotification implements NotifierInterface, LoggerAwareInterface
             $recipients = $GLOBALS['TYPO3_CONF_VARS']['BE']['warning_email_addr'];
         }
 
-        if ($recipients === '' || $recipients === null) {
-            $this->logger->info('No recipient configured for login notification email. Please set $GLOBALS[\'TYPO3_CONF_VARS\'][\'BE\'][\'warning_email_addr\'] or configure the recipient via Typo3LoginWarning configuration.');
+        // Build recipients list
+        $recipientsList = [];
+        if ($recipients !== '' && $recipients !== null) {
+            $recipientsList = explode(',', $recipients);
+        }
+
+        // Add user email if notifyUser is enabled
+        $notifyUser = $configuration['notifyUser'] ?? false;
+        $userEmail = '';
+        if ($notifyUser && ($user->user['email'] ?? '') !== '') {
+            $userEmail = trim($user->user['email']);
+            $recipientsList[] = $userEmail;
+        }
+
+        // Remove duplicates and clean up
+        $recipientsList = array_unique(array_filter(array_map('trim', $recipientsList), static fn(string $email): bool => $email !== ''));
+
+        if ($recipientsList === []) {
+            $this->logger->info('No recipient configured for login notification email. Please set $GLOBALS[\'TYPO3_CONF_VARS\'][\'BE\'][\'warning_email_addr\'], configure the recipient via Typo3LoginWarning configuration, or enable notifyUser with a valid user email.');
             return;
         }
 
-        $recipients = explode(',', $recipients);
-        $values = [
-            'user' => $user->user,
-            'prefix' => $user->isAdmin() ? '[AdminLoginWarning]' : '[LoginWarning]',
-            'language' => $user->user['lang'] ?? 'default',
-            'headline' => $headline,
-        ];
+        // Send separate emails for different perspectives
+        foreach ($recipientsList as $recipient) {
+            $isUserNotification = $notifyUser && $recipient === $userEmail;
+            $values = [
+                'user' => $user->user,
+                'prefix' => $user->isAdmin() ? '[AdminLoginWarning]' : '[LoginWarning]',
+                'language' => $user->user['lang'] ?? 'default',
+                'headline' => $headline,
+                'isUserNotification' => $isUserNotification,
+            ];
 
-        if ($additionalValues !== []) {
-            $values = array_merge($values, $additionalValues);
-        }
+            if ($additionalValues !== []) {
+                $values = array_merge($values, $additionalValues);
+            }
 
-        $email = GeneralUtility::makeInstance(FluidEmail::class)
-            ->to(...$recipients)
-            ->setRequest($request)
-            ->setTemplate(sprintf('LoginNotification/%s', basename(str_replace('\\', '/', $triggerClass))))
-            ->assignMultiple($values);
-        try {
-            $this->mailer->send($email);
-        } catch (TransportException $e) {
-            $this->logger->warning('Could not send notification email to "{recipient}" due to mailer settings error', [
-                'recipient' => $recipients,
-                'userId' => $user->user['uid'] ?? 0,
-                'exception' => $e,
-            ]);
-        } catch (RfcComplianceException $e) {
-            $this->logger->warning('Could not send notification email to "{recipient}" due to invalid email address', [
-                'recipient' => $recipients,
-                'userId' => $user->user['uid'] ?? 0,
-                'exception' => $e,
-            ]);
-        } catch (\Exception $e) {
-            // Catch all other exceptions, otherwise a failed email login notification will keep
-            // a user from logging in. See https://forge.typo3.org/issues/103546
-            $this->logger->error('Could not send notification email to "{recipient}" due to a PHP exception', [
-                'recipient' => $recipients,
-                'userId' => $user->user['uid'] ?? 0,
-                'exception' => $e,
-            ]);
+            $email = GeneralUtility::makeInstance(FluidEmail::class)
+                ->to($recipient)
+                ->setRequest($request)
+                ->setTemplate(sprintf('LoginNotification/%s', basename(str_replace('\\', '/', $triggerClass))))
+                ->assignMultiple($values);
+            try {
+                $this->mailer->send($email);
+            } catch (TransportException $e) {
+                $this->logger->warning('Could not send notification email to "{recipient}" due to mailer settings error', [
+                    'recipient' => $recipient,
+                    'userId' => $user->user['uid'] ?? 0,
+                    'exception' => $e,
+                ]);
+            } catch (RfcComplianceException $e) {
+                $this->logger->warning('Could not send notification email to "{recipient}" due to invalid email address', [
+                    'recipient' => $recipient,
+                    'userId' => $user->user['uid'] ?? 0,
+                    'exception' => $e,
+                ]);
+            } catch (\Exception $e) {
+                // Catch all other exceptions, otherwise a failed email login notification will keep
+                // a user from logging in. See https://forge.typo3.org/issues/103546
+                $this->logger->error('Could not send notification email to "{recipient}" due to a PHP exception', [
+                    'recipient' => $recipient,
+                    'userId' => $user->user['uid'] ?? 0,
+                    'exception' => $e,
+                ]);
+            }
         }
     }
 }

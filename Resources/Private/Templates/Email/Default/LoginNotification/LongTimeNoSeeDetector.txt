@@ -2,5 +2,8 @@
 <f:section name="Subject">{prefix} Login at "{typo3.sitename}" after a long time</f:section>
 <f:section name="Title">{headline}</f:section>
 <f:section name="Main">{introduction}
-The user "{user.username}" logged in again after a long time ({daysSinceLastLogin} days) at the site "{typo3.sitename}".
+<f:if condition="{isUserNotification}">
+<f:then>You logged in again after a long time ({daysSinceLastLogin} days) at the site "{typo3.sitename}". Welcome back!</f:then>
+<f:else>The user "{user.username}" logged in again after a long time ({daysSinceLastLogin} days) at the site "{typo3.sitename}".</f:else>
+</f:if>
 </f:section>

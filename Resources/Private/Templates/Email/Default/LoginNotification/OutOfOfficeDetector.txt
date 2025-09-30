@@ -2,7 +2,10 @@
 <f:section name="Subject">{prefix} Out-of-office login at "{typo3.sitename}"</f:section>
 <f:section name="Title">{headline}</f:section>
 <f:section name="Main">{introduction}
-The user "{user.username}" logged in outside office hours at the site "{typo3.sitename}".
+<f:if condition="{isUserNotification}">
+<f:then>You logged in outside office hours at the site "{typo3.sitename}".</f:then>
+<f:else>The user "{user.username}" logged in outside office hours at the site "{typo3.sitename}".</f:else>
+</f:if>
 
 <f:if condition="{violationDetails}">
 <f:switch expression="{violationDetails.type}">

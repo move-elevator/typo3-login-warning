@@ -12,5 +12,12 @@
 <f:section name="Title">{headline}</f:section>
 <f:section name="Main">
     <h4>{introduction}</h4>
-    <p>The user <em>"{user.username}"</em> logged in from a new IP address <code>{normalizedParams.remoteAddress}</code>{locationInfo} at the site "{typo3.sitename}".</p>
+    <f:if condition="{isUserNotification}">
+        <f:then>
+            <p>You logged in from a new IP address <code>{normalizedParams.remoteAddress}</code>{locationInfo} at the site "{typo3.sitename}".</p>
+        </f:then>
+        <f:else>
+            <p>The user <em>"{user.username}"</em> logged in from a new IP address <code>{normalizedParams.remoteAddress}</code>{locationInfo} at the site "{typo3.sitename}".</p>
+        </f:else>
+    </f:if>
 </f:section>
