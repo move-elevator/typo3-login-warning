@@ -58,8 +58,11 @@ return [
         'phpstan-baseline.neon',
         'phpunit.functional.xml',
         'phpunit.unit.xml',
+        'phpunit.xml',
+        'phpstan.neon',
         'rector.php',
         'renovate.json',
         'typoscript-lint.yml',
+        'version-bumper.yaml',
     ],
 ];
