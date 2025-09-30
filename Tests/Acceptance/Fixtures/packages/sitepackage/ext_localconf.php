@@ -32,7 +32,7 @@ $GLOBALS['TYPO3_CONF_VARS']['BE']['warning_email_addr'] = 'test456@test.de';
 // NewIp Detector with specific configuration for testing
 LoginWarning::newIp([
     'hashIpAddress' => true,
-    'fetchGeolocation' => false,
+    'fetchGeolocation' => true,
     'whitelist' => [], // No whitelist for testing
     'notification' => [
         EmailNotification::class => [
