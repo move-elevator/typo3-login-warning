@@ -20,8 +20,8 @@
  */
 
 $EM_CONF[$_EXTKEY] = [
-    'title' => 'Page Update Info',
-    'description' => '',
+    'title' => 'Login Warning',
+    'description' => 'Extends the TYPO3 backend login warning_mode functionality to inform about suspicious logins with several features.',
     'category' => 'module',
     'author' => 'Konrad Michalik',
     'author_email' => 'hej@konradmichalik.dev',
