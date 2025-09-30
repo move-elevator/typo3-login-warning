@@ -33,6 +33,8 @@ abstract class AbstractDetector implements DetectorInterface
 {
     /**
      * Check if detection should be performed for the given user based on role filtering configuration.
+     *
+     * @param array<string, mixed> $configuration
      */
     protected function shouldDetectForUser(AbstractUserAuthentication $user, array $configuration): bool
     {

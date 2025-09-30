@@ -52,7 +52,7 @@ class UserLogRepository
             )
             ->executeQuery()->fetchAssociative();
 
-        return $result ? (int)$result['last_login_check'] : null;
+        return $result !== false ? (int)$result['last_login_check'] : null;
     }
 
     /**

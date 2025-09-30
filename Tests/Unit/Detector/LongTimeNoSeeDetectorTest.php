@@ -399,6 +399,9 @@ final class LongTimeNoSeeDetectorTest extends TestCase
         self::assertLessThan(740, $days);
     }
 
+    /**
+     * @param array<string, mixed> $userData
+     */
     private function createMockUser(array $userData): BackendUserAuthentication&MockObject
     {
         $user = $this->createMock(BackendUserAuthentication::class);

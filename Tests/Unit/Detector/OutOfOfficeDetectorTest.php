@@ -326,6 +326,9 @@ final class OutOfOfficeDetectorTest extends TestCase
         self::assertSame('vacation', $violationDetails['type']);
     }
 
+    /**
+     * @param array<string, mixed> $userData
+     */
     private function createMockUser(array $userData): BackendUserAuthentication&MockObject
     {
         $user = $this->createMock(BackendUserAuthentication::class);
@@ -342,10 +345,16 @@ final class OutOfOfficeDetectorTest extends TestCase
  */
 class OutOfOfficeDetectorWithMockedTime extends OutOfOfficeDetector
 {
+    /**
+     * @var array<string, mixed>|null
+     */
     private ?array $violationDetails = null;
 
     public function __construct(private string $mockedTime, private string $defaultTimezone = 'UTC') {}
 
+    /**
+     * @param array<string, mixed> $configuration
+     */
     public function detect(\TYPO3\CMS\Core\Authentication\AbstractUserAuthentication $user, array $configuration = []): bool
     {
         $timezone = $configuration['timezone'] ?? $this->defaultTimezone;
@@ -397,11 +406,17 @@ class OutOfOfficeDetectorWithMockedTime extends OutOfOfficeDetector
         return false;
     }
 
+    /**
+     * @return array<string, mixed>|null
+     */
     public function getViolationDetails(): ?array
     {
         return $this->violationDetails;
     }
 
+    /**
+     * @param array<string, mixed> $workingHours
+     */
     private function isWithinWorkingHours(\DateTime $time, array $workingHours): bool
     {
         $dayOfWeek = strtolower($time->format('l'));
@@ -434,6 +449,9 @@ class OutOfOfficeDetectorWithMockedTime extends OutOfOfficeDetector
         return $time >= $start && $time <= $end;
     }
 
+    /**
+     * @param array<string, mixed> $configuration
+     */
     private function isHoliday(\DateTime $time, array $configuration): bool
     {
         $date = $time->format('Y-m-d');
@@ -441,6 +459,9 @@ class OutOfOfficeDetectorWithMockedTime extends OutOfOfficeDetector
         return is_array($holidays) && in_array($date, $holidays, true);
     }
 
+    /**
+     * @param array<string, mixed> $configuration
+     */
     private function isVacationPeriod(\DateTime $time, array $configuration): bool
     {
         $date = $time->format('Y-m-d');

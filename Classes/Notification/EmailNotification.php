@@ -45,6 +45,10 @@ class EmailNotification implements NotifierInterface, LoggerAwareInterface
         private readonly MailerInterface $mailer,
     ) {}
 
+    /**
+     * @param array<string, mixed> $configuration
+     * @param array<string, mixed> $additionalValues
+     */
     public function notify(AbstractUserAuthentication $user, ServerRequestInterface $request, string $triggerClass, array $configuration = [], array $additionalValues = []): void
     {
         if (!$user instanceof BackendUserAuthentication) {
@@ -66,7 +70,7 @@ class EmailNotification implements NotifierInterface, LoggerAwareInterface
         }
 
         // Add user email if notifyUser is enabled
-        $notifyUser = $configuration['notifyUser'] ?? false;
+        $notifyUser = ($configuration['notifyUser'] ?? false) === true;
         $userEmail = '';
         if ($notifyUser && ($user->user['email'] ?? '') !== '') {
             $userEmail = trim($user->user['email']);
@@ -83,7 +87,7 @@ class EmailNotification implements NotifierInterface, LoggerAwareInterface
 
         // Send separate emails for different perspectives
         foreach ($recipientsList as $recipient) {
-            $isUserNotification = $notifyUser && $recipient === $userEmail;
+            $isUserNotification = $notifyUser === true && $recipient === $userEmail;
             $values = [
                 'user' => $user->user,
                 'prefix' => $user->isAdmin() ? '[AdminLoginWarning]' : '[LoginWarning]',

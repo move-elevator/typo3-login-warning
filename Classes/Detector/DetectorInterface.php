@@ -31,5 +31,8 @@ use TYPO3\CMS\Core\Authentication\AbstractUserAuthentication;
  */
 interface DetectorInterface
 {
+    /**
+     * @param array<string, mixed> $configuration
+     */
     public function detect(AbstractUserAuthentication $user, array $configuration = []): bool;
 }
