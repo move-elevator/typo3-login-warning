@@ -33,7 +33,7 @@ use TYPO3\CMS\Core\Authentication\AbstractUserAuthentication;
  * @author Konrad Michalik <hej@konradmichalik.dev>
  * @license GPL-2.0
  */
-class LongTimeNoSeeDetector implements DetectorInterface
+class LongTimeNoSeeDetector extends AbstractDetector
 {
     private const DEFAULT_THRESHOLD_DAYS = 365;
 
@@ -49,6 +49,12 @@ class LongTimeNoSeeDetector implements DetectorInterface
     public function detect(AbstractUserAuthentication $user, array $configuration = []): bool
     {
         $userArray = $user->user;
+
+        // Check user role filtering
+        if (!$this->shouldDetectForUser($user, $configuration)) {
+            return false;
+        }
+
         $userId = (int)$userArray['uid'];
         $currentTimestamp = time();
 
@@ -71,4 +77,5 @@ class LongTimeNoSeeDetector implements DetectorInterface
     {
         return $this->daysSinceLastLogin;
     }
+
 }

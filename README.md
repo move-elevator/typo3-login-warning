@@ -65,6 +65,7 @@ LoginWarning::outOfOffice();
 LoginWarning::newIp([
     'hashIpAddress' => false,
     'fetchGeolocation' => false,
+    'onlyAdmins' => true, // Only detect for admin users
     'whitelist' => [
         '192.168.97.5',
     ],
@@ -77,6 +78,7 @@ LoginWarning::newIp([
 
 LoginWarning::longTimeNoSee([
     'thresholdDays' => 180,
+    'onlySystemMaintainers' => true, // Only detect for system maintainers
     'notification' => [
         EmailNotification::class => [
             'recipient' => 'longterm@example.com',
@@ -110,6 +112,8 @@ The IP address will be stored and can be hashed for privacy reasons. You can als
 LoginWarning::newIp([
     'hashIpAddress' => true, // Hash the IP address for privacy (SHA-256)
     'fetchGeolocation' => true, // Enable IP geolocation lookup
+    'onlyAdmins' => false, // Detect for all users (default)
+    'onlySystemMaintainers' => false, // Detect for all users (default)
     'whitelist' => [ // Define a whitelist of IP addresses that will not trigger a warning
         '127.0.0.1',
         '192.168.1.0/24',
@@ -130,6 +134,8 @@ Detects logins after a long period of inactivity (default: 365 days).
 // Extended example configuration using shorthand syntax
 LoginWarning::longTimeNoSee([
     'thresholdDays' => 180, // Set threshold for inactivity in days, default is 365
+    'onlyAdmins' => false, // Detect for all users (default)
+    'onlySystemMaintainers' => false, // Detect for all users (default)
     'notification' => [ // Override default notification configuration
         EmailNotification::class => [
             'recipient' => 'security@example.com',
@@ -160,6 +166,8 @@ LoginWarning::outOfOffice([
     'vacationPeriods' => [ // List of vacation periods (Y-m-d format)
         ['2025-07-15', '2025-07-30'],
     ],
+    'onlyAdmins' => false, // Detect for all users (default)
+    'onlySystemMaintainers' => false, // Detect for all users (default)
     'notification' => [ // Override default notification configuration
         EmailNotification::class => [
             'recipient' => 'security@example.com',

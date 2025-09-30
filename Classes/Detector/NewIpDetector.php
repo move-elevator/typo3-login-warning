@@ -33,7 +33,7 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  * @author Konrad Michalik <hej@konradmichalik.dev>
  * @license GPL-2.0
  */
-class NewIpDetector implements DetectorInterface
+class NewIpDetector extends AbstractDetector
 {
     private ?array $locationData = null;
 
@@ -48,6 +48,12 @@ class NewIpDetector implements DetectorInterface
     public function detect(AbstractUserAuthentication $user, array $configuration = []): bool
     {
         $userArray = $user->user;
+
+        // Check user role filtering
+        if (!$this->shouldDetectForUser($user, $configuration)) {
+            return false;
+        }
+
         if (
             array_key_exists('whitelist', $configuration) &&
             is_array($configuration['whitelist']) &&
@@ -98,4 +104,5 @@ class NewIpDetector implements DetectorInterface
             FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE
         ) !== false;
     }
+
 }

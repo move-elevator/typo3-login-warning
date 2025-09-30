@@ -33,10 +33,14 @@ $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['_detector'] = [
     NewIpDetector::class => [
         'hashIpAddress' => true,
         'fetchGeolocation' => true,
+        'onlyAdmins' => false,
+        'onlySystemMaintainers' => false,
         'whitelist' => [],
     ],
     LongTimeNoSeeDetector::class => [
         'thresholdDays' => 365,
+        'onlyAdmins' => false,
+        'onlySystemMaintainers' => false,
     ],
     OutOfOfficeDetector::class => [
         'workingHours' => [
@@ -49,6 +53,8 @@ $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['_detector'] = [
         'timezone' => $GLOBALS['TYPO3_CONF_VARS']['SYS']['phpTimeZone'] ?? 'UTC',
         'holidays' => [],
         'vacationPeriods' => [],
+        'onlyAdmins' => false,
+        'onlySystemMaintainers' => false,
     ],
 ];
 
@@ -64,6 +70,7 @@ $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['_notification'] 
 LoginWarning::newIp([
     'hashIpAddress' => true,
     'fetchGeolocation' => false,
+    'onlyAdmins' => true,
     'whitelist' => ['192.168.1.0/24'],
     'notification' => [
         EmailNotification::class => [
@@ -90,6 +97,7 @@ LoginWarning::outOfOffice([
     'timezone' => 'Europe/Berlin',
     'holidays' => ['2025-01-01', '2025-12-25'],
     'vacationPeriods' => [['2025-07-15', '2025-07-30']],
+    'onlySystemMaintainers' => true,
     'notification' => [
         EmailNotification::class => [
             'recipient' => 'security@example.com',
