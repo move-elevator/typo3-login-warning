@@ -52,7 +52,7 @@ final class LoginNotificationTest extends TestCase
         $this->subject = new LoginNotification();
         $this->subject->setLogger($this->logger);
 
-        $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['detector'] = [];
+        $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['register'] = [];
         $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['_notification'] = [];
         $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['_detector'] = [];
     }
@@ -74,7 +74,7 @@ final class LoginNotificationTest extends TestCase
         $request = $this->createMock(ServerRequestInterface::class);
         $event = new AfterUserLoggedInEvent($user, $request);
 
-        $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['detector'] = [];
+        $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['register'] = [];
 
         $this->subject->emailAtLogin($event);
 
@@ -96,8 +96,11 @@ final class LoginNotificationTest extends TestCase
 class () {};
         GeneralUtility::addInstance(get_class($invalidTrigger), $invalidTrigger);
 
-        $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['detector'] = [
-            get_class($invalidTrigger) => [],
+        $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['register'] = [
+            [
+                'detector' => get_class($invalidTrigger),
+                'configuration' => [],
+            ],
         ];
 
         $this->logger
@@ -122,8 +125,11 @@ class () {};
 
         GeneralUtility::addInstance(DetectorInterface::class, $detector);
 
-        $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['detector'] = [
-            DetectorInterface::class => [],
+        $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['register'] = [
+            [
+                'detector' => DetectorInterface::class,
+                'configuration' => [],
+            ],
         ];
         $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['_detector'] = [
             DetectorInterface::class => [],
@@ -150,8 +156,11 @@ class () {};
         GeneralUtility::addInstance(DetectorInterface::class, $detector);
         GeneralUtility::addInstance(NotifierInterface::class, $notifier);
 
-        $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['detector'] = [
-            DetectorInterface::class => [],
+        $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['register'] = [
+            [
+                'detector' => DetectorInterface::class,
+                'configuration' => [],
+            ],
         ];
         $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['_detector'] = [
             DetectorInterface::class => [],
@@ -182,8 +191,11 @@ class () {};
         GeneralUtility::addInstance(DetectorInterface::class, $detector);
         GeneralUtility::addInstance(get_class($invalidNotifier), $invalidNotifier);
 
-        $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['detector'] = [
-            DetectorInterface::class => [],
+        $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['register'] = [
+            [
+                'detector' => DetectorInterface::class,
+                'configuration' => [],
+            ],
         ];
         $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['_detector'] = [
             DetectorInterface::class => [],
@@ -225,10 +237,13 @@ class () {};
         GeneralUtility::addInstance(DetectorInterface::class, $detector);
         GeneralUtility::addInstance(NotifierInterface::class, $notifier);
 
-        $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['detector'] = [
-            DetectorInterface::class => [
-                'notification' => [
-                    NotifierInterface::class => $customNotificationConfig,
+        $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['register'] = [
+            [
+                'detector' => DetectorInterface::class,
+                'configuration' => [
+                    'notification' => [
+                        NotifierInterface::class => $customNotificationConfig,
+                    ],
                 ],
             ],
         ];
