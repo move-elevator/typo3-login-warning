@@ -53,35 +53,36 @@ Download the zip file from [TYPO3 extension repository (TER)](https://extensions
 Add the desired warning detector(s) in your `ext_localconf.php`:
 
 ```php
-use MoveElevator\Typo3LoginWarning\Configuration;
+use MoveElevator\Typo3LoginWarning\Configuration\LoginWarning;
 use MoveElevator\Typo3LoginWarning\Notification\EmailNotification;
-use MoveElevator\Typo3LoginWarning\Detector\NewIpDetector;
-use MoveElevator\Typo3LoginWarning\Detector\LongTimeNoSeeDetector;
-use MoveElevator\Typo3LoginWarning\Detector\OutOfOfficeDetector;
 
-// Simple configuration with default settings
-// (EmailNotification will be used with "warning_email_addr" configuration)
-$GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['detector'] = [
-    NewIpDetector::class,
-    LongTimeNoSeeDetector::class,
-    OutOfOfficeDetector::class
-];
+// Simple configuration with default settings using shorthand syntax
+LoginWarning::newIp();
+LoginWarning::longTimeNoSee();
+LoginWarning::outOfOffice();
 
-// Extended example configuration
-$GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['detector'] = [
-    NewIpDetector::class => [
-        'hashIpAddress' => false,
-        'fetchGeolocation' => false,
-        'whitelist' => [
-            '192.168.97.5',
-        ],
-        'notification' => [
-            EmailNotification::class => [
-                'recipient' => 'security@example.com',
-            ],
+// Extended example configuration with shorthand syntax
+LoginWarning::newIp([
+    'hashIpAddress' => false,
+    'fetchGeolocation' => false,
+    'whitelist' => [
+        '192.168.97.5',
+    ],
+    'notification' => [
+        EmailNotification::class => [
+            'recipient' => 'security@example.com',
         ],
     ],
-];
+]);
+
+LoginWarning::longTimeNoSee([
+    'thresholdDays' => 180,
+    'notification' => [
+        EmailNotification::class => [
+            'recipient' => 'longterm@example.com',
+        ],
+    ],
+]);
 ```
 
 > [!IMPORTANT]
@@ -105,19 +106,20 @@ Detects logins from new IP addresses and triggers a warning email.
 The IP address will be stored and can be hashed for privacy reasons. You can also define a whitelist of IP addresses that will not trigger a warning. An ip geolocation lookup can be enabled to add more information to the notification email.
 
 ```php
-// Extended example configuration
-NewIpDetector::class => [
+// Extended example configuration using shorthand syntax
+LoginWarning::newIp([
     'hashIpAddress' => true, // Hash the IP address for privacy (SHA-256)
-    'fetchGeolocation' => true, // Disable IP geolocation lookup
+    'fetchGeolocation' => true, // Enable IP geolocation lookup
     'whitelist' => [ // Define a whitelist of IP addresses that will not trigger a warning
         '127.0.0.1',
+        '192.168.1.0/24',
     ],
     'notification' => [ // Override default notification configuration
         EmailNotification::class => [
             'recipient' => 'security@example.com',
         ],
     ],
-]
+]);
 ```
 
 #### [LongTimeNoSeeDetector](Classes/Detector/LongTimeNoSeeDetector.php)
@@ -125,15 +127,15 @@ NewIpDetector::class => [
 Detects logins after a long period of inactivity (default: 365 days).
 
 ```php
-// Extended example configuration
-LongTimeNoSeeDetector::class => [
+// Extended example configuration using shorthand syntax
+LoginWarning::longTimeNoSee([
     'thresholdDays' => 180, // Set threshold for inactivity in days, default is 365
     'notification' => [ // Override default notification configuration
         EmailNotification::class => [
             'recipient' => 'security@example.com',
         ],
     ],
-]
+]);
 ```
 
 #### [OutOfOfficeDetector](Classes/Detector/OutOfOfficeDetector.php)
@@ -141,7 +143,8 @@ LongTimeNoSeeDetector::class => [
 Detects logins outside defined working hours, holidays, or vacation periods. Supports flexible working hours with multiple time ranges per day (e.g., lunch breaks), timezone handling, and comprehensive out-of-office period configuration.
 
 ```php
-OutOfOfficeDetector::class => [
+// Extended example configuration using shorthand syntax
+LoginWarning::outOfOffice([
     'workingHours' => [
         'monday' => [['09:00', '12:00'], ['13:00', '17:00']], // Flexible working hours with breaks
         'tuesday' => ['09:00', '17:00'],
@@ -151,8 +154,8 @@ OutOfOfficeDetector::class => [
     ],
     'timezone' => 'Europe/Berlin', // Timezone for working hours
     'holidays' => [ // List of holidays (Y-m-d format)
-        '2025-01-01', 
-        '2025-12-25', 
+        '2025-01-01',
+        '2025-12-25',
     ],
     'vacationPeriods' => [ // List of vacation periods (Y-m-d format)
         ['2025-07-15', '2025-07-30'],
@@ -162,7 +165,7 @@ OutOfOfficeDetector::class => [
             'recipient' => 'security@example.com',
         ],
     ],
-]
+]);
 ```
 
 ### Notification

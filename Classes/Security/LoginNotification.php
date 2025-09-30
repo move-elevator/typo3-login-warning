@@ -59,15 +59,17 @@ final class LoginNotification implements LoggerAwareInterface
         $currentDetector = null;
         $currentDetectorConfiguration = [];
 
-        // Check configured detectors
-        foreach ($GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['detector'] as $detectorClass => $detectorConfiguration) {
-            $detectorHasConfiguration = !is_int($detectorClass);
-            if ($detectorHasConfiguration) {
-                $currentDetectorConfiguration = $detectorConfiguration;
-            } else {
-                $detectorClass = $detectorConfiguration;
-                $currentDetectorConfiguration = [];
+        // Check configured detectors from 'register' configuration
+        $registeredDetectors = $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['register'] ?? [];
+
+        foreach ($registeredDetectors as $detectorConfig) {
+            if (!is_array($detectorConfig) || !isset($detectorConfig['detector'])) {
+                $this->logger->warning('Invalid detector configuration: missing "detector" key');
+                continue;
             }
+
+            $detectorClass = $detectorConfig['detector'];
+            $currentDetectorConfiguration = $detectorConfig['configuration'] ?? [];
 
             $detector = GeneralUtility::makeInstance($detectorClass);
 

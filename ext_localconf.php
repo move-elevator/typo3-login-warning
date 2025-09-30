@@ -20,6 +20,7 @@
  */
 
 use MoveElevator\Typo3LoginWarning\Configuration;
+use MoveElevator\Typo3LoginWarning\Configuration\LoginWarning;
 use MoveElevator\Typo3LoginWarning\Detector\LongTimeNoSeeDetector;
 use MoveElevator\Typo3LoginWarning\Detector\NewIpDetector;
 use MoveElevator\Typo3LoginWarning\Detector\OutOfOfficeDetector;
@@ -58,4 +59,41 @@ $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['_notification'] 
     ],
 ];
 
-$GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['detector'] = [];
+// Example configuration using shorthand syntax
+/*
+LoginWarning::newIp([
+    'hashIpAddress' => true,
+    'fetchGeolocation' => false,
+    'whitelist' => ['192.168.1.0/24'],
+    'notification' => [
+        EmailNotification::class => [
+            'recipient' => 'admin-alerts@example.com',
+        ],
+    ],
+]);
+
+LoginWarning::longTimeNoSee([
+    'thresholdDays' => 180,
+    'notification' => [
+        EmailNotification::class => [
+            'recipient' => 'longterm@example.com',
+        ],
+    ],
+]);
+
+LoginWarning::outOfOffice([
+    'workingHours' => [
+        'monday' => [['09:00', '12:00'], ['13:00', '17:00']],
+        'tuesday' => ['09:00', '17:00'],
+        'friday' => ['09:00', '15:00'],
+    ],
+    'timezone' => 'Europe/Berlin',
+    'holidays' => ['2025-01-01', '2025-12-25'],
+    'vacationPeriods' => [['2025-07-15', '2025-07-30']],
+    'notification' => [
+        EmailNotification::class => [
+            'recipient' => 'security@example.com',
+        ],
+    ],
+]);
+*/

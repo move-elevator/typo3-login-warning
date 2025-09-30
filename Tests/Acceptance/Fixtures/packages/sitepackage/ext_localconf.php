@@ -20,9 +20,7 @@
  */
 
 use MoveElevator\Typo3LoginWarning\Configuration;
-use MoveElevator\Typo3LoginWarning\Detector\LongTimeNoSeeDetector;
-use MoveElevator\Typo3LoginWarning\Detector\NewIpDetector;
-use MoveElevator\Typo3LoginWarning\Detector\OutOfOfficeDetector;
+use MoveElevator\Typo3LoginWarning\Configuration\LoginWarning;
 use MoveElevator\Typo3LoginWarning\Notification\EmailNotification;
 
 // For testing purposes we disable the login rate limit
@@ -30,24 +28,40 @@ $GLOBALS['TYPO3_CONF_VARS']['BE']['loginRateLimit'] = 0;
 
 $GLOBALS['TYPO3_CONF_VARS']['BE']['warning_email_addr'] = 'test456@test.de';
 
-// Example configuration
-$GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['detector'] = [
-    NewIpDetector::class => [
-        //        'hashIpAddress' => true,
-        //        'whitelist' => [
-        //            '192.168.97.5',
-        //        ],
-        'notification' => [
-            EmailNotification::class => [
-                'recipient' => 'test123@test.de',
-            ],
+// Clean configuration using shorthand syntax
+// NewIp Detector with specific configuration for testing
+LoginWarning::newIp([
+    'hashIpAddress' => true,
+    'fetchGeolocation' => false,
+    'whitelist' => [], // No whitelist for testing
+    'notification' => [
+        EmailNotification::class => [
+            'recipient' => 'test123@test.de',
         ],
     ],
-    LongTimeNoSeeDetector::class => [],
-    OutOfOfficeDetector::class => [
-        'workingHours' => [
-            'monday' => [['09:00', '12:00'], ['16:00', '17:00']],
+]);
+
+// LongTimeNoSee Detector with default settings
+LoginWarning::longTimeNoSee([
+    'thresholdDays' => 365,
+    'notification' => [
+        EmailNotification::class => [
+            'recipient' => 'longterm@test.de',
         ],
-        'timezone' => 'Europe/Berlin',
     ],
-];
+]);
+
+// OutOfOffice Detector with specific test configuration
+LoginWarning::outOfOffice([
+    'workingHours' => [
+        'monday' => [['09:00', '12:00'], ['16:00', '17:00']], // Testing lunch break
+    ],
+    'timezone' => 'Europe/Berlin',
+    'holidays' => [],
+    'vacationPeriods' => [],
+    'notification' => [
+        EmailNotification::class => [
+            'recipient' => 'outofoffice@test.de',
+        ],
+    ],
+]);
