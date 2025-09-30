@@ -13,7 +13,7 @@
 
 </div>
 
-This extension extends the TYPO3 backend login [warning_mode](https://docs.typo3.org/m/typo3/reference-coreapi/main/en-us/Security/GuidelinesIntegrators/GlobalTypo3Options.html#security-global-typo3-options-warning-mode) functionality with several improvements:
+This extension extends the TYPO3 backend login [warning_mode](https://docs.typo3.org/m/typo3/reference-coreapi/main/en-us/Security/GuidelinesIntegrators/GlobalTypo3Options.html#security-global-typo3-options-warning-mode) functionality to inform about suspicious logins with several features:
 
 - [**New IP**](#newipdetector) based warning to detect logins from new IP addresses
 - [**Long Time No See**](#longtimenoseedetector) notification for infrequent users
