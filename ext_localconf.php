@@ -62,6 +62,7 @@ $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['_detector'] = [
 $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['_notification'] = [
     EmailNotification::class => [
         'recipient' => '',
+        'notifyUser' => false,
     ],
 ];
 
@@ -75,6 +76,7 @@ LoginWarning::newIp([
     'notification' => [
         EmailNotification::class => [
             'recipient' => 'admin-alerts@example.com',
+            'notifyUser' => true,
         ],
     ],
 ]);

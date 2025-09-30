@@ -74,6 +74,7 @@ LoginWarning::newIp([
     'notification' => [
         EmailNotification::class => [
             'recipient' => 'security@example.com',
+            'notifyUser' => true, // Also send notification to the logged-in user
         ],
     ],
 ]);
@@ -125,6 +126,7 @@ LoginWarning::newIp([
     'notification' => [ // Override default notification configuration
         EmailNotification::class => [
             'recipient' => 'security@example.com',
+            'notifyUser' => false, // Don't notify the user (default)
         ],
     ],
 ]);
@@ -145,6 +147,7 @@ LoginWarning::longTimeNoSee([
     'notification' => [ // Override default notification configuration
         EmailNotification::class => [
             'recipient' => 'security@example.com',
+            'notifyUser' => false, // Don't notify the user (default)
         ],
     ],
 ]);
@@ -179,6 +182,7 @@ LoginWarning::outOfOffice([
     'notification' => [ // Override default notification configuration
         EmailNotification::class => [
             'recipient' => 'security@example.com',
+            'notifyUser' => false, // Don't notify the user (default)
         ],
     ],
 ]);
@@ -196,6 +200,20 @@ The following notification methods are available:
 #### [EmailNotification](Classes/Notification/EmailNotification.php)
 
 Sends a warning email to a defined recipient. If no recipient is defined, the email will be sent to the address defined in `$GLOBALS['TYPO3_CONF_VARS']['BE']['warning_email_addr']`.
+
+**Configuration options:**
+- **`recipient`** (string): Email address(es) of the notification recipients (comma-separated)
+- **`notifyUser`** (boolean): When set to `true`, the logged-in user will also receive a notification email (requires user to have a valid email address). Default: `false`
+
+```php
+// Example: Notify both admin and the logged-in user
+'notification' => [
+    EmailNotification::class => [
+        'recipient' => 'admin@example.com',
+        'notifyUser' => true, // User gets notified about suspicious activity on their account
+    ],
+],
+```
 
 ![email.jpg](Documentation/Images/email.jpg)
 

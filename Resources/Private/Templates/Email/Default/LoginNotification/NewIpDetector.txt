@@ -11,5 +11,8 @@
 <f:section name="Subject">{prefix} Login at "{typo3.sitename}" from new IP address</f:section>
 <f:section name="Title">{headline}</f:section>
 <f:section name="Main">{introduction}
-The user "{user.username}" logged in from a new IP address "{normalizedParams.remoteAddress}"{locationData} at the site "{typo3.sitename}".
+<f:if condition="{isUserNotification}">
+<f:then>You logged in from a new IP address "{normalizedParams.remoteAddress}"{locationInfo} at the site "{typo3.sitename}".</f:then>
+<f:else>The user "{user.username}" logged in from a new IP address "{normalizedParams.remoteAddress}"{locationInfo} at the site "{typo3.sitename}".</f:else>
+</f:if>
 </f:section>

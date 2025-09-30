@@ -37,6 +37,7 @@ LoginWarning::newIp([
     'notification' => [
         EmailNotification::class => [
             'recipient' => 'test123@test.de',
+            'notifyUser' => false,
         ],
     ],
 ]);
@@ -47,6 +48,7 @@ LoginWarning::longTimeNoSee([
     'notification' => [
         EmailNotification::class => [
             'recipient' => 'longterm@test.de',
+            'notifyUser' => false,
         ],
     ],
 ]);
@@ -62,6 +64,7 @@ LoginWarning::outOfOffice([
     'notification' => [
         EmailNotification::class => [
             'recipient' => 'outofoffice@test.de',
+            'notifyUser' => true,
         ],
     ],
 ]);
