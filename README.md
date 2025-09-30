@@ -61,6 +61,8 @@ LoginWarning::newIp();
 LoginWarning::longTimeNoSee();
 LoginWarning::outOfOffice();
 
+//////////////////////////////
+
 // Extended example configuration with shorthand syntax
 LoginWarning::newIp([
     'hashIpAddress' => false,
@@ -105,6 +107,8 @@ The following detectors are available:
 
 Detects logins from new IP addresses and triggers a warning email. 
 
+> The user "admin" logged in from a new IP address 192.168.97.5 at the site "EXT:typo3-login-warning Dev Environment".
+
 The IP address will be stored and can be hashed for privacy reasons. You can also define a whitelist of IP addresses that will not trigger a warning. An ip geolocation lookup can be enabled to add more information to the notification email.
 
 ```php
@@ -130,6 +134,8 @@ LoginWarning::newIp([
 
 Detects logins after a long period of inactivity (default: 365 days).
 
+> The user "admin" logged in again after a long time (643 days) at the site "EXT:typo3-login-warning Dev Environment".
+
 ```php
 // Extended example configuration using shorthand syntax
 LoginWarning::longTimeNoSee([
@@ -147,6 +153,8 @@ LoginWarning::longTimeNoSee([
 #### [OutOfOfficeDetector](Classes/Detector/OutOfOfficeDetector.php)
 
 Detects logins outside defined working hours, holidays, or vacation periods. Supports flexible working hours with multiple time ranges per day (e.g., lunch breaks), timezone handling, and comprehensive out-of-office period configuration.
+
+> The user "admin" logged in outside office hours at the site "EXT:typo3-login-warning Dev Environment".
 
 ```php
 // Extended example configuration using shorthand syntax
