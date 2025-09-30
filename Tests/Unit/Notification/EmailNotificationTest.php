@@ -212,6 +212,9 @@ final class EmailNotificationTest extends TestCase
         $this->subject->notify($user, $this->request, 'TestTrigger', $configuration);
     }
 
+    /**
+     * @param array<string, mixed> $userData
+     */
     private function createMockBackendUser(array $userData, bool $isAdmin = false): BackendUserAuthentication&MockObject
     {
         $user = $this->createMock(BackendUserAuthentication::class);

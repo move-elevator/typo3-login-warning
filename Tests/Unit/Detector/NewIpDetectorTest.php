@@ -247,6 +247,9 @@ final class NewIpDetectorTest extends TestCase
         self::assertNull($subject->getLocationData());
     }
 
+    /**
+     * @param array<string, mixed> $userData
+     */
     private function createMockUser(array $userData): BackendUserAuthentication&MockObject
     {
         $user = $this->createMock(BackendUserAuthentication::class);

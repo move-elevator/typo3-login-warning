@@ -32,5 +32,9 @@ use TYPO3\CMS\Core\Authentication\AbstractUserAuthentication;
  */
 interface NotifierInterface
 {
+    /**
+     * @param array<string, mixed> $configuration
+     * @param array<string, mixed> $additionalValues
+     */
     public function notify(AbstractUserAuthentication $user, ServerRequestInterface $request, string $triggerClass, array $configuration = [], array $additionalValues = []): void;
 }

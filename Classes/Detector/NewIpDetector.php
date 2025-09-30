@@ -35,6 +35,9 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  */
 class NewIpDetector extends AbstractDetector
 {
+    /**
+     * @var array<string, mixed>|null
+     */
     private ?array $locationData = null;
 
     public function __construct(
@@ -43,6 +46,7 @@ class NewIpDetector extends AbstractDetector
     ) {}
 
     /**
+     * @param array<string, mixed> $configuration
      * @throws Exception
      */
     public function detect(AbstractUserAuthentication $user, array $configuration = []): bool
@@ -87,11 +91,17 @@ class NewIpDetector extends AbstractDetector
         return $ipAddress;
     }
 
+    /**
+     * @return array<string, mixed>|null
+     */
     public function getLocationData(): ?array
     {
         return $this->locationData;
     }
 
+    /**
+     * @param array<string, mixed> $configuration
+     */
     private function shouldFetchGeolocation(array $configuration, string $rawIp): bool
     {
         if (($configuration['fetchGeolocation'] ?? false) !== true || $this->geolocationService === null) {

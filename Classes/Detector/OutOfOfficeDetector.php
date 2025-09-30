@@ -33,9 +33,13 @@ use TYPO3\CMS\Core\Authentication\AbstractUserAuthentication;
  */
 class OutOfOfficeDetector extends AbstractDetector
 {
+    /**
+     * @var array<string, mixed>|null
+     */
     private ?array $violationDetails = null;
 
     /**
+     * @param array<string, mixed> $configuration
      * @throws \Exception
      */
     public function detect(AbstractUserAuthentication $user, array $configuration = []): bool
@@ -88,11 +92,17 @@ class OutOfOfficeDetector extends AbstractDetector
         return false;
     }
 
+    /**
+     * @return array<string, mixed>|null
+     */
     public function getViolationDetails(): ?array
     {
         return $this->violationDetails;
     }
 
+    /**
+     * @param array<string, mixed> $workingHours
+     */
     private function isWithinWorkingHours(\DateTime $time, array $workingHours): bool
     {
         $dayOfWeek = strtolower($time->format('l'));
@@ -125,6 +135,9 @@ class OutOfOfficeDetector extends AbstractDetector
         return $time >= $start && $time <= $end;
     }
 
+    /**
+     * @param array<string, mixed> $configuration
+     */
     private function isHoliday(\DateTime $time, array $configuration): bool
     {
         $date = $time->format('Y-m-d');
@@ -135,6 +148,9 @@ class OutOfOfficeDetector extends AbstractDetector
         return in_array($date, $holidays, true);
     }
 
+    /**
+     * @param array<string, mixed> $configuration
+     */
     private function isVacationPeriod(\DateTime $time, array $configuration): bool
     {
         $date = $time->format('Y-m-d');

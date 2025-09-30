@@ -34,6 +34,9 @@ use MoveElevator\Typo3LoginWarning\Detector\OutOfOfficeDetector;
  */
 class LoginWarning
 {
+    /**
+     * @param array<string, mixed> $configuration
+     */
     public static function newIp(array $configuration = []): void
     {
         $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['register'][] = [
@@ -42,6 +45,9 @@ class LoginWarning
         ];
     }
 
+    /**
+     * @param array<string, mixed> $configuration
+     */
     public static function longTimeNoSee(array $configuration = []): void
     {
         $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['register'][] = [
@@ -50,6 +56,9 @@ class LoginWarning
         ];
     }
 
+    /**
+     * @param array<string, mixed> $configuration
+     */
     public static function outOfOffice(array $configuration = []): void
     {
         $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['register'][] = [

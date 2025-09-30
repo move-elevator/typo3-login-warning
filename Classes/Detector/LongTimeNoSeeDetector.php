@@ -44,6 +44,7 @@ class LongTimeNoSeeDetector extends AbstractDetector
     ) {}
 
     /**
+     * @param array<string, mixed> $configuration
      * @throws Exception
      */
     public function detect(AbstractUserAuthentication $user, array $configuration = []): bool
