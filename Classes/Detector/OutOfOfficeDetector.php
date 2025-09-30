@@ -31,7 +31,7 @@ use TYPO3\CMS\Core\Authentication\AbstractUserAuthentication;
  * @author Konrad Michalik <hej@konradmichalik.dev>
  * @license GPL-2.0
  */
-class OutOfOfficeDetector implements DetectorInterface
+class OutOfOfficeDetector extends AbstractDetector
 {
     private ?array $violationDetails = null;
 
@@ -40,6 +40,11 @@ class OutOfOfficeDetector implements DetectorInterface
      */
     public function detect(AbstractUserAuthentication $user, array $configuration = []): bool
     {
+        // Check user role filtering
+        if (!$this->shouldDetectForUser($user, $configuration)) {
+            return false;
+        }
+
         $timezone = $configuration['timezone'] ?? 'UTC';
         $currentTime = new \DateTime('now', new \DateTimeZone($timezone));
 
@@ -148,4 +153,5 @@ class OutOfOfficeDetector implements DetectorInterface
 
         return false;
     }
+
 }
