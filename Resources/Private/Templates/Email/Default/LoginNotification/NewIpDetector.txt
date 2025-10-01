@@ -6,7 +6,19 @@
 <f:if condition="{locationData} && {locationData.city} && {locationData.country}"><f:then>({locationData.city}, {locationData.country})</f:then></f:if></f:spaceless>
 </f:variable>
 <f:if condition="{isUserNotification}">
-<f:then>You logged in from a new IP address "{normalizedParams.remoteAddress}"{locationInfo} at the site "{typo3.sitename}".</f:then>
-<f:else>The user "{user.username}" logged in from a new IP address "{normalizedParams.remoteAddress}"{locationInfo} at the site "{typo3.sitename}".</f:else>
+<f:then>You logged in from a new IP address "{normalizedParams.remoteAddress}"{locationInfo} at the site "{typo3.sitename}".
+
+---
+
+Was this you?
+If you recognize this login, you can safely ignore this email. Your account remains secure.
+If you did not perform this login, please contact your system administrator immediately and change your password.</f:then>
+<f:else>The user "{user.username}" logged in from a new IP address "{normalizedParams.remoteAddress}"{locationInfo} at the site "{typo3.sitename}".
+
+---
+
+Security Notice:
+This is an automated security notification. If this login was authorized, no action is required.
+If this activity appears suspicious, please investigate the user account immediately.</f:else>
 </f:if>
 </f:section>

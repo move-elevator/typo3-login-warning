@@ -5,10 +5,26 @@
     <h4>{introduction}</h4>
     <f:if condition="{isUserNotification}">
         <f:then>
-            <p>You logged in again after a long time ({daysSinceLastLogin} days) at the site "{typo3.sitename}". Welcome back!</p>
+            <p>You logged in again <strong>after a long time</strong> ({daysSinceLastLogin} days) at the site "{typo3.sitename}". Welcome back!</p>
+
+            <hr style="margin: 20px 0; border: 0; border-top: 1px solid #ddd;" />
+
+            <p style="font-size: 12px; color: #666;">
+                <strong>Was this you?</strong><br />
+                If you recognize this login, you can safely ignore this email. Your account remains secure.<br />
+                If you did not perform this login, please contact your system administrator immediately and change your password.
+            </p>
         </f:then>
         <f:else>
-            <p>The user <em>"{user.username}"</em> logged in again after a long time ({daysSinceLastLogin} days) at the site "{typo3.sitename}".</p>
+            <p>The user <em>"{user.username}"</em> logged in again <strong>after a long time</strong> ({daysSinceLastLogin} days) at the site "{typo3.sitename}".</p>
+
+            <hr style="margin: 20px 0; border: 0; border-top: 1px solid #ddd;" />
+
+            <p style="font-size: 12px; color: #666;">
+                <strong>Security Notice:</strong><br />
+                This is an automated security notification. If this login was authorized, no action is required.<br />
+                Consider reviewing the account activity, especially if the user was inactive for an extended period.
+            </p>
         </f:else>
     </f:if>
 </f:section>
