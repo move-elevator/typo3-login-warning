@@ -48,6 +48,16 @@ composer require move-elevator/typo3-login-warning
 
 Download the zip file from [TYPO3 extension repository (TER)](https://extensions.typo3.org/extension/typo3_login_warning).
 
+### Setup
+
+Set up the extension after the installation:
+
+``` bash
+vendor/bin/typo3 extension:setup --extension=typo3_login_warning
+```
+
+By default, the [**New IP**](#newipdetector) and [**Long Time No See**](#longtimenoseedetector) detectors are enabled.
+
 ## 🧰 Configuration
 
 Configure the extension through the TYPO3 backend:
@@ -83,6 +93,10 @@ The IP address will be stored and can be hashed for privacy reasons. You can als
 | **IP Whitelist** | Comma-separated list of whitelisted IPs/networks (supports CIDR notation like `192.168.1.0/24`) | `127.0.0.1` |
 | **Only Admins** | Only detect for admin users | `false`     |
 | **Only System Maintainers** | Only detect for system maintainers | `false`     |
+
+##### IP Geolocation
+
+If `Fetch Geolocation` is enabled, the extension will use the [ip-api.com](https://ip-api.com/) service to fetch geolocation information for the IP address. Only public IP addresses will be looked up to respect privacy.
 
 #### [LongTimeNoSeeDetector](Classes/Detector/LongTimeNoSeeDetector.php)
 
@@ -136,8 +150,8 @@ The following notification methods are available:
 
 Sends a warning email to defined recipients. If no recipient is defined, the email will be sent to the address defined in `$GLOBALS['TYPO3_CONF_VARS']['BE']['warning_email_addr']`.
 
-**Configuration via Extension Configuration:**
-- **Notification Recipients**: Email address(es) of the notification recipients (comma-separated)
+**Configuration Options:**
+- **Email Recipients**: Email address(es) of the notification recipients (comma-separated)
 - **Notify User**: When enabled, the logged-in user will also receive a notification email (requires user to have a valid email address)
 
 ![email.jpg](Documentation/Images/email.jpg)
