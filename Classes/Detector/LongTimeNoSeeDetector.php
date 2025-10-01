@@ -44,6 +44,11 @@ class LongTimeNoSeeDetector extends AbstractDetector
     ) {}
 
     /**
+     * Unfortunately, I was unable to use the existing “lastlogin” field in the backend user. In the AfterUserLoggedInEvent,
+     * the field is already overwritten with the current time, so that the required time span can no longer be accessed.
+     * Unfortunately, I was also unable to find another event or hook to access this information “earlier” during
+     * authentication. For the time being, the only option was to store this information in a separate table.
+     *
      * @param array<string, mixed> $configuration
      * @throws Exception
      */

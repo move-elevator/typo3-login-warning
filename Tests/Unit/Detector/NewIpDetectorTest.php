@@ -247,6 +247,88 @@ final class NewIpDetectorTest extends TestCase
         self::assertNull($subject->getLocationData());
     }
 
+    public function testDetectReturnsFalseForNonAdminWhenOnlyAdminsEnabled(): void
+    {
+        $user = $this->createMockUser(['uid' => 123, 'admin' => false]);
+        $configuration = [
+            'onlyAdmins' => true,
+        ];
+
+        $GLOBALS['_SERVER']['REMOTE_ADDR'] = '1.2.3.4';
+
+        $ipLogRepository = $this->createMock(IpLogRepository::class);
+        $ipLogRepository->expects(self::never())->method('findByUserAndIp');
+
+        $subject = new NewIpDetector($ipLogRepository);
+        $result = $subject->detect($user, $configuration);
+
+        self::assertFalse($result);
+    }
+
+    public function testDetectReturnsTrueForAdminWhenOnlyAdminsEnabled(): void
+    {
+        $user = $this->createMockUser(['uid' => 123, 'admin' => true]);
+        $configuration = [
+            'onlyAdmins' => true,
+        ];
+
+        $GLOBALS['_SERVER']['REMOTE_ADDR'] = '1.2.3.4';
+
+        $ipLogRepository = $this->createMock(IpLogRepository::class);
+        $ipLogRepository->expects(self::once())
+            ->method('findByUserAndIp')
+            ->willReturn(false);
+        $ipLogRepository->expects(self::once())->method('addUserIp');
+
+        $subject = new NewIpDetector($ipLogRepository);
+        $result = $subject->detect($user, $configuration);
+
+        self::assertTrue($result);
+    }
+
+    public function testDetectReturnsFalseForNonSystemMaintainerWhenOnlySystemMaintainersEnabled(): void
+    {
+        $GLOBALS['TYPO3_CONF_VARS']['SYS']['systemMaintainers'] = [2, 3];
+
+        $user = $this->createMockUser(['uid' => 123]);
+        $configuration = [
+            'onlySystemMaintainers' => true,
+        ];
+
+        $GLOBALS['_SERVER']['REMOTE_ADDR'] = '1.2.3.4';
+
+        $ipLogRepository = $this->createMock(IpLogRepository::class);
+        $ipLogRepository->expects(self::never())->method('findByUserAndIp');
+
+        $subject = new NewIpDetector($ipLogRepository);
+        $result = $subject->detect($user, $configuration);
+
+        self::assertFalse($result);
+    }
+
+    public function testDetectReturnsTrueForSystemMaintainerWhenOnlySystemMaintainersEnabled(): void
+    {
+        $GLOBALS['TYPO3_CONF_VARS']['SYS']['systemMaintainers'] = [123, 456];
+
+        $user = $this->createMockUser(['uid' => 123]);
+        $configuration = [
+            'onlySystemMaintainers' => true,
+        ];
+
+        $GLOBALS['_SERVER']['REMOTE_ADDR'] = '1.2.3.4';
+
+        $ipLogRepository = $this->createMock(IpLogRepository::class);
+        $ipLogRepository->expects(self::once())
+            ->method('findByUserAndIp')
+            ->willReturn(false);
+        $ipLogRepository->expects(self::once())->method('addUserIp');
+
+        $subject = new NewIpDetector($ipLogRepository);
+        $result = $subject->detect($user, $configuration);
+
+        self::assertTrue($result);
+    }
+
     /**
      * @param array<string, mixed> $userData
      */
