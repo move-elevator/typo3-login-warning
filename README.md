@@ -94,9 +94,18 @@ The IP address will be stored and can be hashed for privacy reasons. You can als
 | **Only Admins** | Only detect for admin users | `false`     |
 | **Only System Maintainers** | Only detect for system maintainers | `false`     |
 
-##### IP Geolocation
+##### Geolocation
 
 If `Fetch Geolocation` is enabled, the extension will use the [ip-api.com](https://ip-api.com/) service to fetch geolocation information for the IP address. Only public IP addresses will be looked up to respect privacy.
+
+> [!TIP]
+> You can implement your own geolocation service by implementing the `GeolocationServiceInterface` and registering it in the DI container.
+
+```yaml
+services:
+  MoveElevator\Typo3LoginWarning\Service\GeolocationServiceInterface:
+    alias: Vendor\MyExtension\Service\MyCustomGeolocationService
+```
 
 #### [LongTimeNoSeeDetector](Classes/Detector/LongTimeNoSeeDetector.php)
 

@@ -26,7 +26,7 @@ namespace MoveElevator\Typo3LoginWarning\Tests\Unit\Detector;
 use MoveElevator\Typo3LoginWarning\Detector\DetectorInterface;
 use MoveElevator\Typo3LoginWarning\Detector\NewIpDetector;
 use MoveElevator\Typo3LoginWarning\Domain\Repository\IpLogRepository;
-use MoveElevator\Typo3LoginWarning\Service\IpApiGeolocationService;
+use MoveElevator\Typo3LoginWarning\Service\GeolocationServiceInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
@@ -185,7 +185,7 @@ final class NewIpDetectorTest extends TestCase
         $GLOBALS['_SERVER']['REMOTE_ADDR'] = '192.168.1.1';
 
         $ipLogRepository = $this->createMock(IpLogRepository::class);
-        $geolocationService = $this->createMock(IpApiGeolocationService::class);
+        $geolocationService = $this->createMock(GeolocationServiceInterface::class);
 
         $ipLogRepository
             ->expects(self::once())
@@ -225,7 +225,7 @@ final class NewIpDetectorTest extends TestCase
         $GLOBALS['_SERVER']['REMOTE_ADDR'] = '192.168.1.1';
 
         $ipLogRepository = $this->createMock(IpLogRepository::class);
-        $geolocationService = $this->createMock(IpApiGeolocationService::class);
+        $geolocationService = $this->createMock(GeolocationServiceInterface::class);
 
         $ipLogRepository
             ->expects(self::once())
