@@ -50,87 +50,39 @@ Download the zip file from [TYPO3 extension repository (TER)](https://extensions
 
 ## 🧰 Configuration
 
-Add the desired warning detector(s) in your `ext_localconf.php`:
+Configure the extension through the TYPO3 backend:
 
-```php
-use MoveElevator\Typo3LoginWarning\Configuration\LoginWarning;
-use MoveElevator\Typo3LoginWarning\Notification\EmailNotification;
-
-// Simple configuration with default settings using shorthand syntax
-LoginWarning::newIp();
-LoginWarning::longTimeNoSee();
-LoginWarning::outOfOffice();
-
-//////////////////////////////
-
-// Extended example configuration with shorthand syntax
-LoginWarning::newIp([
-    'hashIpAddress' => false,
-    'fetchGeolocation' => false,
-    'onlyAdmins' => true, // Only detect for admin users
-    'whitelist' => [
-        '192.168.97.5',
-    ],
-    'notification' => [
-        EmailNotification::class => [
-            'recipient' => 'security@example.com',
-            'notifyUser' => true, // Also send notification to the logged-in user
-        ],
-    ],
-]);
-
-LoginWarning::longTimeNoSee([
-    'thresholdDays' => 180,
-    'onlySystemMaintainers' => true, // Only detect for system maintainers
-    'notification' => [
-        EmailNotification::class => [
-            'recipient' => 'longterm@example.com',
-        ],
-    ],
-]);
-```
-
-> [!IMPORTANT]
-> The first detector that matches will trigger a notification and no further detectors will be checked. So the order of the detectors is important.
-
-## 💡 Concepts
+1. Go to **Settings** → **Extension Configuration**
+2. Select **typo3_login_warning**
+3. Configure your detectors and notification settings
 
 ### Detectors
 
 Detectors are used to detect certain login events. If a detector matches, a notification will be sent.
 
-> [!TIP]
-> You can implement your own detector by implementing the `MoveElevator\Typo3LoginWarning\Detector\DetectorInterface`.
+> [!IMPORTANT]
+> Only the first matching detector will trigger a notification.
 
-The following detectors are available:
+The following detectors are available (in order of execution):
 
 #### [NewIpDetector](Classes/Detector/NewIpDetector.php)
 
-Detects logins from new IP addresses and triggers a warning email. 
+Detects logins from new IP addresses and triggers a warning email.
 
 > The user "admin" logged in from a new IP address 192.168.97.5 at the site "EXT:typo3-login-warning Dev Environment".
 
-The IP address will be stored and can be hashed for privacy reasons. You can also define a whitelist of IP addresses that will not trigger a warning. An ip geolocation lookup can be enabled to add more information to the notification email.
+The IP address will be stored and can be hashed for privacy reasons. You can also define a whitelist of IP addresses that will not trigger a warning. An IP geolocation lookup can be enabled to add more information to the notification email.
 
-```php
-// Extended example configuration using shorthand syntax
-LoginWarning::newIp([
-    'hashIpAddress' => true, // Hash the IP address for privacy (SHA-256)
-    'fetchGeolocation' => true, // Enable IP geolocation lookup
-    'onlyAdmins' => false, // Detect for all users (default)
-    'onlySystemMaintainers' => false, // Detect for all users (default)
-    'whitelist' => [ // Define a whitelist of IP addresses that will not trigger a warning
-        '127.0.0.1',
-        '192.168.1.0/24',
-    ],
-    'notification' => [ // Override default notification configuration
-        EmailNotification::class => [
-            'recipient' => 'security@example.com',
-            'notifyUser' => false, // Don't notify the user (default)
-        ],
-    ],
-]);
-```
+**Configuration Options:**
+
+| Setting | Description | Default     |
+|---------|-------------|-------------|
+| **Active** | Enable New IP detector | `true`      |
+| **Hash IP Addresses** | Hash IP addresses for privacy (SHA-256) | `true`      |
+| **Fetch Geolocation** | Enable IP geolocation lookup | `true`      |
+| **IP Whitelist** | Comma-separated list of whitelisted IPs/networks (supports CIDR notation like `192.168.1.0/24`) | `127.0.0.1` |
+| **Only Admins** | Only detect for admin users | `false`     |
+| **Only System Maintainers** | Only detect for system maintainers | `false`     |
 
 #### [LongTimeNoSeeDetector](Classes/Detector/LongTimeNoSeeDetector.php)
 
@@ -138,20 +90,14 @@ Detects logins after a long period of inactivity (default: 365 days).
 
 > The user "admin" logged in again after a long time (643 days) at the site "EXT:typo3-login-warning Dev Environment".
 
-```php
-// Extended example configuration using shorthand syntax
-LoginWarning::longTimeNoSee([
-    'thresholdDays' => 180, // Set threshold for inactivity in days, default is 365
-    'onlyAdmins' => false, // Detect for all users (default)
-    'onlySystemMaintainers' => false, // Detect for all users (default)
-    'notification' => [ // Override default notification configuration
-        EmailNotification::class => [
-            'recipient' => 'security@example.com',
-            'notifyUser' => false, // Don't notify the user (default)
-        ],
-    ],
-]);
-```
+**Configuration Options:**
+
+| Setting | Description | Default |
+|---------|-------------|---------|
+| **Active** | Enable Long Time No See detector | `true` |
+| **Threshold Days** | Days of inactivity before triggering | `365` |
+| **Only Admins** | Only detect for admin users | `false` |
+| **Only System Maintainers** | Only detect for system maintainers | `false` |
 
 #### [OutOfOfficeDetector](Classes/Detector/OutOfOfficeDetector.php)
 
@@ -159,61 +105,40 @@ Detects logins outside defined working hours, holidays, or vacation periods. Sup
 
 > The user "admin" logged in outside office hours at the site "EXT:typo3-login-warning Dev Environment".
 
-```php
-// Extended example configuration using shorthand syntax
-LoginWarning::outOfOffice([
-    'workingHours' => [
-        'monday' => [['09:00', '12:00'], ['13:00', '17:00']], // Flexible working hours with breaks
-        'tuesday' => ['09:00', '17:00'],
-        'wednesday' => ['09:00', '17:00'],
-        'thursday' => ['09:00', '17:00'],
-        'friday' => ['09:00', '15:00'],
-    ],
-    'timezone' => 'Europe/Berlin', // Timezone for working hours
-    'holidays' => [ // List of holidays (Y-m-d format)
-        '2025-01-01',
-        '2025-12-25',
-    ],
-    'vacationPeriods' => [ // List of vacation periods (Y-m-d format)
-        ['2025-07-15', '2025-07-30'],
-    ],
-    'onlyAdmins' => false, // Detect for all users (default)
-    'onlySystemMaintainers' => false, // Detect for all users (default)
-    'notification' => [ // Override default notification configuration
-        EmailNotification::class => [
-            'recipient' => 'security@example.com',
-            'notifyUser' => false, // Don't notify the user (default)
-        ],
-    ],
-]);
+**Configuration Options:**
+
+| Setting | Description | Default                        |
+|---------|-------------|--------------------------------|
+| **Active** | Enable Out Of Office detector | `false`                        |
+| **Working Hours** | JSON configuration for working hours (supports multiple time ranges per day for lunch breaks) | Business hours (06-19) Mon-Fri |
+| **Timezone** | Timezone for working hours | `UTC`                          |
+| **Holidays** | Comma-separated list of holidays in Y-m-d format (e.g., `2025-01-01,2025-12-25`) | Empty                          |
+| **Vacation Periods** | Comma-separated vacation periods in start:end format (e.g., `2025-07-15:2025-07-30,2025-12-20:2025-12-31`) | Empty                          |
+| **Only Admins** | Only detect for admin users | `false`                        |
+| **Only System Maintainers** | Only detect for system maintainers | `false`                        |
+
+**Working Hours JSON Example:**
+```json
+{
+  "monday": [["09:00", "12:00"], ["13:00", "17:00"]],
+  "tuesday": ["09:00", "17:00"],
+  "friday": ["09:00", "15:00"]
+}
 ```
 
 ### Notification
 
 Notification methods are used to notify about detected login events.
 
-> [!TIP]
-> You can implement more notification methods by implementing the `MoveElevator\Typo3LoginWarning\Notification\NotificationInterface`.
-
 The following notification methods are available:
 
 #### [EmailNotification](Classes/Notification/EmailNotification.php)
 
-Sends a warning email to a defined recipient. If no recipient is defined, the email will be sent to the address defined in `$GLOBALS['TYPO3_CONF_VARS']['BE']['warning_email_addr']`.
+Sends a warning email to defined recipients. If no recipient is defined, the email will be sent to the address defined in `$GLOBALS['TYPO3_CONF_VARS']['BE']['warning_email_addr']`.
 
-**Configuration options:**
-- **`recipient`** (string): Email address(es) of the notification recipients (comma-separated)
-- **`notifyUser`** (boolean): When set to `true`, the logged-in user will also receive a notification email (requires user to have a valid email address). Default: `false`
-
-```php
-// Example: Notify both admin and the logged-in user
-'notification' => [
-    EmailNotification::class => [
-        'recipient' => 'admin@example.com',
-        'notifyUser' => true, // User gets notified about suspicious activity on their account
-    ],
-],
-```
+**Configuration via Extension Configuration:**
+- **Notification Recipients**: Email address(es) of the notification recipients (comma-separated)
+- **Notify User**: When enabled, the logged-in user will also receive a notification email (requires user to have a valid email address)
 
 ![email.jpg](Documentation/Images/email.jpg)
 

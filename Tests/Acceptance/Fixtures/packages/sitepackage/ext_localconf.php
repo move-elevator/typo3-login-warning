@@ -19,52 +19,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-use MoveElevator\Typo3LoginWarning\Configuration;
-use MoveElevator\Typo3LoginWarning\Configuration\LoginWarning;
-use MoveElevator\Typo3LoginWarning\Notification\EmailNotification;
-
 // For testing purposes we disable the login rate limit
 $GLOBALS['TYPO3_CONF_VARS']['BE']['loginRateLimit'] = 0;
 
 $GLOBALS['TYPO3_CONF_VARS']['BE']['warning_email_addr'] = 'test456@test.de';
-
-// Clean configuration using shorthand syntax
-// NewIp Detector with specific configuration for testing
-LoginWarning::newIp([
-    'hashIpAddress' => true,
-    'fetchGeolocation' => true,
-    'whitelist' => [], // No whitelist for testing
-    'notification' => [
-        EmailNotification::class => [
-            'recipient' => 'test123@test.de',
-            'notifyUser' => false,
-        ],
-    ],
-]);
-
-// LongTimeNoSee Detector with default settings
-LoginWarning::longTimeNoSee([
-    'thresholdDays' => 365,
-    'notification' => [
-        EmailNotification::class => [
-            'recipient' => 'longterm@test.de',
-            'notifyUser' => false,
-        ],
-    ],
-]);
-
-// OutOfOffice Detector with specific test configuration
-LoginWarning::outOfOffice([
-    'workingHours' => [
-        'monday' => [['09:00', '12:00'], ['16:00', '17:00']], // Testing lunch break
-    ],
-    'timezone' => 'Europe/Berlin',
-    'holidays' => [],
-    'vacationPeriods' => [],
-    'notification' => [
-        EmailNotification::class => [
-            'recipient' => 'outofoffice@test.de',
-            'notifyUser' => true,
-        ],
-    ],
-]);
