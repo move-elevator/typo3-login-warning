@@ -326,6 +326,82 @@ final class OutOfOfficeDetectorTest extends TestCase
         self::assertSame('vacation', $violationDetails['type']);
     }
 
+    public function testDetectReturnsFalseForNonAdminWhenOnlyAdminsEnabled(): void
+    {
+        $user = $this->createMockUser(['uid' => 123, 'admin' => false]);
+        $configuration = [
+            'workingHours' => [
+                'monday' => ['09:00', '17:00'],
+            ],
+            'onlyAdmins' => true,
+            'timezone' => 'UTC',
+        ];
+
+        // Saturday - would normally trigger, but user is not admin
+        $subject = new OutOfOfficeDetectorWithMockedTime('2025-01-04 10:00:00'); // Saturday
+        $result = $subject->detect($user, $configuration);
+
+        self::assertFalse($result);
+    }
+
+    public function testDetectReturnsTrueForAdminWhenOnlyAdminsEnabled(): void
+    {
+        $user = $this->createMockUser(['uid' => 123, 'admin' => true]);
+        $configuration = [
+            'workingHours' => [
+                'monday' => ['09:00', '17:00'],
+            ],
+            'onlyAdmins' => true,
+            'timezone' => 'UTC',
+        ];
+
+        // Saturday - should trigger for admin
+        $subject = new OutOfOfficeDetectorWithMockedTime('2025-01-04 10:00:00'); // Saturday
+        $result = $subject->detect($user, $configuration);
+
+        self::assertTrue($result);
+    }
+
+    public function testDetectReturnsFalseForNonSystemMaintainerWhenOnlySystemMaintainersEnabled(): void
+    {
+        $GLOBALS['TYPO3_CONF_VARS']['SYS']['systemMaintainers'] = [2, 3];
+
+        $user = $this->createMockUser(['uid' => 123]);
+        $configuration = [
+            'workingHours' => [
+                'monday' => ['09:00', '17:00'],
+            ],
+            'onlySystemMaintainers' => true,
+            'timezone' => 'UTC',
+        ];
+
+        // Saturday - would normally trigger, but user is not system maintainer
+        $subject = new OutOfOfficeDetectorWithMockedTime('2025-01-04 10:00:00'); // Saturday
+        $result = $subject->detect($user, $configuration);
+
+        self::assertFalse($result);
+    }
+
+    public function testDetectReturnsTrueForSystemMaintainerWhenOnlySystemMaintainersEnabled(): void
+    {
+        $GLOBALS['TYPO3_CONF_VARS']['SYS']['systemMaintainers'] = [123, 456];
+
+        $user = $this->createMockUser(['uid' => 123]);
+        $configuration = [
+            'workingHours' => [
+                'monday' => ['09:00', '17:00'],
+            ],
+            'onlySystemMaintainers' => true,
+            'timezone' => 'UTC',
+        ];
+
+        // Saturday - should trigger for system maintainer
+        $subject = new OutOfOfficeDetectorWithMockedTime('2025-01-04 10:00:00'); // Saturday
+        $result = $subject->detect($user, $configuration);
+
+        self::assertTrue($result);
+    }
+
     /**
      * @param array<string, mixed> $userData
      */
@@ -357,6 +433,11 @@ class OutOfOfficeDetectorWithMockedTime extends OutOfOfficeDetector
      */
     public function detect(\TYPO3\CMS\Core\Authentication\AbstractUserAuthentication $user, array $configuration = []): bool
     {
+        // Check user role filtering
+        if (!$this->shouldDetectForUser($user, $configuration)) {
+            return false;
+        }
+
         $timezone = $configuration['timezone'] ?? $this->defaultTimezone;
         $currentTime = new \DateTime($this->mockedTime, new \DateTimeZone($this->defaultTimezone));
 

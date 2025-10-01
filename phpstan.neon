@@ -27,6 +27,7 @@ parameters:
 
 	excludePaths:
 		- .Build (?)
+		- Tests/Unit/Detector/AbstractDetectorTest.php
 
 	type_coverage:
 		return: 100

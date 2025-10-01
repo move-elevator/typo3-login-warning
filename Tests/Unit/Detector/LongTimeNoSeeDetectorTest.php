@@ -400,6 +400,86 @@ final class LongTimeNoSeeDetectorTest extends TestCase
         self::assertLessThan(740, $days);
     }
 
+    public function testDetectReturnsFalseForNonAdminWhenOnlyAdminsEnabled(): void
+    {
+        $user = $this->createMockUser(['uid' => 123, 'admin' => false]);
+        $configuration = [
+            'onlyAdmins' => true,
+        ];
+
+        $this->userLogRepository->expects(self::never())->method('getLastLoginCheckTimestamp');
+
+        $subject = new LongTimeNoSeeDetector($this->userLogRepository);
+        $result = $subject->detect($user, $configuration);
+
+        self::assertFalse($result);
+    }
+
+    public function testDetectReturnsTrueForAdminWhenOnlyAdminsEnabled(): void
+    {
+        $user = $this->createMockUser(['uid' => 123, 'admin' => true]);
+        $oneYearAgo = time() - (366 * 24 * 60 * 60);
+        $configuration = [
+            'onlyAdmins' => true,
+        ];
+
+        $this->userLogRepository
+            ->expects(self::once())
+            ->method('getLastLoginCheckTimestamp')
+            ->willReturn($oneYearAgo);
+
+        $this->userLogRepository
+            ->expects(self::once())
+            ->method('updateLastLoginCheckTimestamp');
+
+        $subject = new LongTimeNoSeeDetector($this->userLogRepository);
+        $result = $subject->detect($user, $configuration);
+
+        self::assertTrue($result);
+    }
+
+    public function testDetectReturnsFalseForNonSystemMaintainerWhenOnlySystemMaintainersEnabled(): void
+    {
+        $GLOBALS['TYPO3_CONF_VARS']['SYS']['systemMaintainers'] = [2, 3];
+
+        $user = $this->createMockUser(['uid' => 123]);
+        $configuration = [
+            'onlySystemMaintainers' => true,
+        ];
+
+        $this->userLogRepository->expects(self::never())->method('getLastLoginCheckTimestamp');
+
+        $subject = new LongTimeNoSeeDetector($this->userLogRepository);
+        $result = $subject->detect($user, $configuration);
+
+        self::assertFalse($result);
+    }
+
+    public function testDetectReturnsTrueForSystemMaintainerWhenOnlySystemMaintainersEnabled(): void
+    {
+        $GLOBALS['TYPO3_CONF_VARS']['SYS']['systemMaintainers'] = [123, 456];
+
+        $user = $this->createMockUser(['uid' => 123]);
+        $oneYearAgo = time() - (366 * 24 * 60 * 60);
+        $configuration = [
+            'onlySystemMaintainers' => true,
+        ];
+
+        $this->userLogRepository
+            ->expects(self::once())
+            ->method('getLastLoginCheckTimestamp')
+            ->willReturn($oneYearAgo);
+
+        $this->userLogRepository
+            ->expects(self::once())
+            ->method('updateLastLoginCheckTimestamp');
+
+        $subject = new LongTimeNoSeeDetector($this->userLogRepository);
+        $result = $subject->detect($user, $configuration);
+
+        self::assertTrue($result);
+    }
+
     /**
      * @param array<string, mixed> $userData
      */
