@@ -173,11 +173,11 @@ final class DetectorConfigurationBuilder implements LoggerAwareInterface
         // Default working hours if not set
         if (!isset($result['workingHours'])) {
             $result['workingHours'] = [
-                'monday' => ['09:00', '17:00'],
-                'tuesday' => ['09:00', '17:00'],
-                'wednesday' => ['09:00', '17:00'],
-                'thursday' => ['09:00', '17:00'],
-                'friday' => ['09:00', '17:00'],
+                'monday' => ['06:00', '19:00'],
+                'tuesday' => ['06:00', '19:00'],
+                'wednesday' => ['06:00', '19:00'],
+                'thursday' => ['06:00', '19:00'],
+                'friday' => ['06:00', '19:00'],
             ];
         }
 
