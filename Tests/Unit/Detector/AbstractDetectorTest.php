@@ -39,7 +39,7 @@ final class AbstractDetectorTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->subject = new class extends AbstractDetector {
+        $this->subject = new class () extends AbstractDetector {
             /**
              * @param array<string, mixed> $configuration
              */
