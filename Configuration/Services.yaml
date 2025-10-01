@@ -7,6 +7,10 @@ services:
     resource: "../Classes/*"
     exclude: "../Classes/Domain/Model/*"
 
+  # Interface binding for geolocation service
+  MoveElevator\Typo3LoginWarning\Service\GeolocationServiceInterface:
+    alias: MoveElevator\Typo3LoginWarning\Service\IpApiGeolocationService
+
   MoveElevator\Typo3LoginWarning\Notification\EmailNotification:
     public: true
 

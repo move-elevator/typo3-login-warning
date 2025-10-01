@@ -23,7 +23,7 @@ namespace MoveElevator\Typo3LoginWarning\Detector;
 
 use Doctrine\DBAL\Exception;
 use MoveElevator\Typo3LoginWarning\Domain\Repository\IpLogRepository;
-use MoveElevator\Typo3LoginWarning\Service\IpApiGeolocationService;
+use MoveElevator\Typo3LoginWarning\Service\GeolocationServiceInterface;
 use TYPO3\CMS\Core\Authentication\AbstractUserAuthentication;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
@@ -42,7 +42,7 @@ class NewIpDetector extends AbstractDetector
 
     public function __construct(
         private IpLogRepository $ipLogRepository,
-        private ?IpApiGeolocationService $geolocationService = null,
+        private ?GeolocationServiceInterface $geolocationService = null,
     ) {}
 
     /**

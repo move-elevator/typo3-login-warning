@@ -32,7 +32,7 @@ use TYPO3\CMS\Core\Http\RequestFactory;
  * @author Konrad Michalik <hej@konradmichalik.dev>
  * @license GPL-2.0
  */
-class IpApiGeolocationService implements LoggerAwareInterface
+class IpApiGeolocationService implements GeolocationServiceInterface, LoggerAwareInterface
 {
     use LoggerAwareTrait;
 
@@ -43,9 +43,6 @@ class IpApiGeolocationService implements LoggerAwareInterface
         private readonly RequestFactory $requestFactory,
     ) {}
 
-    /**
-     * @return array<string, mixed>|null
-     */
     public function getLocationData(string $ipAddress): ?array
     {
         if ($ipAddress === '' || filter_var($ipAddress, FILTER_VALIDATE_IP) === false) {
@@ -83,17 +80,8 @@ class IpApiGeolocationService implements LoggerAwareInterface
             }
 
             return [
-                'country' => $data['country'] ?? '',
-                'countryCode' => $data['countryCode'] ?? '',
-                'region' => $data['regionName'] ?? '',
-                'regionCode' => $data['region'] ?? '',
                 'city' => $data['city'] ?? '',
-                'timezone' => $data['timezone'] ?? '',
-                'isp' => $data['isp'] ?? '',
-                'org' => $data['org'] ?? '',
-                'as' => $data['as'] ?? '',
-                'lat' => $data['lat'] ?? null,
-                'lon' => $data['lon'] ?? null,
+                'country' => $data['country'] ?? '',
             ];
         } catch (ClientExceptionInterface $e) {
             $this->logger?->warning('Failed to fetch IP geolocation data', [
