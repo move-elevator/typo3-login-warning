@@ -91,20 +91,11 @@ class IpApiGeolocationServiceTest extends TestCase
         $result = $this->subject->getLocationData('8.8.8.8');
 
         $expected = [
-            'country' => 'Germany',
-            'countryCode' => 'DE',
-            'region' => 'North Rhine-Westphalia',
-            'regionCode' => 'NW',
             'city' => 'Düsseldorf',
-            'timezone' => 'Europe/Berlin',
-            'isp' => 'Test ISP',
-            'org' => 'Test Organization',
-            'as' => 'AS12345 Test AS',
-            'lat' => 51.2217,
-            'lon' => 6.7762,
+            'country' => 'Germany',
         ];
 
-        self::assertEquals($expected, $result);
+        self::assertSame($expected, $result);
     }
 
     public function testGetLocationDataWithFailedApiResponse(): void
@@ -198,19 +189,10 @@ class IpApiGeolocationServiceTest extends TestCase
         $result = $this->subject->getLocationData('8.8.8.8');
 
         $expected = [
-            'country' => 'Germany',
-            'countryCode' => '',
-            'region' => '',
-            'regionCode' => '',
             'city' => '',
-            'timezone' => '',
-            'isp' => '',
-            'org' => '',
-            'as' => '',
-            'lat' => null,
-            'lon' => null,
+            'country' => 'Germany',
         ];
 
-        self::assertEquals($expected, $result);
+        self::assertSame($expected, $result);
     }
 }
