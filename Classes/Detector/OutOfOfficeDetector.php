@@ -49,7 +49,7 @@ class OutOfOfficeDetector extends AbstractDetector
             return false;
         }
 
-        $timezone = $configuration['timezone'] ?? 'UTC';
+        $timezone = ($configuration['timezone'] ?? '') !== '' ? $configuration['timezone'] : 'UTC';
         $currentTime = new \DateTime('now', new \DateTimeZone($timezone));
 
         if ($this->isHoliday($currentTime, $configuration)) {

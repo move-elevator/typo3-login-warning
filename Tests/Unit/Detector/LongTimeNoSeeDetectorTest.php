@@ -52,7 +52,7 @@ final class LongTimeNoSeeDetectorTest extends TestCase
         self::assertInstanceOf(DetectorInterface::class, $subject);
     }
 
-    public function testDetectReturnsTrueForFirstTimeLogin(): void
+    public function testDetectReturnsFalseForFirstTimeLogin(): void
     {
         $user = $this->createMockUser(['uid' => 123]);
         $configuration = [];
@@ -71,7 +71,8 @@ final class LongTimeNoSeeDetectorTest extends TestCase
         $subject = new LongTimeNoSeeDetector($this->userLogRepository);
         $result = $subject->detect($user, $configuration);
 
-        self::assertTrue($result);
+        // First time login should NOT trigger (no history to compare against)
+        self::assertFalse($result);
     }
 
     public function testDetectReturnsTrueWhenLastLoginExceedsDefaultThreshold(): void

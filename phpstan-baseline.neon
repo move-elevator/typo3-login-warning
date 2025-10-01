@@ -1,7 +1,2 @@
 parameters:
-	ignoreErrors:
-		-
-			message: '#^Unable to resolve the template type T in call to method static method TYPO3\\CMS\\Core\\Utility\\GeneralUtility\:\:makeInstance\(\)$#'
-			identifier: argument.templateType
-			count: 2
-			path: Classes/Security/LoginNotification.php
+	ignoreErrors: []

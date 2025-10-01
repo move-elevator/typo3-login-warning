@@ -71,7 +71,7 @@ class LongTimeNoSeeDetector extends AbstractDetector
 
         $this->userLogRepository->updateLastLoginCheckTimestamp($userId, $currentTimestamp);
 
-        return $lastLoginCheckTimestamp === null || $lastLoginCheckTimestamp <= $thresholdTimestamp;
+        return $lastLoginCheckTimestamp !== null && $lastLoginCheckTimestamp <= $thresholdTimestamp;
     }
 
     public function getDaysSinceLastLogin(): ?int
