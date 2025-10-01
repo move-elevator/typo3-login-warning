@@ -3,7 +3,19 @@
 <f:section name="Title">{headline}</f:section>
 <f:section name="Main">{introduction}
 <f:if condition="{isUserNotification}">
-<f:then>You logged in again after a long time ({daysSinceLastLogin} days) at the site "{typo3.sitename}". Welcome back!</f:then>
-<f:else>The user "{user.username}" logged in again after a long time ({daysSinceLastLogin} days) at the site "{typo3.sitename}".</f:else>
+<f:then>You logged in again after a long time ({daysSinceLastLogin} days) at the site "{typo3.sitename}". Welcome back!
+
+---
+
+Was this you?
+If you recognize this login, you can safely ignore this email. Your account remains secure.
+If you did not perform this login, please contact your system administrator immediately and change your password.</f:then>
+<f:else>The user "{user.username}" logged in again after a long time ({daysSinceLastLogin} days) at the site "{typo3.sitename}".
+
+---
+
+Security Notice:
+This is an automated security notification. If this login was authorized, no action is required.
+Consider reviewing the account activity, especially if the user was inactive for an extended period.</f:else>
 </f:if>
 </f:section>

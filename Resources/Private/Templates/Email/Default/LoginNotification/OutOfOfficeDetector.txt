@@ -23,4 +23,15 @@ Login time: {violationDetails.dayOfWeek}, {violationDetails.date} at {violationD
 </f:if></f:case>
 </f:switch>
 </f:if>
+
+---
+
+<f:if condition="{isUserNotification}">
+<f:then>Was this you?
+If you recognize this login, you can safely ignore this email. Your account remains secure.
+If you did not perform this login, please contact your system administrator immediately and change your password.</f:then>
+<f:else>Security Notice:
+This is an automated security notification. If this login was authorized, no action is required.
+Out-of-office logins may indicate unauthorized access or account sharing. Please review if necessary.</f:else>
+</f:if>
 </f:section>
