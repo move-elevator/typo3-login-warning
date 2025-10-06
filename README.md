@@ -19,9 +19,6 @@ This extension extends the TYPO3 backend login [warning_mode](https://docs.typo3
 - [**Long Time No See**](#longtimenoseedetector) notification for infrequent users
 - [**Out Of Office**](#outofofficedetector) login detection outside defined working hours, holidays, or vacation periods
 
-> [!WARNING]
-> This package is in early development and may change significantly.
-
 > [!NOTE]
 > Since I was annoyed by the constant login emails from the TYPO3 backend, but the issue of login security is still extremely important, I expanded the standard login notification functions of TYPO3 with some more or less well-known additional features.
 
