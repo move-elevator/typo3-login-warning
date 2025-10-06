@@ -73,7 +73,7 @@ final class LoginNotification implements LoggerAwareInterface
             $currentDetectorConfiguration = $this->configBuilder->build($detectorClass);
 
             if (!$detector->shouldDetectForUser($currentUser, $currentDetectorConfiguration)) {
-                return;
+                continue;
             }
 
             if ($detector->detect($currentUser, $currentDetectorConfiguration)) {
