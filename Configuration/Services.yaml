@@ -14,13 +14,27 @@ services:
   MoveElevator\Typo3LoginWarning\Notification\EmailNotification:
     public: true
 
+  MoveElevator\Typo3LoginWarning\Registry\DetectorRegistry:
+    public: true
+    arguments:
+      $detectors: !tagged_iterator typo3_login_warning.detector
+
   MoveElevator\Typo3LoginWarning\Detector\NewIpDetector:
     public: true
+    tags:
+      - { name: typo3_login_warning.detector, priority: 100 }
 
   MoveElevator\Typo3LoginWarning\Detector\LongTimeNoSeeDetector:
     public: true
+    tags:
+      - { name: typo3_login_warning.detector, priority: 50 }
 
+  MoveElevator\Typo3LoginWarning\Detector\OutOfOfficeDetector:
+    public: true
+    tags:
+      - { name: typo3_login_warning.detector, priority: 10 }
 
+  # Login notification event listener
   MoveElevator\Typo3LoginWarning\Security\LoginNotification:
     tags:
       - name: event.listener
