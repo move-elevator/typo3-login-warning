@@ -168,6 +168,14 @@ Each detector has its own **Notification Receiver** setting that controls who re
 
 ![email.jpg](Documentation/Images/email.jpg)
 
+## 🛠️ Customization
+
+You can override the email templates located in `Resources/Private/Templates/Email/Default/LoginNotification/`.
+
+```php
+$GLOBALS['TYPO3_CONF_VARS']['MAIL']['templateRootPaths'][1000] = 'EXT:my_sitepackage/Resources/Private/Templates/Email/';
+```
+
 ## 🧑‍💻 Contributing
 
 Please have a look at [`CONTRIBUTING.md`](CONTRIBUTING.md).
