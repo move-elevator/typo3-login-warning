@@ -184,7 +184,7 @@ final class EmailNotificationTest extends TestCase
         $user = $this->createMockBackendUser(['uid' => 123, 'email' => 'user@example.com']);
         $configuration = [
             'recipient' => 'admin@example.com',
-            'notifyUser' => true,
+            'notificationReceiver' => 'both',
         ];
 
         // Expect two emails: one for admin, one for user

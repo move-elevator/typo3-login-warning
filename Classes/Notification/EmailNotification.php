@@ -63,31 +63,49 @@ class EmailNotification implements NotifierInterface, LoggerAwareInterface
             $recipients = $GLOBALS['TYPO3_CONF_VARS']['BE']['warning_email_addr'];
         }
 
-        // Build recipients list
+        // Build recipients list based on notificationReceiver setting
+        $notificationReceiver = $configuration['notificationReceiver'] ?? 'recipients';
         $recipientsList = [];
-        if ($recipients !== '' && $recipients !== null) {
-            $recipientsList = explode(',', $recipients);
-        }
+        $userEmail = trim($user->user['email'] ?? '');
 
-        // Add user email if notifyUser is enabled
-        $notifyUser = ($configuration['notifyUser'] ?? false) === true;
-        $userEmail = '';
-        if ($notifyUser && ($user->user['email'] ?? '') !== '') {
-            $userEmail = trim($user->user['email']);
-            $recipientsList[] = $userEmail;
+        switch ($notificationReceiver) {
+            case 'user':
+                // Only send to logged-in user
+                if ($userEmail !== '') {
+                    $recipientsList[] = $userEmail;
+                }
+                break;
+
+            case 'both':
+                // Send to email recipients and logged-in user
+                if ($recipients !== '' && $recipients !== null) {
+                    $recipientsList = explode(',', $recipients);
+                }
+                if ($userEmail !== '') {
+                    $recipientsList[] = $userEmail;
+                }
+                break;
+
+            case 'recipients':
+            default:
+                // Only send to email recipients
+                if ($recipients !== '' && $recipients !== null) {
+                    $recipientsList = explode(',', $recipients);
+                }
+                break;
         }
 
         // Remove duplicates and clean up
         $recipientsList = array_unique(array_filter(array_map('trim', $recipientsList), static fn(string $email): bool => $email !== ''));
 
         if ($recipientsList === []) {
-            $this->logger->info('No recipient configured for login notification email. Please set $GLOBALS[\'TYPO3_CONF_VARS\'][\'BE\'][\'warning_email_addr\'], configure the recipient via Typo3LoginWarning configuration, or enable notifyUser with a valid user email.');
+            $this->logger->info('No recipient configured for login notification email. Please set $GLOBALS[\'TYPO3_CONF_VARS\'][\'BE\'][\'warning_email_addr\'], configure the recipient via Typo3LoginWarning configuration, or use notificationReceiver setting with a valid user email.');
             return;
         }
 
         // Send separate emails for different perspectives
         foreach ($recipientsList as $recipient) {
-            $isUserNotification = $notifyUser === true && $recipient === $userEmail;
+            $isUserNotification = $userEmail !== '' && $recipient === $userEmail;
             $values = [
                 'user' => $user->user,
                 'prefix' => $user->isAdmin() ? '[AdminLoginWarning]' : '[LoginWarning]',

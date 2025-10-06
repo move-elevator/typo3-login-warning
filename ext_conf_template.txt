@@ -16,9 +16,6 @@ outOfOffice.active = 0
 # cat=notification/notification/010; type=string; label=Email Recipients:Email addresses for notifications (comma-separated, default is `warning_email_addr`)
 notificationRecipients =
 
-# cat=notification/notification/020; type=boolean; label=Notify User:Also send notification to the logged-in user
-notifyUser = 0
-
 # cat=newip/newip/020; type=boolean; label=Hash IP Addresses:Hash the persistence of IP addresses for privacy reasons (SHA-256)
 newIp.hashIpAddress = 1
 
@@ -28,20 +25,20 @@ newIp.fetchGeolocation = 1
 # cat=newip/newip/040; type=string; label=IP Whitelist:Comma-separated list of whitelisted IPs/networks (e.g. 127.0.0.1,192.168.1.0/24)
 newIp.whitelist = 127.0.0.1
 
-# cat=newip/newip/050; type=boolean; label=Only Admins:Only detect new IPs for admin users
-newIp.onlyAdmins = 0
+# cat=newip/newip/050; type=options[All Users=all,Only Admins=admins,Only System Maintainers=maintainers]; label=Affected Users:Which users should trigger this detector
+newIp.affectedUsers = all
 
-# cat=newip/newip/060; type=boolean; label=Only System Maintainers:Only detect new IPs for system maintainer users
-newIp.onlySystemMaintainers = 0
+# cat=newip/newip/060; type=options[Email Recipients=recipients,Logged-In User=user,Both=both]; label=Notification Receiver:Who should receive the notification
+newIp.notificationReceiver = recipients
 
 # cat=longtimenosee/longtimenosee/020; type=int+; label=Threshold Days:Days of inactivity before triggering notification
 longTimeNoSee.thresholdDays = 365
 
-# cat=longtimenosee/longtimenosee/030; type=boolean; label=Only Admins:Only detect for admin users
-longTimeNoSee.onlyAdmins = 0
+# cat=longtimenosee/longtimenosee/030; type=options[All Users=all,Only Admins=admins,Only System Maintainers=maintainers]; label=Affected Users:Which users should trigger this detector
+longTimeNoSee.affectedUsers = all
 
-# cat=longtimenosee/longtimenosee/040; type=boolean; label=Only System Maintainers:Only detect for system maintainer users
-longTimeNoSee.onlySystemMaintainers = 0
+# cat=longtimenosee/longtimenosee/040; type=options[Email Recipients=recipients,Logged-In User=user,Both=both]; label=Notification Receiver:Who should receive the notification
+longTimeNoSee.notificationReceiver = recipients
 
 # cat=outofoffice/outofoffice/020; type=string; label=Working Hours (JSON):JSON configuration for working hours (e.g. {"monday":["09:00","17:00"],"tuesday":["09:00","17:00"]})
 outOfOffice.workingHours = {"monday":["06:00","19:00"],"tuesday":["06:00","19:00"],"wednesday":["06:00","19:00"],"thursday":["06:00","19:00"],"friday":["06:00","19:00"]}
@@ -55,8 +52,8 @@ outOfOffice.holidays =
 # cat=outofoffice/outofoffice/050; type=string; label=Vacation Periods:Comma-separated list of vacation periods in Y-m-d format (e.g. 2025-07-15:2025-07-30,2025-12-20:2025-12-31)
 outOfOffice.vacationPeriods =
 
-# cat=outofoffice/outofoffice/060; type=boolean; label=Only Admins:Only detect for admin users
-outOfOffice.onlyAdmins = 0
+# cat=outofoffice/outofoffice/060; type=options[All Users=all,Only Admins=admins,Only System Maintainers=maintainers]; label=Affected Users:Which users should trigger this detector
+outOfOffice.affectedUsers = all
 
-# cat=outofoffice/outofoffice/070; type=boolean; label=Only System Maintainers:Only detect for system maintainer users
-outOfOffice.onlySystemMaintainers = 0
+# cat=outofoffice/outofoffice/070; type=options[Email Recipients=recipients,Logged-In User=user,Both=both]; label=Notification Receiver:Who should receive the notification
+outOfOffice.notificationReceiver = recipients

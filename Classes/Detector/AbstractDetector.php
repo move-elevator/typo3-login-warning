@@ -39,25 +39,12 @@ abstract class AbstractDetector implements DetectorInterface
     protected function shouldDetectForUser(AbstractUserAuthentication $user, array $configuration): bool
     {
         $userArray = $user->user;
+        $affectedUsers = $configuration['affectedUsers'] ?? 'all';
 
-        // Check if detection should only apply to admins
-        if (
-            array_key_exists('onlyAdmins', $configuration) &&
-            $configuration['onlyAdmins'] === true &&
-            !($userArray['admin'] ?? false)
-        ) {
-            return false;
-        }
-
-        // Check if detection should only apply to system maintainers
-        if (
-            array_key_exists('onlySystemMaintainers', $configuration) &&
-            $configuration['onlySystemMaintainers'] === true &&
-            !in_array((int)$userArray['uid'], $GLOBALS['TYPO3_CONF_VARS']['SYS']['systemMaintainers'] ?? [], true)
-        ) {
-            return false;
-        }
-
-        return true;
+        return match ($affectedUsers) {
+            'admins' => (bool)($userArray['admin'] ?? false),
+            'maintainers' => in_array((int)$userArray['uid'], $GLOBALS['TYPO3_CONF_VARS']['SYS']['systemMaintainers'] ?? [], true),
+            default => true, // 'all'
+        };
     }
 }
