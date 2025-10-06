@@ -5,7 +5,7 @@ services:
             - EXTENSION_KEY=typo3_login_warning
             - EXTENSION_NAME=typo3-login-warning
             - PACKAGE_NAME=move-elevator/typo3-login-warning
-            - TYPO3_VERSIONS=13
+            - TYPO3_VERSIONS=12 13
             - SYMLINK_EXCLUSIONS=.* Documentation Documentation-GENERATED-temp var vendor public
 
             # TYPO3 v11 and v12 config

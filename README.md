@@ -29,7 +29,7 @@ This extension extends the TYPO3 backend login [warning_mode](https://docs.typo3
 
 ### Requirements
 
-* TYPO3 >= 13.4
+* TYPO3 >= 12.4
 * PHP 8.2+
 
 ### Composer

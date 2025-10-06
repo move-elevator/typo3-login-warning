@@ -31,7 +31,6 @@ use MoveElevator\Typo3LoginWarning\Detector\OutOfOfficeDetector;
 use MoveElevator\Typo3LoginWarning\Notification\EmailNotification;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
-use TYPO3\CMS\Core\Attribute\AsEventListener;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Authentication\Event\AfterUserLoggedInEvent;
 use TYPO3\CMS\Core\Core\SystemEnvironmentBuilder;
@@ -48,8 +47,7 @@ final class LoginNotification implements LoggerAwareInterface
 {
     use LoggerAwareTrait;
 
-    #[AsEventListener('move-elevator/typo3-login-warning/login-notification')]
-    public function warningAtLogin(AfterUserLoggedInEvent $event): void
+    public function __invoke(AfterUserLoggedInEvent $event): void
     {
         if (!$event->getUser() instanceof BackendUserAuthentication) {
             return;
@@ -60,16 +58,13 @@ final class LoginNotification implements LoggerAwareInterface
         $configBuilder = GeneralUtility::makeInstance(DetectorConfigurationBuilder::class);
         $configBuilder->setLogger($this->logger);
 
-        // Get global notification configuration
         $globalNotificationConfig = $configBuilder->buildNotificationConfig();
 
         foreach ($this->getDetectors() as $detectorClass) {
-            // Check if detector is active
             if (!$configBuilder->isActive($detectorClass)) {
                 continue;
             }
 
-            // Build detector configuration from extension config
             $currentDetectorConfiguration = $configBuilder->build($detectorClass);
 
             $detector = GeneralUtility::makeInstance($detectorClass);
@@ -104,6 +99,7 @@ final class LoginNotification implements LoggerAwareInterface
     ): void {
         $notifier = GeneralUtility::makeInstance(EmailNotification::class);
 
+        // ToDo: Consider more generic way to pass additional data from detectors to notifiers
         $additionalData = [];
         if ($detector instanceof NewIpDetector) {
             $additionalData['locationData'] = $detector->getLocationData();
