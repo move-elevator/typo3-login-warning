@@ -40,7 +40,7 @@ class OutOfOfficeDetector extends AbstractDetector
     public function detect(AbstractUserAuthentication $user, array $configuration = []): bool
     {
         $timezone = ($configuration['timezone'] ?? '') !== '' ? $configuration['timezone'] : 'UTC';
-        $currentTime = new \DateTime('now', new \DateTimeZone($timezone));
+        $currentTime = $this->getCurrentTime($timezone);
 
         if ($this->isHoliday($currentTime, $configuration)) {
             $this->additionalData['violationDetails'] = [
@@ -150,6 +150,16 @@ class OutOfOfficeDetector extends AbstractDetector
         }
 
         return false;
+    }
+
+    /**
+     * Get current time - can be overridden in tests.
+     *
+     * @throws \Exception
+     */
+    protected function getCurrentTime(string $timezone): \DateTime
+    {
+        return new \DateTime('now', new \DateTimeZone($timezone));
     }
 
 }

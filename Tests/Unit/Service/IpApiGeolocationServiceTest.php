@@ -26,6 +26,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
+use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use TYPO3\CMS\Core\Http\RequestFactory;
 
@@ -194,5 +195,149 @@ class IpApiGeolocationServiceTest extends TestCase
         ];
 
         self::assertSame($expected, $result);
+    }
+
+    public function testGetLocationDataLogsWarningOnClientException(): void
+    {
+        $logger = $this->createMock(LoggerInterface::class);
+        $this->subject->setLogger($logger);
+
+        $exception = new class ('Network error') extends \Exception implements ClientExceptionInterface {};
+
+        $this->requestFactory
+            ->method('request')
+            ->willThrowException($exception);
+
+        $logger->expects(self::once())
+            ->method('warning')
+            ->with(
+                'Failed to fetch IP geolocation data',
+                self::callback(function (array $context): bool {
+                    return $context['exception'] === 'Network error'
+                        && $context['ipAddress'] === '8.8.8.8';
+                })
+            );
+
+        $result = $this->subject->getLocationData('8.8.8.8');
+
+        self::assertNull($result);
+    }
+
+    public function testGetLocationDataLogsWarningOnJsonException(): void
+    {
+        $logger = $this->createMock(LoggerInterface::class);
+        $this->subject->setLogger($logger);
+
+        $stream = $this->createMock(StreamInterface::class);
+        $stream->method('getContents')->willThrowException(new \JsonException('Invalid JSON'));
+
+        $response = $this->createMock(ResponseInterface::class);
+        $response->method('getStatusCode')->willReturn(200);
+        $response->method('getBody')->willReturn($stream);
+
+        $this->requestFactory
+            ->method('request')
+            ->willReturn($response);
+
+        $logger->expects(self::once())
+            ->method('warning')
+            ->with(
+                'Failed to decode IP geolocation response',
+                self::callback(function (array $context): bool {
+                    return $context['exception'] === 'Invalid JSON'
+                        && $context['ipAddress'] === '8.8.8.8';
+                })
+            );
+
+        $result = $this->subject->getLocationData('8.8.8.8');
+
+        self::assertNull($result);
+    }
+
+    public function testGetLocationDataLogsErrorOnUnexpectedException(): void
+    {
+        $logger = $this->createMock(LoggerInterface::class);
+        $this->subject->setLogger($logger);
+
+        $this->requestFactory
+            ->method('request')
+            ->willThrowException(new \RuntimeException('Unexpected error'));
+
+        $logger->expects(self::once())
+            ->method('error')
+            ->with(
+                'Unexpected error during IP geolocation lookup',
+                self::callback(function (array $context): bool {
+                    return $context['exception'] === 'Unexpected error'
+                        && $context['ipAddress'] === '8.8.8.8';
+                })
+            );
+
+        $result = $this->subject->getLocationData('8.8.8.8');
+
+        self::assertNull($result);
+    }
+
+    public function testGetLocationDataLogsWarningOnNon200Status(): void
+    {
+        $logger = $this->createMock(LoggerInterface::class);
+        $this->subject->setLogger($logger);
+
+        $response = $this->createMock(ResponseInterface::class);
+        $response->method('getStatusCode')->willReturn(429);
+
+        $this->requestFactory
+            ->method('request')
+            ->willReturn($response);
+
+        $logger->expects(self::once())
+            ->method('warning')
+            ->with(
+                'IP geolocation API returned non-200 status',
+                [
+                    'statusCode' => 429,
+                    'ipAddress' => '8.8.8.8',
+                ]
+            );
+
+        $result = $this->subject->getLocationData('8.8.8.8');
+
+        self::assertNull($result);
+    }
+
+    public function testGetLocationDataLogsInfoOnUnsuccessfulResponse(): void
+    {
+        $logger = $this->createMock(LoggerInterface::class);
+        $this->subject->setLogger($logger);
+
+        $responseData = [
+            'status' => 'fail',
+            'message' => 'private range',
+        ];
+
+        $stream = $this->createMock(StreamInterface::class);
+        $stream->method('getContents')->willReturn(json_encode($responseData));
+
+        $response = $this->createMock(ResponseInterface::class);
+        $response->method('getStatusCode')->willReturn(200);
+        $response->method('getBody')->willReturn($stream);
+
+        $this->requestFactory
+            ->method('request')
+            ->willReturn($response);
+
+        $logger->expects(self::once())
+            ->method('info')
+            ->with(
+                'IP geolocation API returned unsuccessful response',
+                [
+                    'response' => $responseData,
+                    'ipAddress' => '192.168.1.1',
+                ]
+            );
+
+        $result = $this->subject->getLocationData('192.168.1.1');
+
+        self::assertNull($result);
     }
 }

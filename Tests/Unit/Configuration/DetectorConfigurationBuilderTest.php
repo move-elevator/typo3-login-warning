@@ -28,7 +28,10 @@ use MoveElevator\Typo3LoginWarning\Configuration\DetectorConfigurationBuilder;
 use MoveElevator\Typo3LoginWarning\Detector\LongTimeNoSeeDetector;
 use MoveElevator\Typo3LoginWarning\Detector\NewIpDetector;
 use MoveElevator\Typo3LoginWarning\Detector\OutOfOfficeDetector;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
+use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
 
 /**
  * DetectorConfigurationBuilderTest.
@@ -38,11 +41,13 @@ use PHPUnit\Framework\TestCase;
  */
 final class DetectorConfigurationBuilderTest extends TestCase
 {
+    private ExtensionConfiguration&MockObject $extensionConfiguration;
     private DetectorConfigurationBuilder $subject;
 
     protected function setUp(): void
     {
-        $this->subject = new DetectorConfigurationBuilder();
+        $this->extensionConfiguration = $this->createMock(ExtensionConfiguration::class);
+        $this->subject = new DetectorConfigurationBuilder($this->extensionConfiguration);
         $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS'][Configuration::EXT_KEY] = [];
     }
 
@@ -53,34 +58,63 @@ final class DetectorConfigurationBuilderTest extends TestCase
 
     public function testIsActiveReturnsTrueWhenDetectorIsActive(): void
     {
-        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS'][Configuration::EXT_KEY] = [
-            'newIp' => ['active' => true],
-        ];
+        $this->extensionConfiguration
+            ->method('get')
+            ->with(Configuration::EXT_KEY)
+            ->willReturn(['newIp' => ['active' => true]]);
 
         self::assertTrue($this->subject->isActive(NewIpDetector::class));
     }
 
     public function testIsActiveReturnsFalseWhenDetectorIsInactive(): void
     {
-        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS'][Configuration::EXT_KEY] = [
-            'newIp' => ['active' => false],
-        ];
+        $this->extensionConfiguration
+            ->method('get')
+            ->with(Configuration::EXT_KEY)
+            ->willReturn(['newIp' => ['active' => false]]);
 
         self::assertFalse($this->subject->isActive(NewIpDetector::class));
     }
 
     public function testIsActiveReturnsFalseWhenDetectorConfigMissing(): void
     {
-        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS'][Configuration::EXT_KEY] = [];
+        $this->extensionConfiguration
+            ->method('get')
+            ->with(Configuration::EXT_KEY)
+            ->willReturn([]);
 
         self::assertFalse($this->subject->isActive(NewIpDetector::class));
     }
 
+    public function testGetExtensionConfigurationHandlesException(): void
+    {
+        $logger = $this->createMock(LoggerInterface::class);
+        $this->subject->setLogger($logger);
+
+        $this->extensionConfiguration
+            ->expects(self::once())
+            ->method('get')
+            ->with(Configuration::EXT_KEY)
+            ->willThrowException(new \Exception('Configuration not found'));
+
+        $logger->expects(self::once())
+            ->method('warning')
+            ->with(
+                'Could not load extension configuration: {message}',
+                ['message' => 'Configuration not found']
+            );
+
+        $result = $this->subject->getExtensionConfiguration();
+
+        self::assertSame([], $result);
+    }
+
     public function testBuildNewIpConfigWithDefaults(): void
     {
-        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS'][Configuration::EXT_KEY] = [
-            'newIp' => ['active' => true],
-        ];
+        $this->extensionConfiguration
+            ->method('get')
+            ->with(Configuration::EXT_KEY)
+            ->willReturn(['newIp' => ['active' => true]]);
 
         $result = $this->subject->build(NewIpDetector::class);
 
@@ -95,16 +129,19 @@ final class DetectorConfigurationBuilderTest extends TestCase
 
     public function testBuildNewIpConfigWithCustomValues(): void
     {
-        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS'][Configuration::EXT_KEY] = [
-            'newIp' => [
-                'active' => true,
-                'hashIpAddress' => false,
-                'fetchGeolocation' => false,
-                'affectedUsers' => 'admins',
-                'notificationReceiver' => 'both',
-                'whitelist' => '192.168.1.1, 10.0.0.1',
-            ],
-        ];
+        $this->extensionConfiguration
+            ->method('get')
+            ->with(Configuration::EXT_KEY)
+            ->willReturn([
+                'newIp' => [
+                    'active' => true,
+                    'hashIpAddress' => false,
+                    'fetchGeolocation' => false,
+                    'affectedUsers' => 'admins',
+                    'notificationReceiver' => 'both',
+                    'whitelist' => '192.168.1.1, 10.0.0.1',
+                ],
+            ]);
 
         $result = $this->subject->build(NewIpDetector::class);
 
@@ -119,9 +156,10 @@ final class DetectorConfigurationBuilderTest extends TestCase
 
     public function testBuildLongTimeNoSeeConfigWithDefaults(): void
     {
-        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS'][Configuration::EXT_KEY] = [
-            'longTimeNoSee' => ['active' => true],
-        ];
+        $this->extensionConfiguration
+            ->method('get')
+            ->with(Configuration::EXT_KEY)
+            ->willReturn(['longTimeNoSee' => ['active' => true]]);
 
         $result = $this->subject->build(LongTimeNoSeeDetector::class);
 
@@ -134,14 +172,17 @@ final class DetectorConfigurationBuilderTest extends TestCase
 
     public function testBuildLongTimeNoSeeConfigWithCustomValues(): void
     {
-        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS'][Configuration::EXT_KEY] = [
-            'longTimeNoSee' => [
-                'active' => true,
-                'thresholdDays' => 180,
-                'affectedUsers' => 'maintainers',
-                'notificationReceiver' => 'user',
-            ],
-        ];
+        $this->extensionConfiguration
+            ->method('get')
+            ->with(Configuration::EXT_KEY)
+            ->willReturn([
+                'longTimeNoSee' => [
+                    'active' => true,
+                    'thresholdDays' => 180,
+                    'affectedUsers' => 'maintainers',
+                    'notificationReceiver' => 'user',
+                ],
+            ]);
 
         $result = $this->subject->build(LongTimeNoSeeDetector::class);
 
@@ -154,9 +195,11 @@ final class DetectorConfigurationBuilderTest extends TestCase
 
     public function testBuildOutOfOfficeConfigWithDefaults(): void
     {
-        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS'][Configuration::EXT_KEY] = [
-            'outOfOffice' => ['active' => true],
-        ];
+        $this->extensionConfiguration
+            ->method('get')
+            ->with(Configuration::EXT_KEY)
+            ->willReturn(['outOfOffice' => ['active' => true]]);
+
         $GLOBALS['TYPO3_CONF_VARS']['SYS']['phpTimeZone'] = 'Europe/Berlin';
 
         $result = $this->subject->build(OutOfOfficeDetector::class);
@@ -177,13 +220,16 @@ final class DetectorConfigurationBuilderTest extends TestCase
 
     public function testBuildOutOfOfficeConfigWithCustomWorkingHours(): void
     {
-        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS'][Configuration::EXT_KEY] = [
-            'outOfOffice' => [
-                'active' => true,
-                'workingHours' => '{"monday":["09:00","17:00"],"friday":["09:00","15:00"]}',
-                'timezone' => 'America/New_York',
-            ],
-        ];
+        $this->extensionConfiguration
+            ->method('get')
+            ->with(Configuration::EXT_KEY)
+            ->willReturn([
+                'outOfOffice' => [
+                    'active' => true,
+                    'workingHours' => '{"monday":["09:00","17:00"],"friday":["09:00","15:00"]}',
+                    'timezone' => 'America/New_York',
+                ],
+            ]);
 
         $result = $this->subject->build(OutOfOfficeDetector::class);
 
@@ -196,13 +242,16 @@ final class DetectorConfigurationBuilderTest extends TestCase
 
     public function testBuildOutOfOfficeConfigWithHolidaysAndVacations(): void
     {
-        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS'][Configuration::EXT_KEY] = [
-            'outOfOffice' => [
-                'active' => true,
-                'holidays' => '2025-01-01, 2025-12-25',
-                'vacationPeriods' => '2025-07-15:2025-07-30, 2025-12-20:2025-12-31',
-            ],
-        ];
+        $this->extensionConfiguration
+            ->method('get')
+            ->with(Configuration::EXT_KEY)
+            ->willReturn([
+                'outOfOffice' => [
+                    'active' => true,
+                    'holidays' => '2025-01-01, 2025-12-25',
+                    'vacationPeriods' => '2025-07-15:2025-07-30, 2025-12-20:2025-12-31',
+                ],
+            ]);
 
         $result = $this->subject->build(OutOfOfficeDetector::class);
 
@@ -215,7 +264,11 @@ final class DetectorConfigurationBuilderTest extends TestCase
 
     public function testBuildNotificationConfigWithDefaults(): void
     {
-        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS'][Configuration::EXT_KEY] = [];
+        $this->extensionConfiguration
+            ->method('get')
+            ->with(Configuration::EXT_KEY)
+            ->willReturn([]);
+
         $GLOBALS['TYPO3_CONF_VARS']['BE']['warning_email_addr'] = 'admin@example.com';
 
         $result = $this->subject->buildNotificationConfig();
@@ -225,9 +278,12 @@ final class DetectorConfigurationBuilderTest extends TestCase
 
     public function testBuildNotificationConfigWithCustomValues(): void
     {
-        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS'][Configuration::EXT_KEY] = [
-            'notificationRecipients' => 'security@example.com',
-        ];
+        $this->extensionConfiguration
+            ->method('get')
+            ->with(Configuration::EXT_KEY)
+            ->willReturn([
+                'notificationRecipients' => 'security@example.com',
+            ]);
 
         $result = $this->subject->buildNotificationConfig();
 

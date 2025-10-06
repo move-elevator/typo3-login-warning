@@ -30,7 +30,6 @@ use MoveElevator\Typo3LoginWarning\Detector\OutOfOfficeDetector;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
  * DetectorConfigurationBuilder.
@@ -47,6 +46,10 @@ class DetectorConfigurationBuilder implements LoggerAwareInterface
      */
     private array $extensionConfiguration = [];
 
+    public function __construct(
+        private readonly ExtensionConfiguration $extConfiguration
+    ) {}
+
     /**
      * @return array<string, mixed>
      */
@@ -57,8 +60,7 @@ class DetectorConfigurationBuilder implements LoggerAwareInterface
         }
 
         try {
-            $this->extensionConfiguration = GeneralUtility::makeInstance(ExtensionConfiguration::class)
-                ->get(Configuration::EXT_KEY);
+            $this->extensionConfiguration = $this->extConfiguration->get(Configuration::EXT_KEY);
         } catch (\Exception $e) {
             $this->logger?->warning('Could not load extension configuration: {message}', [
                 'message' => $e->getMessage(),

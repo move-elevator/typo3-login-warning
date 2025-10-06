@@ -90,6 +90,7 @@ final class LoginNotificationTest extends TestCase
     public function testWarningAtLoginHandlesNoActiveDetectors(): void
     {
         $user = $this->createMock(BackendUserAuthentication::class);
+        $user->user = ['uid' => 123];
         $request = $this->createMock(ServerRequestInterface::class);
         $event = new AfterUserLoggedInEvent($user, $request);
 
@@ -102,24 +103,6 @@ final class LoginNotificationTest extends TestCase
         ($this->subject)($event);
 
         // Should complete without errors when no detectors are active
-        $this->addToAssertionCount(1);
-    }
-
-    public function testSkipsDetectorWhenNotActive(): void
-    {
-        $user = $this->createMock(BackendUserAuthentication::class);
-        $user->user = ['uid' => 123];
-        $request = $this->createMock(ServerRequestInterface::class);
-        $event = new AfterUserLoggedInEvent($user, $request);
-
-        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS'][Configuration::EXT_KEY] = [
-            'newIp' => ['active' => false],
-            'longTimeNoSee' => ['active' => false],
-            'outOfOffice' => ['active' => false],
-        ];
-
-        // Should complete without triggering any detector
-        ($this->subject)($event);
         $this->addToAssertionCount(1);
     }
 

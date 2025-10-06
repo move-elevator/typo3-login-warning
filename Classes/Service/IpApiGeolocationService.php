@@ -69,7 +69,7 @@ class IpApiGeolocationService implements GeolocationServiceInterface, LoggerAwar
                 return null;
             }
 
-            $data = json_decode($response->getBody()->getContents(), true);
+            $data = json_decode($response->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR);
 
             if (!is_array($data) || ($data['status'] ?? '') !== 'success') {
                 $this->logger?->info('IP geolocation API returned unsuccessful response', [
