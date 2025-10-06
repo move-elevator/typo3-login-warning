@@ -28,8 +28,8 @@ use MoveElevator\Typo3LoginWarning\Detector\DetectorInterface;
 use MoveElevator\Typo3LoginWarning\Detector\LongTimeNoSeeDetector;
 use MoveElevator\Typo3LoginWarning\Detector\NewIpDetector;
 use MoveElevator\Typo3LoginWarning\Detector\OutOfOfficeDetector;
-use MoveElevator\Typo3LoginWarning\Notification\EmailNotification;
 use MoveElevator\Typo3LoginWarning\Registry\DetectorRegistry;
+use MoveElevator\Typo3LoginWarning\Registry\NotificationRegistry;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
@@ -50,7 +50,7 @@ final class LoginNotification implements LoggerAwareInterface
     public function __construct(
         private readonly DetectorRegistry $detectorRegistry,
         private readonly DetectorConfigurationBuilder $configBuilder,
-        private readonly EmailNotification $notifier,
+        private readonly NotificationRegistry $notificationRegistry,
     ) {}
 
     public function __invoke(AfterUserLoggedInEvent $event): void
@@ -85,7 +85,6 @@ final class LoginNotification implements LoggerAwareInterface
             return;
         }
 
-        // Send notification
         $this->sendNotification(
             $currentUser,
             $event->getRequest() ?? $GLOBALS['TYPO3_REQUEST'] ?? ServerRequestFactory::fromGlobals()->withAttribute('applicationType', SystemEnvironmentBuilder::REQUESTTYPE_BE),
@@ -118,18 +117,19 @@ final class LoginNotification implements LoggerAwareInterface
             $additionalData['violationDetails'] = $detector->getViolationDetails();
         }
 
-        // Merge detector-specific notification config with global config
         $mergedConfig = array_merge($notificationConfig, [
             'notificationReceiver' => $detectorConfig['notificationReceiver'] ?? 'recipients',
         ]);
 
-        $this->notifier->notify(
-            $user,
-            $request,
-            $detector::class,
-            $mergedConfig,
-            $additionalData
-        );
+        foreach ($this->notificationRegistry->getNotifiers() as $notifier) {
+            $notifier->notify(
+                $user,
+                $request,
+                $detector::class,
+                $mergedConfig,
+                $additionalData
+            );
+        }
     }
 
 }
