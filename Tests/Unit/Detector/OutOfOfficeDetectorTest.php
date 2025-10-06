@@ -57,10 +57,10 @@ final class OutOfOfficeDetectorTest extends TestCase
         self::assertInstanceOf(DetectorInterface::class, $subject);
     }
 
-    public function testGetViolationDetailsReturnsNullInitially(): void
+    public function testGetAdditionalDataReturnsEmptyArrayInitially(): void
     {
         $subject = new OutOfOfficeDetector();
-        self::assertNull($subject->getViolationDetails());
+        self::assertSame([], $subject->getAdditionalData());
     }
 
     public function testDetectReturnsFalseForWorkingHours(): void
@@ -78,7 +78,7 @@ final class OutOfOfficeDetectorTest extends TestCase
         $result = $subject->detect($user, $configuration);
 
         self::assertFalse($result);
-        self::assertNull($subject->getViolationDetails());
+        self::assertSame([], $subject->getAdditionalData());
     }
 
     public function testDetectReturnsTrueForWeekend(): void
@@ -96,10 +96,9 @@ final class OutOfOfficeDetectorTest extends TestCase
         $result = $subject->detect($user, $configuration);
 
         self::assertTrue($result);
-        $violationDetails = $subject->getViolationDetails();
-        self::assertIsArray($violationDetails);
-        self::assertSame('outside_hours', $violationDetails['type']);
-        self::assertSame('Saturday', $violationDetails['dayOfWeek']);
+        $additionalData = $subject->getAdditionalData();
+        self::assertSame('outside_hours', $additionalData['type']);
+        self::assertSame('Saturday', $additionalData['dayOfWeek']);
     }
 
     public function testDetectReturnsTrueForOutsideWorkingHours(): void
@@ -117,10 +116,10 @@ final class OutOfOfficeDetectorTest extends TestCase
         $result = $subject->detect($user, $configuration);
 
         self::assertTrue($result);
-        $violationDetails = $subject->getViolationDetails();
-        self::assertSame('outside_hours', $violationDetails['type']);
-        self::assertSame('Monday', $violationDetails['dayOfWeek']);
-        self::assertSame(['09:00', '17:00'], $violationDetails['workingHours']);
+        $additionalData = $subject->getAdditionalData();
+        self::assertSame('outside_hours', $additionalData['type']);
+        self::assertSame('Monday', $additionalData['dayOfWeek']);
+        self::assertSame(['09:00', '17:00'], $additionalData['workingHours']);
     }
 
     public function testDetectReturnsTrueForHoliday(): void
@@ -139,10 +138,10 @@ final class OutOfOfficeDetectorTest extends TestCase
         $result = $subject->detect($user, $configuration);
 
         self::assertTrue($result);
-        $violationDetails = $subject->getViolationDetails();
-        self::assertSame('holiday', $violationDetails['type']);
-        self::assertSame('2025-01-06', $violationDetails['date']);
-        self::assertSame('Monday', $violationDetails['dayOfWeek']);
+        $additionalData = $subject->getAdditionalData();
+        self::assertSame('holiday', $additionalData['type']);
+        self::assertSame('2025-01-06', $additionalData['date']);
+        self::assertSame('Monday', $additionalData['dayOfWeek']);
     }
 
     public function testDetectReturnsTrueForVacationPeriod(): void
@@ -163,10 +162,10 @@ final class OutOfOfficeDetectorTest extends TestCase
         $result = $subject->detect($user, $configuration);
 
         self::assertTrue($result);
-        $violationDetails = $subject->getViolationDetails();
-        self::assertSame('vacation', $violationDetails['type']);
-        self::assertSame('2025-01-08', $violationDetails['date']);
-        self::assertSame('Wednesday', $violationDetails['dayOfWeek']);
+        $additionalData = $subject->getAdditionalData();
+        self::assertSame('vacation', $additionalData['type']);
+        self::assertSame('2025-01-08', $additionalData['date']);
+        self::assertSame('Wednesday', $additionalData['dayOfWeek']);
     }
 
     public function testDetectHandlesMultipleTimeRanges(): void
@@ -184,8 +183,8 @@ final class OutOfOfficeDetectorTest extends TestCase
         $result = $subject->detect($user, $configuration);
 
         self::assertTrue($result);
-        $violationDetails = $subject->getViolationDetails();
-        self::assertSame('outside_hours', $violationDetails['type']);
+        $additionalData = $subject->getAdditionalData();
+        self::assertSame('outside_hours', $additionalData['type']);
 
         // Test during working hours (morning)
         $subject = new OutOfOfficeDetectorWithMockedTime('2025-01-06 10:00:00');
@@ -300,8 +299,8 @@ final class OutOfOfficeDetectorTest extends TestCase
         $result = $subject->detect($user, $configuration);
 
         self::assertTrue($result);
-        $violationDetails = $subject->getViolationDetails();
-        self::assertSame('holiday', $violationDetails['type']);
+        $additionalData = $subject->getAdditionalData();
+        self::assertSame('holiday', $additionalData['type']);
     }
 
     public function testVacationTakesPrecedenceOverWorkingHours(): void
@@ -322,8 +321,8 @@ final class OutOfOfficeDetectorTest extends TestCase
         $result = $subject->detect($user, $configuration);
 
         self::assertTrue($result);
-        $violationDetails = $subject->getViolationDetails();
-        self::assertSame('vacation', $violationDetails['type']);
+        $additionalData = $subject->getAdditionalData();
+        self::assertSame('vacation', $additionalData['type']);
     }
 
     public function testDetectReturnsFalseForNonAdminWhenAffectedUsersIsAdmins(): void
@@ -421,11 +420,6 @@ final class OutOfOfficeDetectorTest extends TestCase
  */
 class OutOfOfficeDetectorWithMockedTime extends OutOfOfficeDetector
 {
-    /**
-     * @var array<string, mixed>|null
-     */
-    private ?array $violationDetails = null;
-
     public function __construct(private string $mockedTime, private string $defaultTimezone = 'UTC') {}
 
     /**
@@ -448,7 +442,7 @@ class OutOfOfficeDetectorWithMockedTime extends OutOfOfficeDetector
 
         // Copy of original detect method with mocked time
         if ($this->isHoliday($currentTime, $configuration)) {
-            $this->violationDetails = [
+            $this->additionalData = [
                 'type' => 'holiday',
                 'date' => $currentTime->format('Y-m-d'),
                 'time' => $currentTime->format('H:i:s'),
@@ -458,7 +452,7 @@ class OutOfOfficeDetectorWithMockedTime extends OutOfOfficeDetector
         }
 
         if ($this->isVacationPeriod($currentTime, $configuration)) {
-            $this->violationDetails = [
+            $this->additionalData = [
                 'type' => 'vacation',
                 'date' => $currentTime->format('Y-m-d'),
                 'time' => $currentTime->format('H:i:s'),
@@ -474,7 +468,7 @@ class OutOfOfficeDetectorWithMockedTime extends OutOfOfficeDetector
 
         if (!$this->isWithinWorkingHours($currentTime, $workingHours)) {
             $dayOfWeek = strtolower($currentTime->format('l'));
-            $this->violationDetails = [
+            $this->additionalData = [
                 'type' => 'outside_hours',
                 'date' => $currentTime->format('Y-m-d'),
                 'time' => $currentTime->format('H:i:s'),
@@ -485,14 +479,6 @@ class OutOfOfficeDetectorWithMockedTime extends OutOfOfficeDetector
         }
 
         return false;
-    }
-
-    /**
-     * @return array<string, mixed>|null
-     */
-    public function getViolationDetails(): ?array
-    {
-        return $this->violationDetails;
     }
 
     /**

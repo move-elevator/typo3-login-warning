@@ -25,9 +25,6 @@ namespace MoveElevator\Typo3LoginWarning\Security;
 
 use MoveElevator\Typo3LoginWarning\Configuration\DetectorConfigurationBuilder;
 use MoveElevator\Typo3LoginWarning\Detector\DetectorInterface;
-use MoveElevator\Typo3LoginWarning\Detector\LongTimeNoSeeDetector;
-use MoveElevator\Typo3LoginWarning\Detector\NewIpDetector;
-use MoveElevator\Typo3LoginWarning\Detector\OutOfOfficeDetector;
 use MoveElevator\Typo3LoginWarning\Registry\DetectorRegistry;
 use MoveElevator\Typo3LoginWarning\Registry\NotificationRegistry;
 use Psr\Log\LoggerAwareInterface;
@@ -75,6 +72,10 @@ final class LoginNotification implements LoggerAwareInterface
 
             $currentDetectorConfiguration = $this->configBuilder->build($detectorClass);
 
+            if (!$detector->shouldDetectForUser($currentUser, $currentDetectorConfiguration)) {
+                continue;
+            }
+
             if ($detector->detect($currentUser, $currentDetectorConfiguration)) {
                 $currentDetector = $detector;
                 break;
@@ -105,18 +106,6 @@ final class LoginNotification implements LoggerAwareInterface
         array $notificationConfig,
         array $detectorConfig
     ): void {
-        // ToDo: Consider more generic way to pass additional data from detectors to notifiers
-        $additionalData = [];
-        if ($detector instanceof NewIpDetector) {
-            $additionalData['locationData'] = $detector->getLocationData();
-        }
-        if ($detector instanceof LongTimeNoSeeDetector) {
-            $additionalData['daysSinceLastLogin'] = $detector->getDaysSinceLastLogin();
-        }
-        if ($detector instanceof OutOfOfficeDetector) {
-            $additionalData['violationDetails'] = $detector->getViolationDetails();
-        }
-
         $mergedConfig = array_merge($notificationConfig, [
             'notificationReceiver' => $detectorConfig['notificationReceiver'] ?? 'recipients',
         ]);
@@ -127,7 +116,7 @@ final class LoginNotification implements LoggerAwareInterface
                 $request,
                 $detector::class,
                 $mergedConfig,
-                $additionalData
+                $detector->getAdditionalData()
             );
         }
     }

@@ -37,8 +37,6 @@ class LongTimeNoSeeDetector extends AbstractDetector
 {
     private const DEFAULT_THRESHOLD_DAYS = 365;
 
-    private ?int $daysSinceLastLogin = null;
-
     public function __construct(
         private UserLogRepository $userLogRepository,
     ) {}
@@ -55,12 +53,6 @@ class LongTimeNoSeeDetector extends AbstractDetector
     public function detect(AbstractUserAuthentication $user, array $configuration = []): bool
     {
         $userArray = $user->user;
-
-        // Check user role filtering
-        if (!$this->shouldDetectForUser($user, $configuration)) {
-            return false;
-        }
-
         $userId = (int)$userArray['uid'];
         $currentTimestamp = time();
 
@@ -69,19 +61,14 @@ class LongTimeNoSeeDetector extends AbstractDetector
 
         $lastLoginCheckTimestamp = $this->userLogRepository->getLastLoginCheckTimestamp($userId);
 
-        // Calculate days since last login for additional data
         if ($lastLoginCheckTimestamp !== null) {
-            $this->daysSinceLastLogin = (int)floor(($currentTimestamp - $lastLoginCheckTimestamp) / (24 * 60 * 60));
+            $this->additionalData = [
+                'daysSinceLastLogin' => (int)floor(($currentTimestamp - $lastLoginCheckTimestamp) / (24 * 60 * 60)),
+            ];
         }
 
         $this->userLogRepository->updateLastLoginCheckTimestamp($userId, $currentTimestamp);
 
         return $lastLoginCheckTimestamp !== null && $lastLoginCheckTimestamp <= $thresholdTimestamp;
     }
-
-    public function getDaysSinceLastLogin(): ?int
-    {
-        return $this->daysSinceLastLogin;
-    }
-
 }

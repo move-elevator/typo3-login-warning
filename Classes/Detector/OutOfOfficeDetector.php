@@ -34,26 +34,16 @@ use TYPO3\CMS\Core\Authentication\AbstractUserAuthentication;
 class OutOfOfficeDetector extends AbstractDetector
 {
     /**
-     * @var array<string, mixed>|null
-     */
-    private ?array $violationDetails = null;
-
-    /**
      * @param array<string, mixed> $configuration
      * @throws \Exception
      */
     public function detect(AbstractUserAuthentication $user, array $configuration = []): bool
     {
-        // Check user role filtering
-        if (!$this->shouldDetectForUser($user, $configuration)) {
-            return false;
-        }
-
         $timezone = ($configuration['timezone'] ?? '') !== '' ? $configuration['timezone'] : 'UTC';
         $currentTime = new \DateTime('now', new \DateTimeZone($timezone));
 
         if ($this->isHoliday($currentTime, $configuration)) {
-            $this->violationDetails = [
+            $this->additionalData['violationDetails'] = [
                 'type' => 'holiday',
                 'date' => $currentTime->format('Y-m-d'),
                 'time' => $currentTime->format('H:i:s'),
@@ -63,7 +53,7 @@ class OutOfOfficeDetector extends AbstractDetector
         }
 
         if ($this->isVacationPeriod($currentTime, $configuration)) {
-            $this->violationDetails = [
+            $this->additionalData['violationDetails'] = [
                 'type' => 'vacation',
                 'date' => $currentTime->format('Y-m-d'),
                 'time' => $currentTime->format('H:i:s'),
@@ -79,7 +69,7 @@ class OutOfOfficeDetector extends AbstractDetector
 
         if (!$this->isWithinWorkingHours($currentTime, $workingHours)) {
             $dayOfWeek = strtolower($currentTime->format('l'));
-            $this->violationDetails = [
+            $this->additionalData['violationDetails'] = [
                 'type' => 'outside_hours',
                 'date' => $currentTime->format('Y-m-d'),
                 'time' => $currentTime->format('H:i:s'),
@@ -90,14 +80,6 @@ class OutOfOfficeDetector extends AbstractDetector
         }
 
         return false;
-    }
-
-    /**
-     * @return array<string, mixed>|null
-     */
-    public function getViolationDetails(): ?array
-    {
-        return $this->violationDetails;
     }
 
     /**

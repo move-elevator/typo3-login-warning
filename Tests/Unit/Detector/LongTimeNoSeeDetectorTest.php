@@ -303,13 +303,13 @@ final class LongTimeNoSeeDetectorTest extends TestCase
         $subject->detect($user, $configuration);
     }
 
-    public function testGetDaysSinceLastLoginReturnsNullInitially(): void
+    public function testGetAdditionalDataReturnsEmptyArrayInitially(): void
     {
         $subject = new LongTimeNoSeeDetector($this->userLogRepository);
-        self::assertNull($subject->getDaysSinceLastLogin());
+        self::assertSame([], $subject->getAdditionalData());
     }
 
-    public function testGetDaysSinceLastLoginReturnsNullForFirstTimeLogin(): void
+    public function testGetAdditionalDataReturnsEmptyArrayForFirstTimeLogin(): void
     {
         $user = $this->createMockUser(['uid' => 123]);
         $configuration = [];
@@ -327,10 +327,10 @@ final class LongTimeNoSeeDetectorTest extends TestCase
         $subject = new LongTimeNoSeeDetector($this->userLogRepository);
         $subject->detect($user, $configuration);
 
-        self::assertNull($subject->getDaysSinceLastLogin());
+        self::assertSame([], $subject->getAdditionalData());
     }
 
-    public function testGetDaysSinceLastLoginCalculatesCorrectDays(): void
+    public function testGetAdditionalDataCalculatesCorrectDays(): void
     {
         $user = $this->createMockUser(['uid' => 123]);
         $tenDaysAgo = time() - (10 * 24 * 60 * 60);
@@ -349,10 +349,10 @@ final class LongTimeNoSeeDetectorTest extends TestCase
         $subject = new LongTimeNoSeeDetector($this->userLogRepository);
         $subject->detect($user, $configuration);
 
-        self::assertSame(10, $subject->getDaysSinceLastLogin());
+        self::assertSame(['daysSinceLastLogin' => 10], $subject->getAdditionalData());
     }
 
-    public function testGetDaysSinceLastLoginHandlesPartialDays(): void
+    public function testGetAdditionalDataHandlesPartialDays(): void
     {
         $user = $this->createMockUser(['uid' => 123]);
         $oneAndAHalfDaysAgo = time() - (36 * 60 * 60); // 1.5 days = 36 hours
@@ -372,10 +372,10 @@ final class LongTimeNoSeeDetectorTest extends TestCase
         $subject->detect($user, $configuration);
 
         // Should floor to 1 day
-        self::assertSame(1, $subject->getDaysSinceLastLogin());
+        self::assertSame(['daysSinceLastLogin' => 1], $subject->getAdditionalData());
     }
 
-    public function testGetDaysSinceLastLoginForLongPeriods(): void
+    public function testGetAdditionalDataForLongPeriods(): void
     {
         $user = $this->createMockUser(['uid' => 123]);
         $twoYearsAgo = time() - (2 * 365 * 24 * 60 * 60);
@@ -395,89 +395,62 @@ final class LongTimeNoSeeDetectorTest extends TestCase
         $subject->detect($user, $configuration);
 
         // Should be approximately 730 days (2 years)
-        $days = $subject->getDaysSinceLastLogin();
-        self::assertGreaterThan(720, $days);
-        self::assertLessThan(740, $days);
+        $additionalData = $subject->getAdditionalData();
+        self::assertArrayHasKey('daysSinceLastLogin', $additionalData);
+        self::assertGreaterThan(720, $additionalData['daysSinceLastLogin']);
+        self::assertLessThan(740, $additionalData['daysSinceLastLogin']);
     }
 
-    public function testDetectReturnsFalseForNonAdminWhenAffectedUsersIsAdmins(): void
+    public function testShouldDetectForUserReturnsFalseForNonAdmin(): void
     {
         $user = $this->createMockUser(['uid' => 123, 'admin' => false]);
-        $configuration = [
-            'affectedUsers' => 'admins',
-        ];
-
-        $this->userLogRepository->expects(self::never())->method('getLastLoginCheckTimestamp');
+        $configuration = ['affectedUsers' => 'admins'];
 
         $subject = new LongTimeNoSeeDetector($this->userLogRepository);
-        $result = $subject->detect($user, $configuration);
+        $result = $subject->shouldDetectForUser($user, $configuration);
 
         self::assertFalse($result);
     }
 
-    public function testDetectReturnsTrueForAdminWhenAffectedUsersIsAdmins(): void
+    public function testShouldDetectForUserReturnsTrueForAdmin(): void
     {
         $user = $this->createMockUser(['uid' => 123, 'admin' => true]);
-        $oneYearAgo = time() - (366 * 24 * 60 * 60);
-        $configuration = [
-            'affectedUsers' => 'admins',
-        ];
-
-        $this->userLogRepository
-            ->expects(self::once())
-            ->method('getLastLoginCheckTimestamp')
-            ->willReturn($oneYearAgo);
-
-        $this->userLogRepository
-            ->expects(self::once())
-            ->method('updateLastLoginCheckTimestamp');
+        $configuration = ['affectedUsers' => 'admins'];
 
         $subject = new LongTimeNoSeeDetector($this->userLogRepository);
-        $result = $subject->detect($user, $configuration);
+        $result = $subject->shouldDetectForUser($user, $configuration);
 
         self::assertTrue($result);
     }
 
-    public function testDetectReturnsFalseForNonSystemMaintainerWhenAffectedUsersIsMaintainers(): void
+    public function testShouldDetectForUserReturnsFalseForNonMaintainer(): void
     {
         $GLOBALS['TYPO3_CONF_VARS']['SYS']['systemMaintainers'] = [2, 3];
 
         $user = $this->createMockUser(['uid' => 123]);
-        $configuration = [
-            'affectedUsers' => 'maintainers',
-        ];
-
-        $this->userLogRepository->expects(self::never())->method('getLastLoginCheckTimestamp');
+        $configuration = ['affectedUsers' => 'maintainers'];
 
         $subject = new LongTimeNoSeeDetector($this->userLogRepository);
-        $result = $subject->detect($user, $configuration);
+        $result = $subject->shouldDetectForUser($user, $configuration);
 
         self::assertFalse($result);
+
+        unset($GLOBALS['TYPO3_CONF_VARS']['SYS']['systemMaintainers']);
     }
 
-    public function testDetectReturnsTrueForSystemMaintainerWhenAffectedUsersIsMaintainers(): void
+    public function testShouldDetectForUserReturnsTrueForMaintainer(): void
     {
         $GLOBALS['TYPO3_CONF_VARS']['SYS']['systemMaintainers'] = [123, 456];
 
         $user = $this->createMockUser(['uid' => 123]);
-        $oneYearAgo = time() - (366 * 24 * 60 * 60);
-        $configuration = [
-            'affectedUsers' => 'maintainers',
-        ];
-
-        $this->userLogRepository
-            ->expects(self::once())
-            ->method('getLastLoginCheckTimestamp')
-            ->willReturn($oneYearAgo);
-
-        $this->userLogRepository
-            ->expects(self::once())
-            ->method('updateLastLoginCheckTimestamp');
+        $configuration = ['affectedUsers' => 'maintainers'];
 
         $subject = new LongTimeNoSeeDetector($this->userLogRepository);
-        $result = $subject->detect($user, $configuration);
+        $result = $subject->shouldDetectForUser($user, $configuration);
 
         self::assertTrue($result);
+
+        unset($GLOBALS['TYPO3_CONF_VARS']['SYS']['systemMaintainers']);
     }
 
     /**

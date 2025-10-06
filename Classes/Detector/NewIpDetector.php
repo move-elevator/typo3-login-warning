@@ -35,11 +35,6 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  */
 class NewIpDetector extends AbstractDetector
 {
-    /**
-     * @var array<string, mixed>|null
-     */
-    private ?array $locationData = null;
-
     public function __construct(
         private IpLogRepository $ipLogRepository,
         private ?GeolocationServiceInterface $geolocationService = null,
@@ -52,11 +47,6 @@ class NewIpDetector extends AbstractDetector
     public function detect(AbstractUserAuthentication $user, array $configuration = []): bool
     {
         $userArray = $user->user;
-
-        // Check user role filtering
-        if (!$this->shouldDetectForUser($user, $configuration)) {
-            return false;
-        }
 
         if (
             array_key_exists('whitelist', $configuration) &&
@@ -72,7 +62,7 @@ class NewIpDetector extends AbstractDetector
 
         if (!$this->ipLogRepository->findByUserAndIp((int)$userArray['uid'], $ipAddress)) {
             if ($this->shouldFetchGeolocation($configuration, $rawIpAddress)) {
-                $this->locationData = $this->geolocationService?->getLocationData($rawIpAddress);
+                $this->additionalData['locationData'] = $this->geolocationService?->getLocationData($rawIpAddress);
             }
             $this->ipLogRepository->addUserIp((int)$userArray['uid'], $ipAddress);
             return true;
@@ -89,14 +79,6 @@ class NewIpDetector extends AbstractDetector
         }
 
         return $ipAddress;
-    }
-
-    /**
-     * @return array<string, mixed>|null
-     */
-    public function getLocationData(): ?array
-    {
-        return $this->locationData;
     }
 
     /**

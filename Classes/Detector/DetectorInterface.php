@@ -34,5 +34,15 @@ interface DetectorInterface
     /**
      * @param array<string, mixed> $configuration
      */
+    public function shouldDetectForUser(AbstractUserAuthentication $user, array $configuration = []): bool;
+
+    /**
+     * @param array<string, mixed> $configuration
+     */
     public function detect(AbstractUserAuthentication $user, array $configuration = []): bool;
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function getAdditionalData(): ?array;
 }
