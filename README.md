@@ -146,6 +146,18 @@ Detects logins outside defined working hours, holidays, or vacation periods. Sup
 }
 ```
 
+#### Custom Detectors
+
+> [!TIP]
+> You can implement your own detector by implementing the [`DetectorInterface`](Classes/Detector/DetectorInterface.php) and registering it in the DI container.
+
+```yaml
+services:
+  Vendor\MyExtension\Detector\CustomDetector:
+    tags:
+      - { name: typo3_login_warning.detector, priority: 200 }
+```
+
 ### Notification
 
 Notification methods are used to notify about detected login events.
@@ -169,6 +181,8 @@ Each detector has its own **Notification Receiver** setting that controls who re
 ![email.jpg](Documentation/Images/email.jpg)
 
 ## 🛠️ Customization
+
+### Email Templates
 
 You can override the email templates located in `Resources/Private/Templates/Email/Default/LoginNotification/`.
 

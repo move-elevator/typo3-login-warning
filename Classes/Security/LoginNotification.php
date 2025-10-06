@@ -29,6 +29,7 @@ use MoveElevator\Typo3LoginWarning\Detector\LongTimeNoSeeDetector;
 use MoveElevator\Typo3LoginWarning\Detector\NewIpDetector;
 use MoveElevator\Typo3LoginWarning\Detector\OutOfOfficeDetector;
 use MoveElevator\Typo3LoginWarning\Notification\EmailNotification;
+use MoveElevator\Typo3LoginWarning\Registry\DetectorRegistry;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
@@ -47,6 +48,10 @@ final class LoginNotification implements LoggerAwareInterface
 {
     use LoggerAwareTrait;
 
+    public function __construct(
+        private readonly DetectorRegistry $detectorRegistry,
+    ) {}
+
     public function __invoke(AfterUserLoggedInEvent $event): void
     {
         if (!$event->getUser() instanceof BackendUserAuthentication) {
@@ -61,14 +66,14 @@ final class LoginNotification implements LoggerAwareInterface
 
         $globalNotificationConfig = $configBuilder->buildNotificationConfig();
 
-        foreach ($this->getDetectors() as $detectorClass) {
+        foreach ($this->detectorRegistry->getDetectors() as $detector) {
+            $detectorClass = $detector::class;
+
             if (!$configBuilder->isActive($detectorClass)) {
                 continue;
             }
 
             $currentDetectorConfiguration = $configBuilder->build($detectorClass);
-
-            $detector = GeneralUtility::makeInstance($detectorClass);
 
             if ($detector->detect($currentUser, $currentDetectorConfiguration)) {
                 $currentDetector = $detector;
@@ -127,18 +132,6 @@ final class LoginNotification implements LoggerAwareInterface
             $mergedConfig,
             $additionalData
         );
-    }
-
-    /**
-     * @return array<int, class-string<DetectorInterface>>
-     */
-    private function getDetectors(): array
-    {
-        return [
-            NewIpDetector::class,
-            LongTimeNoSeeDetector::class,
-            OutOfOfficeDetector::class,
-        ];
     }
 
 }
