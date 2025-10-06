@@ -204,14 +204,14 @@ final class NewIpDetectorTest extends TestCase
         $result = $subject->detect($user, $configuration);
 
         self::assertTrue($result);
-        self::assertNull($subject->getLocationData());
+        self::assertSame([], $subject->getAdditionalData());
     }
 
-    public function testGetLocationDataReturnsNullInitially(): void
+    public function testGetAdditionalDataReturnsEmptyArrayInitially(): void
     {
         $ipLogRepository = $this->createMock(IpLogRepository::class);
         $subject = new NewIpDetector($ipLogRepository);
-        self::assertNull($subject->getLocationData());
+        self::assertSame([], $subject->getAdditionalData());
     }
 
     public function testDetectDoesNotFetchGeolocationForPrivateIps(): void
@@ -244,89 +244,63 @@ final class NewIpDetectorTest extends TestCase
         $result = $subject->detect($user, $configuration);
 
         self::assertTrue($result);
-        self::assertNull($subject->getLocationData());
+        self::assertSame([], $subject->getAdditionalData());
     }
 
-    public function testDetectReturnsFalseForNonAdminWhenAffectedUsersIsAdmins(): void
+    public function testShouldDetectForUserReturnsFalseForNonAdmin(): void
     {
         $user = $this->createMockUser(['uid' => 123, 'admin' => false]);
-        $configuration = [
-            'affectedUsers' => 'admins',
-        ];
-
-        $GLOBALS['_SERVER']['REMOTE_ADDR'] = '1.2.3.4';
+        $configuration = ['affectedUsers' => 'admins'];
 
         $ipLogRepository = $this->createMock(IpLogRepository::class);
-        $ipLogRepository->expects(self::never())->method('findByUserAndIp');
-
         $subject = new NewIpDetector($ipLogRepository);
-        $result = $subject->detect($user, $configuration);
+        $result = $subject->shouldDetectForUser($user, $configuration);
 
         self::assertFalse($result);
     }
 
-    public function testDetectReturnsTrueForAdminWhenAffectedUsersIsAdmins(): void
+    public function testShouldDetectForUserReturnsTrueForAdmin(): void
     {
         $user = $this->createMockUser(['uid' => 123, 'admin' => true]);
-        $configuration = [
-            'affectedUsers' => 'admins',
-        ];
-
-        $GLOBALS['_SERVER']['REMOTE_ADDR'] = '1.2.3.4';
+        $configuration = ['affectedUsers' => 'admins'];
 
         $ipLogRepository = $this->createMock(IpLogRepository::class);
-        $ipLogRepository->expects(self::once())
-            ->method('findByUserAndIp')
-            ->willReturn(false);
-        $ipLogRepository->expects(self::once())->method('addUserIp');
-
         $subject = new NewIpDetector($ipLogRepository);
-        $result = $subject->detect($user, $configuration);
+        $result = $subject->shouldDetectForUser($user, $configuration);
 
         self::assertTrue($result);
     }
 
-    public function testDetectReturnsFalseForNonSystemMaintainerWhenAffectedUsersIsMaintainers(): void
+    public function testShouldDetectForUserReturnsFalseForNonMaintainer(): void
     {
         $GLOBALS['TYPO3_CONF_VARS']['SYS']['systemMaintainers'] = [2, 3];
 
         $user = $this->createMockUser(['uid' => 123]);
-        $configuration = [
-            'affectedUsers' => 'maintainers',
-        ];
-
-        $GLOBALS['_SERVER']['REMOTE_ADDR'] = '1.2.3.4';
+        $configuration = ['affectedUsers' => 'maintainers'];
 
         $ipLogRepository = $this->createMock(IpLogRepository::class);
-        $ipLogRepository->expects(self::never())->method('findByUserAndIp');
-
         $subject = new NewIpDetector($ipLogRepository);
-        $result = $subject->detect($user, $configuration);
+        $result = $subject->shouldDetectForUser($user, $configuration);
 
         self::assertFalse($result);
+
+        unset($GLOBALS['TYPO3_CONF_VARS']['SYS']['systemMaintainers']);
     }
 
-    public function testDetectReturnsTrueForSystemMaintainerWhenAffectedUsersIsMaintainers(): void
+    public function testShouldDetectForUserReturnsTrueForMaintainer(): void
     {
         $GLOBALS['TYPO3_CONF_VARS']['SYS']['systemMaintainers'] = [123, 456];
 
         $user = $this->createMockUser(['uid' => 123]);
-        $configuration = [
-            'affectedUsers' => 'maintainers',
-        ];
-
-        $GLOBALS['_SERVER']['REMOTE_ADDR'] = '1.2.3.4';
+        $configuration = ['affectedUsers' => 'maintainers'];
 
         $ipLogRepository = $this->createMock(IpLogRepository::class);
-        $ipLogRepository->expects(self::once())
-            ->method('findByUserAndIp')
-            ->willReturn(false);
-        $ipLogRepository->expects(self::once())->method('addUserIp');
-
         $subject = new NewIpDetector($ipLogRepository);
-        $result = $subject->detect($user, $configuration);
+        $result = $subject->shouldDetectForUser($user, $configuration);
 
         self::assertTrue($result);
+
+        unset($GLOBALS['TYPO3_CONF_VARS']['SYS']['systemMaintainers']);
     }
 
     /**

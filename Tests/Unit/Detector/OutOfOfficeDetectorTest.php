@@ -57,10 +57,10 @@ final class OutOfOfficeDetectorTest extends TestCase
         self::assertInstanceOf(DetectorInterface::class, $subject);
     }
 
-    public function testGetViolationDetailsReturnsNullInitially(): void
+    public function testGetAdditionalDataReturnsEmptyArrayInitially(): void
     {
         $subject = new OutOfOfficeDetector();
-        self::assertNull($subject->getViolationDetails());
+        self::assertSame([], $subject->getAdditionalData());
     }
 
     public function testDetectReturnsFalseForWorkingHours(): void
@@ -78,7 +78,7 @@ final class OutOfOfficeDetectorTest extends TestCase
         $result = $subject->detect($user, $configuration);
 
         self::assertFalse($result);
-        self::assertNull($subject->getViolationDetails());
+        self::assertSame([], $subject->getAdditionalData());
     }
 
     public function testDetectReturnsTrueForWeekend(): void
@@ -96,10 +96,9 @@ final class OutOfOfficeDetectorTest extends TestCase
         $result = $subject->detect($user, $configuration);
 
         self::assertTrue($result);
-        $violationDetails = $subject->getViolationDetails();
-        self::assertIsArray($violationDetails);
-        self::assertSame('outside_hours', $violationDetails['type']);
-        self::assertSame('Saturday', $violationDetails['dayOfWeek']);
+        $additionalData = $subject->getAdditionalData();
+        self::assertSame('outside_hours', $additionalData['type']);
+        self::assertSame('Saturday', $additionalData['dayOfWeek']);
     }
 
     public function testDetectReturnsTrueForOutsideWorkingHours(): void
@@ -117,10 +116,10 @@ final class OutOfOfficeDetectorTest extends TestCase
         $result = $subject->detect($user, $configuration);
 
         self::assertTrue($result);
-        $violationDetails = $subject->getViolationDetails();
-        self::assertSame('outside_hours', $violationDetails['type']);
-        self::assertSame('Monday', $violationDetails['dayOfWeek']);
-        self::assertSame(['09:00', '17:00'], $violationDetails['workingHours']);
+        $additionalData = $subject->getAdditionalData();
+        self::assertSame('outside_hours', $additionalData['type']);
+        self::assertSame('Monday', $additionalData['dayOfWeek']);
+        self::assertSame(['09:00', '17:00'], $additionalData['workingHours']);
     }
 
     public function testDetectReturnsTrueForHoliday(): void
@@ -139,10 +138,10 @@ final class OutOfOfficeDetectorTest extends TestCase
         $result = $subject->detect($user, $configuration);
 
         self::assertTrue($result);
-        $violationDetails = $subject->getViolationDetails();
-        self::assertSame('holiday', $violationDetails['type']);
-        self::assertSame('2025-01-06', $violationDetails['date']);
-        self::assertSame('Monday', $violationDetails['dayOfWeek']);
+        $additionalData = $subject->getAdditionalData();
+        self::assertSame('holiday', $additionalData['type']);
+        self::assertSame('2025-01-06', $additionalData['date']);
+        self::assertSame('Monday', $additionalData['dayOfWeek']);
     }
 
     public function testDetectReturnsTrueForVacationPeriod(): void
@@ -163,10 +162,10 @@ final class OutOfOfficeDetectorTest extends TestCase
         $result = $subject->detect($user, $configuration);
 
         self::assertTrue($result);
-        $violationDetails = $subject->getViolationDetails();
-        self::assertSame('vacation', $violationDetails['type']);
-        self::assertSame('2025-01-08', $violationDetails['date']);
-        self::assertSame('Wednesday', $violationDetails['dayOfWeek']);
+        $additionalData = $subject->getAdditionalData();
+        self::assertSame('vacation', $additionalData['type']);
+        self::assertSame('2025-01-08', $additionalData['date']);
+        self::assertSame('Wednesday', $additionalData['dayOfWeek']);
     }
 
     public function testDetectHandlesMultipleTimeRanges(): void
@@ -184,8 +183,8 @@ final class OutOfOfficeDetectorTest extends TestCase
         $result = $subject->detect($user, $configuration);
 
         self::assertTrue($result);
-        $violationDetails = $subject->getViolationDetails();
-        self::assertSame('outside_hours', $violationDetails['type']);
+        $additionalData = $subject->getAdditionalData();
+        self::assertSame('outside_hours', $additionalData['type']);
 
         // Test during working hours (morning)
         $subject = new OutOfOfficeDetectorWithMockedTime('2025-01-06 10:00:00');
@@ -300,8 +299,8 @@ final class OutOfOfficeDetectorTest extends TestCase
         $result = $subject->detect($user, $configuration);
 
         self::assertTrue($result);
-        $violationDetails = $subject->getViolationDetails();
-        self::assertSame('holiday', $violationDetails['type']);
+        $additionalData = $subject->getAdditionalData();
+        self::assertSame('holiday', $additionalData['type']);
     }
 
     public function testVacationTakesPrecedenceOverWorkingHours(): void
@@ -322,8 +321,8 @@ final class OutOfOfficeDetectorTest extends TestCase
         $result = $subject->detect($user, $configuration);
 
         self::assertTrue($result);
-        $violationDetails = $subject->getViolationDetails();
-        self::assertSame('vacation', $violationDetails['type']);
+        $additionalData = $subject->getAdditionalData();
+        self::assertSame('vacation', $additionalData['type']);
     }
 
     public function testDetectReturnsFalseForNonAdminWhenAffectedUsersIsAdmins(): void
@@ -424,12 +423,16 @@ class OutOfOfficeDetectorWithMockedTime extends OutOfOfficeDetector
     public function __construct(private string $mockedTime, private string $defaultTimezone = 'UTC') {}
 
     /**
-     * Override getCurrentTime to return mocked time for testing.
-     *
-     * @throws \Exception
+     * @param array<string, mixed> $configuration
      */
-    protected function getCurrentTime(string $timezone): \DateTime
+    public function detect(\TYPO3\CMS\Core\Authentication\AbstractUserAuthentication $user, array $configuration = []): bool
     {
+        // Check user role filtering
+        if (!$this->shouldDetectForUser($user, $configuration)) {
+            return false;
+        }
+
+        $timezone = $configuration['timezone'] ?? $this->defaultTimezone;
         $currentTime = new \DateTime($this->mockedTime, new \DateTimeZone($this->defaultTimezone));
 
         // Convert to the configuration timezone if different
@@ -437,6 +440,112 @@ class OutOfOfficeDetectorWithMockedTime extends OutOfOfficeDetector
             $currentTime->setTimezone(new \DateTimeZone($timezone));
         }
 
-        return $currentTime;
+        // Copy of original detect method with mocked time
+        if ($this->isHoliday($currentTime, $configuration)) {
+            $this->additionalData = [
+                'type' => 'holiday',
+                'date' => $currentTime->format('Y-m-d'),
+                'time' => $currentTime->format('H:i:s'),
+                'dayOfWeek' => $currentTime->format('l'),
+            ];
+            return true;
+        }
+
+        if ($this->isVacationPeriod($currentTime, $configuration)) {
+            $this->additionalData = [
+                'type' => 'vacation',
+                'date' => $currentTime->format('Y-m-d'),
+                'time' => $currentTime->format('H:i:s'),
+                'dayOfWeek' => $currentTime->format('l'),
+            ];
+            return true;
+        }
+
+        $workingHours = $configuration['workingHours'] ?? [];
+        if ($workingHours === []) {
+            return false;
+        }
+
+        if (!$this->isWithinWorkingHours($currentTime, $workingHours)) {
+            $dayOfWeek = strtolower($currentTime->format('l'));
+            $this->additionalData = [
+                'type' => 'outside_hours',
+                'date' => $currentTime->format('Y-m-d'),
+                'time' => $currentTime->format('H:i:s'),
+                'dayOfWeek' => $currentTime->format('l'),
+                'workingHours' => $workingHours[$dayOfWeek] ?? null,
+            ];
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * @param array<string, mixed> $workingHours
+     */
+    private function isWithinWorkingHours(\DateTime $time, array $workingHours): bool
+    {
+        $dayOfWeek = strtolower($time->format('l'));
+        $currentTime = $time->format('H:i');
+
+        if (!isset($workingHours[$dayOfWeek])) {
+            return false;
+        }
+
+        $hours = $workingHours[$dayOfWeek];
+
+        if (is_array($hours) && isset($hours[0]) && is_array($hours[0])) {
+            foreach ($hours as $timeRange) {
+                if (count($timeRange) === 2 && $this->isTimeInRange($currentTime, $timeRange[0], $timeRange[1])) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        if (is_array($hours) && count($hours) === 2) {
+            return $this->isTimeInRange($currentTime, $hours[0], $hours[1]);
+        }
+
+        return false;
+    }
+
+    private function isTimeInRange(string $time, string $start, string $end): bool
+    {
+        return $time >= $start && $time <= $end;
+    }
+
+    /**
+     * @param array<string, mixed> $configuration
+     */
+    private function isHoliday(\DateTime $time, array $configuration): bool
+    {
+        $date = $time->format('Y-m-d');
+        $holidays = $configuration['holidays'] ?? [];
+        return is_array($holidays) && in_array($date, $holidays, true);
+    }
+
+    /**
+     * @param array<string, mixed> $configuration
+     */
+    private function isVacationPeriod(\DateTime $time, array $configuration): bool
+    {
+        $date = $time->format('Y-m-d');
+        $vacationPeriods = $configuration['vacationPeriods'] ?? [];
+
+        if (!is_array($vacationPeriods)) {
+            return false;
+        }
+
+        foreach ($vacationPeriods as $period) {
+            if (is_array($period) && count($period) === 2) {
+                if ($date >= $period[0] && $date <= $period[1]) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 }

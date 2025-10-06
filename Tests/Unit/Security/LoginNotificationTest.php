@@ -133,8 +133,14 @@ final class LoginNotificationTest extends TestCase
         // Create mock detector that will trigger
         $mockDetector = $this->createMock(\MoveElevator\Typo3LoginWarning\Detector\DetectorInterface::class);
         $mockDetector->expects(self::once())
+            ->method('shouldDetectForUser')
+            ->willReturn(true);
+        $mockDetector->expects(self::once())
             ->method('detect')
             ->willReturn(true);
+        $mockDetector->expects(self::once())
+            ->method('getAdditionalData')
+            ->willReturn([]);
 
         // Create mock notifier
         $mockNotifier = $this->createMock(\MoveElevator\Typo3LoginWarning\Notification\NotifierInterface::class);
