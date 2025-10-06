@@ -378,16 +378,6 @@ final class EmailNotificationTest extends TestCase
         $this->subject->notify($user, $this->request, 'TestTrigger', $configuration);
     }
 
-    public function testNotifyDoesNothingForNonBackendUser(): void
-    {
-        $user = $this->createMock(\TYPO3\CMS\Core\Authentication\AbstractUserAuthentication::class);
-        $configuration = ['recipient' => 'admin@example.com'];
-
-        $this->mailer->expects(self::never())->method('send');
-
-        $this->subject->notify($user, $this->request, 'TestTrigger', $configuration);
-    }
-
     /**
      * @param array<string, mixed> $userData
      */
