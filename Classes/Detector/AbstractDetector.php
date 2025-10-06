@@ -32,11 +32,16 @@ use TYPO3\CMS\Core\Authentication\AbstractUserAuthentication;
 abstract class AbstractDetector implements DetectorInterface
 {
     /**
+     * @var array<string, mixed>
+     */
+    protected array $additionalData = [];
+
+    /**
      * Check if detection should be performed for the given user based on role filtering configuration.
      *
      * @param array<string, mixed> $configuration
      */
-    protected function shouldDetectForUser(AbstractUserAuthentication $user, array $configuration): bool
+    public function shouldDetectForUser(AbstractUserAuthentication $user, array $configuration = []): bool
     {
         $userArray = $user->user;
         $affectedUsers = $configuration['affectedUsers'] ?? 'all';
@@ -46,5 +51,13 @@ abstract class AbstractDetector implements DetectorInterface
             'maintainers' => in_array((int)$userArray['uid'], $GLOBALS['TYPO3_CONF_VARS']['SYS']['systemMaintainers'] ?? [], true),
             default => true, // 'all'
         };
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function getAdditionalData(): array
+    {
+        return $this->additionalData;
     }
 }

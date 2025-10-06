@@ -149,7 +149,7 @@ Detects logins outside defined working hours, holidays, or vacation periods. Sup
 #### Custom Detectors
 
 > [!TIP]
-> You can implement your own detector by implementing the [`DetectorInterface`](Classes/Detector/DetectorInterface.php) and registering it in the DI container.
+> You can implement your own detector by implementing the [`DetectorInterface`](Classes/Detector/DetectorInterface.php), extending the [`AbstractDetector`](Classes/Detector/AbstractDetector.php) and registering it in the DI container.
 
 ```yaml
 services:
