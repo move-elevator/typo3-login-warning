@@ -24,6 +24,7 @@ declare(strict_types=1);
 namespace MoveElevator\Typo3LoginWarning\Tests\Unit\Security;
 
 use MoveElevator\Typo3LoginWarning\Configuration;
+use MoveElevator\Typo3LoginWarning\Registry\DetectorRegistry;
 use MoveElevator\Typo3LoginWarning\Security\LoginNotification;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -41,12 +42,17 @@ use TYPO3\CMS\Core\Authentication\Event\AfterUserLoggedInEvent;
 final class LoginNotificationTest extends TestCase
 {
     private LoggerInterface&MockObject $logger;
+    private DetectorRegistry $detectorRegistry;
     private LoginNotification $subject;
 
     protected function setUp(): void
     {
         $this->logger = $this->createMock(LoggerInterface::class);
-        $this->subject = new LoginNotification();
+
+        // Use real DetectorRegistry with empty detector list
+        $this->detectorRegistry = new DetectorRegistry([]);
+
+        $this->subject = new LoginNotification($this->detectorRegistry);
         $this->subject->setLogger($this->logger);
 
         $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['_notification'] = [];
