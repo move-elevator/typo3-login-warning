@@ -67,7 +67,7 @@ final class LoginNotificationTest extends TestCase
         $event = new AfterUserLoggedInEvent($user, $request);
 
         // Should complete without errors for non-backend users
-        $this->subject->warningAtLogin($event);
+        ($this->subject)($event);
         $this->addToAssertionCount(1);
     }
 
@@ -83,7 +83,7 @@ final class LoginNotificationTest extends TestCase
             'outOfOffice' => ['active' => false],
         ];
 
-        $this->subject->warningAtLogin($event);
+        ($this->subject)($event);
 
         // Should complete without errors when no detectors are active
         $this->addToAssertionCount(1);
