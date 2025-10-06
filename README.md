@@ -88,8 +88,8 @@ The IP address will be stored and can be hashed for privacy reasons. You can als
 | **Hash IP Addresses** | Hash IP addresses for privacy (SHA-256) | `true`      |
 | **Fetch Geolocation** | Enable IP geolocation lookup | `true`      |
 | **IP Whitelist** | Comma-separated list of whitelisted IPs/networks (supports CIDR notation like `192.168.1.0/24`) | `127.0.0.1` |
-| **Only Admins** | Only detect for admin users | `false`     |
-| **Only System Maintainers** | Only detect for system maintainers | `false`     |
+| **Affected Users** | Which users should trigger this detector: `All Users`, `Only Admins`, `Only System Maintainers` | `All Users` |
+| **Notification Receiver** | Who should receive the notification: `Email Recipients`, `Logged-In User`, `Both` | `Email Recipients` |
 
 ##### Geolocation
 
@@ -116,8 +116,8 @@ Detects logins after a long period of inactivity (default: 365 days).
 |---------|-------------|---------|
 | **Active** | Enable Long Time No See detector | `true` |
 | **Threshold Days** | Days of inactivity before triggering | `365` |
-| **Only Admins** | Only detect for admin users | `false` |
-| **Only System Maintainers** | Only detect for system maintainers | `false` |
+| **Affected Users** | Which users should trigger this detector: `All Users`, `Only Admins`, `Only System Maintainers` | `All Users` |
+| **Notification Receiver** | Who should receive the notification: `Email Recipients`, `Logged-In User`, `Both` | `Email Recipients` |
 
 #### [OutOfOfficeDetector](Classes/Detector/OutOfOfficeDetector.php)
 
@@ -134,8 +134,8 @@ Detects logins outside defined working hours, holidays, or vacation periods. Sup
 | **Timezone** | Timezone for working hours | `UTC`                          |
 | **Holidays** | Comma-separated list of holidays in Y-m-d format (e.g., `2025-01-01,2025-12-25`) | Empty                          |
 | **Vacation Periods** | Comma-separated vacation periods in start:end format (e.g., `2025-07-15:2025-07-30,2025-12-20:2025-12-31`) | Empty                          |
-| **Only Admins** | Only detect for admin users | `false`                        |
-| **Only System Maintainers** | Only detect for system maintainers | `false`                        |
+| **Affected Users** | Which users should trigger this detector: `All Users`, `Only Admins`, `Only System Maintainers` | `All Users` |
+| **Notification Receiver** | Who should receive the notification: `Email Recipients`, `Logged-In User`, `Both` | `Email Recipients` |
 
 **Working Hours JSON Example:**
 ```json
@@ -156,9 +156,15 @@ The following notification methods are available:
 
 Sends a warning email to defined recipients. If no recipient is defined, the email will be sent to the address defined in `$GLOBALS['TYPO3_CONF_VARS']['BE']['warning_email_addr']`.
 
-**Configuration Options:**
+**Global Configuration Options:**
 - **Email Recipients**: Email address(es) of the notification recipients (comma-separated)
-- **Notify User**: When enabled, the logged-in user will also receive a notification email (requires user to have a valid email address)
+
+**Per-Detector Configuration:**
+
+Each detector has its own **Notification Receiver** setting that controls who receives notifications:
+- **Email Recipients** (default): Send notification only to configured email recipients
+- **Logged-In User**: Send notification only to the logged-in user (requires valid email address)
+- **Both**: Send notification to both email recipients and logged-in user
 
 ![email.jpg](Documentation/Images/email.jpg)
 

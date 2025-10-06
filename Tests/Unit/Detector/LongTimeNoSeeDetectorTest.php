@@ -400,11 +400,11 @@ final class LongTimeNoSeeDetectorTest extends TestCase
         self::assertLessThan(740, $days);
     }
 
-    public function testDetectReturnsFalseForNonAdminWhenOnlyAdminsEnabled(): void
+    public function testDetectReturnsFalseForNonAdminWhenAffectedUsersIsAdmins(): void
     {
         $user = $this->createMockUser(['uid' => 123, 'admin' => false]);
         $configuration = [
-            'onlyAdmins' => true,
+            'affectedUsers' => 'admins',
         ];
 
         $this->userLogRepository->expects(self::never())->method('getLastLoginCheckTimestamp');
@@ -415,12 +415,12 @@ final class LongTimeNoSeeDetectorTest extends TestCase
         self::assertFalse($result);
     }
 
-    public function testDetectReturnsTrueForAdminWhenOnlyAdminsEnabled(): void
+    public function testDetectReturnsTrueForAdminWhenAffectedUsersIsAdmins(): void
     {
         $user = $this->createMockUser(['uid' => 123, 'admin' => true]);
         $oneYearAgo = time() - (366 * 24 * 60 * 60);
         $configuration = [
-            'onlyAdmins' => true,
+            'affectedUsers' => 'admins',
         ];
 
         $this->userLogRepository
@@ -438,13 +438,13 @@ final class LongTimeNoSeeDetectorTest extends TestCase
         self::assertTrue($result);
     }
 
-    public function testDetectReturnsFalseForNonSystemMaintainerWhenOnlySystemMaintainersEnabled(): void
+    public function testDetectReturnsFalseForNonSystemMaintainerWhenAffectedUsersIsMaintainers(): void
     {
         $GLOBALS['TYPO3_CONF_VARS']['SYS']['systemMaintainers'] = [2, 3];
 
         $user = $this->createMockUser(['uid' => 123]);
         $configuration = [
-            'onlySystemMaintainers' => true,
+            'affectedUsers' => 'maintainers',
         ];
 
         $this->userLogRepository->expects(self::never())->method('getLastLoginCheckTimestamp');
@@ -455,14 +455,14 @@ final class LongTimeNoSeeDetectorTest extends TestCase
         self::assertFalse($result);
     }
 
-    public function testDetectReturnsTrueForSystemMaintainerWhenOnlySystemMaintainersEnabled(): void
+    public function testDetectReturnsTrueForSystemMaintainerWhenAffectedUsersIsMaintainers(): void
     {
         $GLOBALS['TYPO3_CONF_VARS']['SYS']['systemMaintainers'] = [123, 456];
 
         $user = $this->createMockUser(['uid' => 123]);
         $oneYearAgo = time() - (366 * 24 * 60 * 60);
         $configuration = [
-            'onlySystemMaintainers' => true,
+            'affectedUsers' => 'maintainers',
         ];
 
         $this->userLogRepository

@@ -55,6 +55,7 @@ final class LoginNotification implements LoggerAwareInterface
         $currentUser = $event->getUser();
 
         $currentDetector = null;
+        $currentDetectorConfiguration = [];
         $configBuilder = GeneralUtility::makeInstance(DetectorConfigurationBuilder::class);
         $configBuilder->setLogger($this->logger);
 
@@ -84,18 +85,21 @@ final class LoginNotification implements LoggerAwareInterface
             $currentUser,
             $event->getRequest() ?? $GLOBALS['TYPO3_REQUEST'] ?? ServerRequestFactory::fromGlobals()->withAttribute('applicationType', SystemEnvironmentBuilder::REQUESTTYPE_BE),
             $currentDetector,
-            $globalNotificationConfig
+            $globalNotificationConfig,
+            $currentDetectorConfiguration
         );
     }
 
     /**
      * @param array<string, mixed> $notificationConfig
+     * @param array<string, mixed> $detectorConfig
      */
     private function sendNotification(
         BackendUserAuthentication $user,
         mixed $request,
         DetectorInterface $detector,
-        array $notificationConfig
+        array $notificationConfig,
+        array $detectorConfig
     ): void {
         $notifier = GeneralUtility::makeInstance(EmailNotification::class);
 
@@ -111,11 +115,16 @@ final class LoginNotification implements LoggerAwareInterface
             $additionalData['violationDetails'] = $detector->getViolationDetails();
         }
 
+        // Merge detector-specific notification config with global config
+        $mergedConfig = array_merge($notificationConfig, [
+            'notificationReceiver' => $detectorConfig['notificationReceiver'] ?? 'recipients',
+        ]);
+
         $notifier->notify(
             $user,
             $request,
             $detector::class,
-            $notificationConfig,
+            $mergedConfig,
             $additionalData
         );
     }

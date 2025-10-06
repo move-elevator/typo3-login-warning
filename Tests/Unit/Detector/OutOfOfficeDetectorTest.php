@@ -326,14 +326,14 @@ final class OutOfOfficeDetectorTest extends TestCase
         self::assertSame('vacation', $violationDetails['type']);
     }
 
-    public function testDetectReturnsFalseForNonAdminWhenOnlyAdminsEnabled(): void
+    public function testDetectReturnsFalseForNonAdminWhenAffectedUsersIsAdmins(): void
     {
         $user = $this->createMockUser(['uid' => 123, 'admin' => false]);
         $configuration = [
             'workingHours' => [
                 'monday' => ['09:00', '17:00'],
             ],
-            'onlyAdmins' => true,
+            'affectedUsers' => 'admins',
             'timezone' => 'UTC',
         ];
 
@@ -344,14 +344,14 @@ final class OutOfOfficeDetectorTest extends TestCase
         self::assertFalse($result);
     }
 
-    public function testDetectReturnsTrueForAdminWhenOnlyAdminsEnabled(): void
+    public function testDetectReturnsTrueForAdminWhenAffectedUsersIsAdmins(): void
     {
         $user = $this->createMockUser(['uid' => 123, 'admin' => true]);
         $configuration = [
             'workingHours' => [
                 'monday' => ['09:00', '17:00'],
             ],
-            'onlyAdmins' => true,
+            'affectedUsers' => 'admins',
             'timezone' => 'UTC',
         ];
 
@@ -362,7 +362,7 @@ final class OutOfOfficeDetectorTest extends TestCase
         self::assertTrue($result);
     }
 
-    public function testDetectReturnsFalseForNonSystemMaintainerWhenOnlySystemMaintainersEnabled(): void
+    public function testDetectReturnsFalseForNonSystemMaintainerWhenAffectedUsersIsMaintainers(): void
     {
         $GLOBALS['TYPO3_CONF_VARS']['SYS']['systemMaintainers'] = [2, 3];
 
@@ -371,7 +371,7 @@ final class OutOfOfficeDetectorTest extends TestCase
             'workingHours' => [
                 'monday' => ['09:00', '17:00'],
             ],
-            'onlySystemMaintainers' => true,
+            'affectedUsers' => 'maintainers',
             'timezone' => 'UTC',
         ];
 
@@ -382,7 +382,7 @@ final class OutOfOfficeDetectorTest extends TestCase
         self::assertFalse($result);
     }
 
-    public function testDetectReturnsTrueForSystemMaintainerWhenOnlySystemMaintainersEnabled(): void
+    public function testDetectReturnsTrueForSystemMaintainerWhenAffectedUsersIsMaintainers(): void
     {
         $GLOBALS['TYPO3_CONF_VARS']['SYS']['systemMaintainers'] = [123, 456];
 
@@ -391,7 +391,7 @@ final class OutOfOfficeDetectorTest extends TestCase
             'workingHours' => [
                 'monday' => ['09:00', '17:00'],
             ],
-            'onlySystemMaintainers' => true,
+            'affectedUsers' => 'maintainers',
             'timezone' => 'UTC',
         ];
 

@@ -76,43 +76,42 @@ final class AbstractDetectorTest extends TestCase
         self::assertTrue($this->subject->exposeShouldDetectForUser($user, []));
     }
 
-    public function testShouldDetectForUserReturnsTrueForAdminWhenOnlyAdminsEnabled(): void
+    public function testShouldDetectForUserReturnsTrueForAdminWhenAffectedUsersIsAdmins(): void
     {
         $user = $this->createMockUser(isAdmin: true);
 
-        self::assertTrue($this->subject->exposeShouldDetectForUser($user, ['onlyAdmins' => true]));
+        self::assertTrue($this->subject->exposeShouldDetectForUser($user, ['affectedUsers' => 'admins']));
     }
 
-    public function testShouldDetectForUserReturnsFalseForNonAdminWhenOnlyAdminsEnabled(): void
+    public function testShouldDetectForUserReturnsFalseForNonAdminWhenAffectedUsersIsAdmins(): void
     {
         $user = $this->createMockUser(isAdmin: false);
 
-        self::assertFalse($this->subject->exposeShouldDetectForUser($user, ['onlyAdmins' => true]));
+        self::assertFalse($this->subject->exposeShouldDetectForUser($user, ['affectedUsers' => 'admins']));
     }
 
-    public function testShouldDetectForUserReturnsTrueForSystemMaintainerWhenOnlySystemMaintainersEnabled(): void
+    public function testShouldDetectForUserReturnsTrueForSystemMaintainerWhenAffectedUsersIsMaintainers(): void
     {
         $GLOBALS['TYPO3_CONF_VARS']['SYS']['systemMaintainers'] = [1, 2];
         $user = $this->createMockUser(uid: 1);
 
-        self::assertTrue($this->subject->exposeShouldDetectForUser($user, ['onlySystemMaintainers' => true]));
+        self::assertTrue($this->subject->exposeShouldDetectForUser($user, ['affectedUsers' => 'maintainers']));
     }
 
-    public function testShouldDetectForUserReturnsFalseForNonSystemMaintainerWhenOnlySystemMaintainersEnabled(): void
+    public function testShouldDetectForUserReturnsFalseForNonSystemMaintainerWhenAffectedUsersIsMaintainers(): void
     {
         $GLOBALS['TYPO3_CONF_VARS']['SYS']['systemMaintainers'] = [2, 3];
         $user = $this->createMockUser(uid: 1);
 
-        self::assertFalse($this->subject->exposeShouldDetectForUser($user, ['onlySystemMaintainers' => true]));
+        self::assertFalse($this->subject->exposeShouldDetectForUser($user, ['affectedUsers' => 'maintainers']));
     }
 
-    public function testShouldDetectForUserReturnsTrueWhenBothRestrictionsAreDisabled(): void
+    public function testShouldDetectForUserReturnsTrueWhenAffectedUsersIsAll(): void
     {
         $user = $this->createMockUser(isAdmin: false);
 
         self::assertTrue($this->subject->exposeShouldDetectForUser($user, [
-            'onlyAdmins' => false,
-            'onlySystemMaintainers' => false,
+            'affectedUsers' => 'all',
         ]));
     }
 }

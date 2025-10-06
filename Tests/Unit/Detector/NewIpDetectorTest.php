@@ -247,11 +247,11 @@ final class NewIpDetectorTest extends TestCase
         self::assertNull($subject->getLocationData());
     }
 
-    public function testDetectReturnsFalseForNonAdminWhenOnlyAdminsEnabled(): void
+    public function testDetectReturnsFalseForNonAdminWhenAffectedUsersIsAdmins(): void
     {
         $user = $this->createMockUser(['uid' => 123, 'admin' => false]);
         $configuration = [
-            'onlyAdmins' => true,
+            'affectedUsers' => 'admins',
         ];
 
         $GLOBALS['_SERVER']['REMOTE_ADDR'] = '1.2.3.4';
@@ -265,11 +265,11 @@ final class NewIpDetectorTest extends TestCase
         self::assertFalse($result);
     }
 
-    public function testDetectReturnsTrueForAdminWhenOnlyAdminsEnabled(): void
+    public function testDetectReturnsTrueForAdminWhenAffectedUsersIsAdmins(): void
     {
         $user = $this->createMockUser(['uid' => 123, 'admin' => true]);
         $configuration = [
-            'onlyAdmins' => true,
+            'affectedUsers' => 'admins',
         ];
 
         $GLOBALS['_SERVER']['REMOTE_ADDR'] = '1.2.3.4';
@@ -286,13 +286,13 @@ final class NewIpDetectorTest extends TestCase
         self::assertTrue($result);
     }
 
-    public function testDetectReturnsFalseForNonSystemMaintainerWhenOnlySystemMaintainersEnabled(): void
+    public function testDetectReturnsFalseForNonSystemMaintainerWhenAffectedUsersIsMaintainers(): void
     {
         $GLOBALS['TYPO3_CONF_VARS']['SYS']['systemMaintainers'] = [2, 3];
 
         $user = $this->createMockUser(['uid' => 123]);
         $configuration = [
-            'onlySystemMaintainers' => true,
+            'affectedUsers' => 'maintainers',
         ];
 
         $GLOBALS['_SERVER']['REMOTE_ADDR'] = '1.2.3.4';
@@ -306,13 +306,13 @@ final class NewIpDetectorTest extends TestCase
         self::assertFalse($result);
     }
 
-    public function testDetectReturnsTrueForSystemMaintainerWhenOnlySystemMaintainersEnabled(): void
+    public function testDetectReturnsTrueForSystemMaintainerWhenAffectedUsersIsMaintainers(): void
     {
         $GLOBALS['TYPO3_CONF_VARS']['SYS']['systemMaintainers'] = [123, 456];
 
         $user = $this->createMockUser(['uid' => 123]);
         $configuration = [
-            'onlySystemMaintainers' => true,
+            'affectedUsers' => 'maintainers',
         ];
 
         $GLOBALS['_SERVER']['REMOTE_ADDR'] = '1.2.3.4';

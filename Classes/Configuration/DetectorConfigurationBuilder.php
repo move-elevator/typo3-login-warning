@@ -100,7 +100,6 @@ final class DetectorConfigurationBuilder implements LoggerAwareInterface
         $extensionConfiguration = $this->getExtensionConfiguration();
         return [
             'recipient' => $extensionConfiguration['notificationRecipients'] ?? $GLOBALS['TYPO3_CONF_VARS']['BE']['warning_email_addr'] ?? '',
-            'notifyUser' => (bool)($extensionConfiguration['notifyUser'] ?? false),
         ];
     }
 
@@ -131,8 +130,8 @@ final class DetectorConfigurationBuilder implements LoggerAwareInterface
         return [
             'hashIpAddress' => (bool)($config['hashIpAddress'] ?? true),
             'fetchGeolocation' => (bool)($config['fetchGeolocation'] ?? true),
-            'onlyAdmins' => (bool)($config['onlyAdmins'] ?? false),
-            'onlySystemMaintainers' => (bool)($config['onlySystemMaintainers'] ?? false),
+            'affectedUsers' => $config['affectedUsers'] ?? 'all',
+            'notificationReceiver' => $config['notificationReceiver'] ?? 'recipients',
             'whitelist' => $this->parseCommaSeparatedList($config['whitelist'] ?? '127.0.0.1'),
         ];
     }
@@ -145,8 +144,8 @@ final class DetectorConfigurationBuilder implements LoggerAwareInterface
     {
         return [
             'thresholdDays' => (int)($config['thresholdDays'] ?? 365),
-            'onlyAdmins' => (bool)($config['onlyAdmins'] ?? false),
-            'onlySystemMaintainers' => (bool)($config['onlySystemMaintainers'] ?? false),
+            'affectedUsers' => $config['affectedUsers'] ?? 'all',
+            'notificationReceiver' => $config['notificationReceiver'] ?? 'recipients',
         ];
     }
 
@@ -158,8 +157,8 @@ final class DetectorConfigurationBuilder implements LoggerAwareInterface
     {
         $result = [
             'timezone' => $config['timezone'] ?? $GLOBALS['TYPO3_CONF_VARS']['SYS']['phpTimeZone'] ?? 'UTC',
-            'onlyAdmins' => (bool)($config['onlyAdmins'] ?? false),
-            'onlySystemMaintainers' => (bool)($config['onlySystemMaintainers'] ?? false),
+            'affectedUsers' => $config['affectedUsers'] ?? 'all',
+            'notificationReceiver' => $config['notificationReceiver'] ?? 'recipients',
         ];
 
         // Parse working hours JSON

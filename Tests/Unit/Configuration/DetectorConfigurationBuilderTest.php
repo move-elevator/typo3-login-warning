@@ -87,8 +87,8 @@ final class DetectorConfigurationBuilderTest extends TestCase
         self::assertSame([
             'hashIpAddress' => true,
             'fetchGeolocation' => true,
-            'onlyAdmins' => false,
-            'onlySystemMaintainers' => false,
+            'affectedUsers' => 'all',
+            'notificationReceiver' => 'recipients',
             'whitelist' => ['127.0.0.1'],
         ], $result);
     }
@@ -100,7 +100,8 @@ final class DetectorConfigurationBuilderTest extends TestCase
                 'active' => true,
                 'hashIpAddress' => false,
                 'fetchGeolocation' => false,
-                'onlyAdmins' => true,
+                'affectedUsers' => 'admins',
+                'notificationReceiver' => 'both',
                 'whitelist' => '192.168.1.1, 10.0.0.1',
             ],
         ];
@@ -110,8 +111,8 @@ final class DetectorConfigurationBuilderTest extends TestCase
         self::assertSame([
             'hashIpAddress' => false,
             'fetchGeolocation' => false,
-            'onlyAdmins' => true,
-            'onlySystemMaintainers' => false,
+            'affectedUsers' => 'admins',
+            'notificationReceiver' => 'both',
             'whitelist' => ['192.168.1.1', '10.0.0.1'],
         ], $result);
     }
@@ -126,8 +127,8 @@ final class DetectorConfigurationBuilderTest extends TestCase
 
         self::assertSame([
             'thresholdDays' => 365,
-            'onlyAdmins' => false,
-            'onlySystemMaintainers' => false,
+            'affectedUsers' => 'all',
+            'notificationReceiver' => 'recipients',
         ], $result);
     }
 
@@ -137,7 +138,8 @@ final class DetectorConfigurationBuilderTest extends TestCase
             'longTimeNoSee' => [
                 'active' => true,
                 'thresholdDays' => 180,
-                'onlySystemMaintainers' => true,
+                'affectedUsers' => 'maintainers',
+                'notificationReceiver' => 'user',
             ],
         ];
 
@@ -145,8 +147,8 @@ final class DetectorConfigurationBuilderTest extends TestCase
 
         self::assertSame([
             'thresholdDays' => 180,
-            'onlyAdmins' => false,
-            'onlySystemMaintainers' => true,
+            'affectedUsers' => 'maintainers',
+            'notificationReceiver' => 'user',
         ], $result);
     }
 
@@ -160,8 +162,8 @@ final class DetectorConfigurationBuilderTest extends TestCase
         $result = $this->subject->build(OutOfOfficeDetector::class);
 
         self::assertSame('Europe/Berlin', $result['timezone']);
-        self::assertFalse($result['onlyAdmins']);
-        self::assertFalse($result['onlySystemMaintainers']);
+        self::assertSame('all', $result['affectedUsers']);
+        self::assertSame('recipients', $result['notificationReceiver']);
         self::assertSame([
             'monday' => ['06:00', '19:00'],
             'tuesday' => ['06:00', '19:00'],
@@ -219,20 +221,17 @@ final class DetectorConfigurationBuilderTest extends TestCase
         $result = $this->subject->buildNotificationConfig();
 
         self::assertSame('admin@example.com', $result['recipient']);
-        self::assertFalse($result['notifyUser']);
     }
 
     public function testBuildNotificationConfigWithCustomValues(): void
     {
         $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS'][Configuration::EXT_KEY] = [
             'notificationRecipients' => 'security@example.com',
-            'notifyUser' => true,
         ];
 
         $result = $this->subject->buildNotificationConfig();
 
         self::assertSame('security@example.com', $result['recipient']);
-        self::assertTrue($result['notifyUser']);
     }
 
     public function testGetConfigPrefixReturnsCorrectPrefix(): void
