@@ -28,15 +28,14 @@ use MoveElevator\Typo3LoginWarning\Detector\DetectorInterface;
 use MoveElevator\Typo3LoginWarning\Detector\LongTimeNoSeeDetector;
 use MoveElevator\Typo3LoginWarning\Detector\NewIpDetector;
 use MoveElevator\Typo3LoginWarning\Detector\OutOfOfficeDetector;
-use MoveElevator\Typo3LoginWarning\Notification\EmailNotification;
 use MoveElevator\Typo3LoginWarning\Registry\DetectorRegistry;
+use MoveElevator\Typo3LoginWarning\Registry\NotificationRegistry;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Authentication\Event\AfterUserLoggedInEvent;
 use TYPO3\CMS\Core\Core\SystemEnvironmentBuilder;
 use TYPO3\CMS\Core\Http\ServerRequestFactory;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
  * LoginNotification.
@@ -50,6 +49,8 @@ final class LoginNotification implements LoggerAwareInterface
 
     public function __construct(
         private readonly DetectorRegistry $detectorRegistry,
+        private readonly DetectorConfigurationBuilder $configBuilder,
+        private readonly NotificationRegistry $notificationRegistry,
     ) {}
 
     public function __invoke(AfterUserLoggedInEvent $event): void
@@ -61,19 +62,18 @@ final class LoginNotification implements LoggerAwareInterface
 
         $currentDetector = null;
         $currentDetectorConfiguration = [];
-        $configBuilder = GeneralUtility::makeInstance(DetectorConfigurationBuilder::class);
-        $configBuilder->setLogger($this->logger);
+        $this->configBuilder->setLogger($this->logger);
 
-        $globalNotificationConfig = $configBuilder->buildNotificationConfig();
+        $globalNotificationConfig = $this->configBuilder->buildNotificationConfig();
 
         foreach ($this->detectorRegistry->getDetectors() as $detector) {
             $detectorClass = $detector::class;
 
-            if (!$configBuilder->isActive($detectorClass)) {
+            if (!$this->configBuilder->isActive($detectorClass)) {
                 continue;
             }
 
-            $currentDetectorConfiguration = $configBuilder->build($detectorClass);
+            $currentDetectorConfiguration = $this->configBuilder->build($detectorClass);
 
             if ($detector->detect($currentUser, $currentDetectorConfiguration)) {
                 $currentDetector = $detector;
@@ -85,7 +85,6 @@ final class LoginNotification implements LoggerAwareInterface
             return;
         }
 
-        // Send notification
         $this->sendNotification(
             $currentUser,
             $event->getRequest() ?? $GLOBALS['TYPO3_REQUEST'] ?? ServerRequestFactory::fromGlobals()->withAttribute('applicationType', SystemEnvironmentBuilder::REQUESTTYPE_BE),
@@ -106,8 +105,6 @@ final class LoginNotification implements LoggerAwareInterface
         array $notificationConfig,
         array $detectorConfig
     ): void {
-        $notifier = GeneralUtility::makeInstance(EmailNotification::class);
-
         // ToDo: Consider more generic way to pass additional data from detectors to notifiers
         $additionalData = [];
         if ($detector instanceof NewIpDetector) {
@@ -120,18 +117,19 @@ final class LoginNotification implements LoggerAwareInterface
             $additionalData['violationDetails'] = $detector->getViolationDetails();
         }
 
-        // Merge detector-specific notification config with global config
         $mergedConfig = array_merge($notificationConfig, [
             'notificationReceiver' => $detectorConfig['notificationReceiver'] ?? 'recipients',
         ]);
 
-        $notifier->notify(
-            $user,
-            $request,
-            $detector::class,
-            $mergedConfig,
-            $additionalData
-        );
+        foreach ($this->notificationRegistry->getNotifiers() as $notifier) {
+            $notifier->notify(
+                $user,
+                $request,
+                $detector::class,
+                $mergedConfig,
+                $additionalData
+            );
+        }
     }
 
 }

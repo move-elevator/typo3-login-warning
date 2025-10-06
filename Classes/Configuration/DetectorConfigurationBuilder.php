@@ -38,7 +38,7 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  * @author Konrad Michalik <hej@konradmichalik.dev>
  * @license GPL-2.0
  */
-final class DetectorConfigurationBuilder implements LoggerAwareInterface
+class DetectorConfigurationBuilder implements LoggerAwareInterface
 {
     use LoggerAwareTrait;
 
