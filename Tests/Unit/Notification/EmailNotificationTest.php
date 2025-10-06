@@ -212,6 +212,182 @@ final class EmailNotificationTest extends TestCase
         $this->subject->notify($user, $this->request, 'TestTrigger', $configuration);
     }
 
+    public function testNotifyWithNotificationReceiverUser(): void
+    {
+        $user = $this->createMockBackendUser(['uid' => 123, 'email' => 'user@example.com']);
+        $configuration = [
+            'recipient' => 'admin@example.com',
+            'notificationReceiver' => 'user', // Only to user
+        ];
+
+        $fluidEmail = $this->createMock(FluidEmail::class);
+        $fluidEmail->expects(self::once())->method('to')->with('user@example.com')->willReturnSelf();
+        $fluidEmail->expects(self::once())->method('setRequest')->willReturnSelf();
+        $fluidEmail->expects(self::once())->method('setTemplate')->willReturnSelf();
+        $fluidEmail->expects(self::once())->method('assignMultiple')->with(
+            self::callback(fn(array $vars) => $vars['isUserNotification'] === true)
+        )->willReturnSelf();
+
+        GeneralUtility::addInstance(FluidEmail::class, $fluidEmail);
+
+        $this->mailer->expects(self::once())->method('send');
+
+        $this->subject->notify($user, $this->request, 'TestTrigger', $configuration);
+    }
+
+    public function testNotifyWithNotificationReceiverUserWithoutEmail(): void
+    {
+        $user = $this->createMockBackendUser(['uid' => 123]); // No email
+        $configuration = [
+            'recipient' => 'admin@example.com',
+            'notificationReceiver' => 'user',
+        ];
+
+        $this->logger
+            ->expects(self::once())
+            ->method('info')
+            ->with(self::stringContains('No recipient configured'));
+
+        $this->mailer->expects(self::never())->method('send');
+
+        $this->subject->notify($user, $this->request, 'TestTrigger', $configuration);
+    }
+
+    public function testNotifyMergesAdditionalValues(): void
+    {
+        $user = $this->createMockBackendUser(['uid' => 123]);
+        $configuration = ['recipient' => 'admin@example.com'];
+        $additionalValues = [
+            'locationData' => ['city' => 'Berlin'],
+            'daysSinceLastLogin' => 365,
+        ];
+
+        $fluidEmail = $this->createMock(FluidEmail::class);
+        $fluidEmail->expects(self::once())->method('to')->willReturnSelf();
+        $fluidEmail->expects(self::once())->method('setRequest')->willReturnSelf();
+        $fluidEmail->expects(self::once())->method('setTemplate')->willReturnSelf();
+        $fluidEmail->expects(self::once())->method('assignMultiple')->with(
+            self::callback(function (array $vars) use ($additionalValues) {
+                return isset($vars['locationData'])
+                    && $vars['locationData'] === $additionalValues['locationData']
+                    && $vars['daysSinceLastLogin'] === $additionalValues['daysSinceLastLogin'];
+            })
+        )->willReturnSelf();
+
+        GeneralUtility::addInstance(FluidEmail::class, $fluidEmail);
+
+        $this->mailer->expects(self::once())->method('send');
+
+        $this->subject->notify($user, $this->request, 'TestTrigger', $configuration, $additionalValues);
+    }
+
+    public function testNotifyHandlesTransportException(): void
+    {
+        $user = $this->createMockBackendUser(['uid' => 123]);
+        $configuration = ['recipient' => 'admin@example.com'];
+
+        $fluidEmail = $this->createMock(FluidEmail::class);
+        $fluidEmail->expects(self::once())->method('to')->willReturnSelf();
+        $fluidEmail->expects(self::once())->method('setRequest')->willReturnSelf();
+        $fluidEmail->expects(self::once())->method('setTemplate')->willReturnSelf();
+        $fluidEmail->expects(self::once())->method('assignMultiple')->willReturnSelf();
+
+        GeneralUtility::addInstance(FluidEmail::class, $fluidEmail);
+
+        $this->mailer
+            ->expects(self::once())
+            ->method('send')
+            ->willThrowException(new \Symfony\Component\Mailer\Exception\TransportException('SMTP error'));
+
+        $this->logger
+            ->expects(self::once())
+            ->method('warning')
+            ->with(
+                self::stringContains('mailer settings error'),
+                self::callback(
+                    fn(array $context) =>
+                    $context['recipient'] === 'admin@example.com'
+                    && $context['userId'] === 123
+                )
+            );
+
+        $this->subject->notify($user, $this->request, 'TestTrigger', $configuration);
+    }
+
+    public function testNotifyHandlesRfcComplianceException(): void
+    {
+        $user = $this->createMockBackendUser(['uid' => 123]);
+        $configuration = ['recipient' => 'invalid-email'];
+
+        $fluidEmail = $this->createMock(FluidEmail::class);
+        $fluidEmail->expects(self::once())->method('to')->willReturnSelf();
+        $fluidEmail->expects(self::once())->method('setRequest')->willReturnSelf();
+        $fluidEmail->expects(self::once())->method('setTemplate')->willReturnSelf();
+        $fluidEmail->expects(self::once())->method('assignMultiple')->willReturnSelf();
+
+        GeneralUtility::addInstance(FluidEmail::class, $fluidEmail);
+
+        $this->mailer
+            ->expects(self::once())
+            ->method('send')
+            ->willThrowException(new \Symfony\Component\Mime\Exception\RfcComplianceException('Invalid email'));
+
+        $this->logger
+            ->expects(self::once())
+            ->method('warning')
+            ->with(
+                self::stringContains('invalid email address'),
+                self::callback(
+                    fn(array $context) =>
+                    $context['recipient'] === 'invalid-email'
+                )
+            );
+
+        $this->subject->notify($user, $this->request, 'TestTrigger', $configuration);
+    }
+
+    public function testNotifyHandlesGenericException(): void
+    {
+        $user = $this->createMockBackendUser(['uid' => 123]);
+        $configuration = ['recipient' => 'admin@example.com'];
+
+        $fluidEmail = $this->createMock(FluidEmail::class);
+        $fluidEmail->expects(self::once())->method('to')->willReturnSelf();
+        $fluidEmail->expects(self::once())->method('setRequest')->willReturnSelf();
+        $fluidEmail->expects(self::once())->method('setTemplate')->willReturnSelf();
+        $fluidEmail->expects(self::once())->method('assignMultiple')->willReturnSelf();
+
+        GeneralUtility::addInstance(FluidEmail::class, $fluidEmail);
+
+        $this->mailer
+            ->expects(self::once())
+            ->method('send')
+            ->willThrowException(new \RuntimeException('Unexpected error'));
+
+        $this->logger
+            ->expects(self::once())
+            ->method('error')
+            ->with(
+                self::stringContains('PHP exception'),
+                self::callback(
+                    fn(array $context) =>
+                    isset($context['exception']) && $context['exception'] instanceof \RuntimeException
+                )
+            );
+
+        $this->subject->notify($user, $this->request, 'TestTrigger', $configuration);
+    }
+
+    public function testNotifyDoesNothingForNonBackendUser(): void
+    {
+        $user = $this->createMock(\TYPO3\CMS\Core\Authentication\AbstractUserAuthentication::class);
+        $configuration = ['recipient' => 'admin@example.com'];
+
+        $this->mailer->expects(self::never())->method('send');
+
+        $this->subject->notify($user, $this->request, 'TestTrigger', $configuration);
+    }
+
     /**
      * @param array<string, mixed> $userData
      */
