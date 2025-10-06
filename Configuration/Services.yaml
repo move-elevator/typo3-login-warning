@@ -7,10 +7,6 @@ services:
     resource: "../Classes/*"
     exclude: "../Classes/Domain/Model/*"
 
-  # Interface binding for geolocation service
-  MoveElevator\Typo3LoginWarning\Service\GeolocationServiceInterface:
-    alias: MoveElevator\Typo3LoginWarning\Service\IpApiGeolocationService
-
   MoveElevator\Typo3LoginWarning\Registry\DetectorRegistry:
     public: true
     arguments:
@@ -22,17 +18,14 @@ services:
       $notifiers: !tagged_iterator typo3_login_warning.notifier
 
   MoveElevator\Typo3LoginWarning\Detector\NewIpDetector:
-    public: true
     tags:
       - { name: typo3_login_warning.detector, priority: 100 }
 
   MoveElevator\Typo3LoginWarning\Detector\LongTimeNoSeeDetector:
-    public: true
     tags:
       - { name: typo3_login_warning.detector, priority: 50 }
 
   MoveElevator\Typo3LoginWarning\Detector\OutOfOfficeDetector:
-    public: true
     tags:
       - { name: typo3_login_warning.detector, priority: 10 }
 
@@ -40,8 +33,10 @@ services:
     tags:
       - { name: typo3_login_warning.notifier }
 
-  # Login notification event listener
   MoveElevator\Typo3LoginWarning\Security\LoginNotification:
     tags:
       - name: event.listener
         identifier: 'move-elevator/typo3-login-warning/login-notification'
+
+  MoveElevator\Typo3LoginWarning\Service\GeolocationServiceInterface:
+    alias: MoveElevator\Typo3LoginWarning\Service\IpApiGeolocationService
