@@ -80,7 +80,7 @@ final class IpLogRepositoryTest extends TestCase
 
         $this->queryBuilder->expects(self::exactly(2))
             ->method('createNamedParameter')
-            ->willReturnCallback(function ($value, $type) use ($userId, $ipAddress) {
+            ->willReturnCallback(function (mixed $value, mixed $type) use ($userId, $ipAddress): string {
                 if ($value === $userId && $type === Connection::PARAM_INT) {
                     return ':userId';
                 }
@@ -92,7 +92,7 @@ final class IpLogRepositoryTest extends TestCase
 
         $this->expressionBuilder->expects(self::exactly(2))
             ->method('eq')
-            ->willReturnCallback(function ($field, $param) {
+            ->willReturnCallback(function (string $field, string $param): string {
                 return "$field = $param";
             });
 
