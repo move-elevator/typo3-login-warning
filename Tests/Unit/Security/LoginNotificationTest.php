@@ -24,7 +24,9 @@ declare(strict_types=1);
 namespace MoveElevator\Typo3LoginWarning\Tests\Unit\Security;
 
 use MoveElevator\Typo3LoginWarning\Configuration;
+use MoveElevator\Typo3LoginWarning\Configuration\DetectorConfigurationBuilder;
 use MoveElevator\Typo3LoginWarning\Registry\DetectorRegistry;
+use MoveElevator\Typo3LoginWarning\Registry\NotificationRegistry;
 use MoveElevator\Typo3LoginWarning\Security\LoginNotification;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -43,16 +45,24 @@ final class LoginNotificationTest extends TestCase
 {
     private LoggerInterface&MockObject $logger;
     private DetectorRegistry $detectorRegistry;
+    private DetectorConfigurationBuilder&MockObject $configBuilder;
+    private NotificationRegistry $notificationRegistry;
     private LoginNotification $subject;
 
     protected function setUp(): void
     {
         $this->logger = $this->createMock(LoggerInterface::class);
+        $this->configBuilder = $this->createMock(DetectorConfigurationBuilder::class);
 
-        // Use real DetectorRegistry with empty detector list
+        // Use real registries with empty lists
         $this->detectorRegistry = new DetectorRegistry([]);
+        $this->notificationRegistry = new NotificationRegistry([]);
 
-        $this->subject = new LoginNotification($this->detectorRegistry);
+        $this->subject = new LoginNotification(
+            $this->detectorRegistry,
+            $this->configBuilder,
+            $this->notificationRegistry
+        );
         $this->subject->setLogger($this->logger);
 
         $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['_notification'] = [];
@@ -93,5 +103,73 @@ final class LoginNotificationTest extends TestCase
 
         // Should complete without errors when no detectors are active
         $this->addToAssertionCount(1);
+    }
+
+    public function testSkipsDetectorWhenNotActive(): void
+    {
+        $user = $this->createMock(BackendUserAuthentication::class);
+        $user->user = ['uid' => 123];
+        $request = $this->createMock(ServerRequestInterface::class);
+        $event = new AfterUserLoggedInEvent($user, $request);
+
+        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS'][Configuration::EXT_KEY] = [
+            'newIp' => ['active' => false],
+            'longTimeNoSee' => ['active' => false],
+            'outOfOffice' => ['active' => false],
+        ];
+
+        // Should complete without triggering any detector
+        ($this->subject)($event);
+        $this->addToAssertionCount(1);
+    }
+
+    public function testNotifiesWhenDetectorTriggered(): void
+    {
+        $user = $this->createMock(BackendUserAuthentication::class);
+        $user->user = ['uid' => 123, 'username' => 'testuser'];
+        $request = $this->createMock(ServerRequestInterface::class);
+        $event = new AfterUserLoggedInEvent($user, $request);
+
+        // Create mock detector that will trigger
+        $mockDetector = $this->createMock(\MoveElevator\Typo3LoginWarning\Detector\DetectorInterface::class);
+        $mockDetector->expects(self::once())
+            ->method('detect')
+            ->willReturn(true);
+
+        // Create mock notifier
+        $mockNotifier = $this->createMock(\MoveElevator\Typo3LoginWarning\Notification\NotifierInterface::class);
+        $mockNotifier->expects(self::once())
+            ->method('notify');
+
+        // Use registries with our mocks
+        $this->detectorRegistry = new DetectorRegistry([$mockDetector]);
+        $this->notificationRegistry = new NotificationRegistry([$mockNotifier]);
+        $this->subject = new LoginNotification(
+            $this->detectorRegistry,
+            $this->configBuilder,
+            $this->notificationRegistry
+        );
+        $this->subject->setLogger($this->logger);
+
+        // Configure mocks
+        $this->configBuilder->expects(self::once())
+            ->method('setLogger')
+            ->with($this->logger);
+
+        $this->configBuilder->expects(self::once())
+            ->method('buildNotificationConfig')
+            ->willReturn(['recipients' => 'test@example.com']);
+
+        $this->configBuilder->expects(self::once())
+            ->method('isActive')
+            ->with(get_class($mockDetector))
+            ->willReturn(true);
+
+        $this->configBuilder->expects(self::once())
+            ->method('build')
+            ->with(get_class($mockDetector))
+            ->willReturn(['notificationReceiver' => 'recipients']);
+
+        ($this->subject)($event);
     }
 }

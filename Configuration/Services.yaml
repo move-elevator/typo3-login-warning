@@ -11,13 +11,15 @@ services:
   MoveElevator\Typo3LoginWarning\Service\GeolocationServiceInterface:
     alias: MoveElevator\Typo3LoginWarning\Service\IpApiGeolocationService
 
-  MoveElevator\Typo3LoginWarning\Notification\EmailNotification:
-    public: true
-
   MoveElevator\Typo3LoginWarning\Registry\DetectorRegistry:
     public: true
     arguments:
       $detectors: !tagged_iterator typo3_login_warning.detector
+
+  MoveElevator\Typo3LoginWarning\Registry\NotificationRegistry:
+    public: true
+    arguments:
+      $notifiers: !tagged_iterator typo3_login_warning.notifier
 
   MoveElevator\Typo3LoginWarning\Detector\NewIpDetector:
     public: true
@@ -33,6 +35,10 @@ services:
     public: true
     tags:
       - { name: typo3_login_warning.detector, priority: 10 }
+
+  MoveElevator\Typo3LoginWarning\Notification\EmailNotification:
+    tags:
+      - { name: typo3_login_warning.notifier }
 
   # Login notification event listener
   MoveElevator\Typo3LoginWarning\Security\LoginNotification:
