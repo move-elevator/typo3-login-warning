@@ -2,6 +2,7 @@ type: php
 docroot: .Build
 webserver_type: apache-fpm
 additional_hostnames:
+  - 12.typo3-login-warning
   - 13.typo3-login-warning
 hooks:
    post-start:
