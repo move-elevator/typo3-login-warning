@@ -34,7 +34,7 @@ use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
 /**
  * DetectorConfigurationBuilder.
  *
- * @author Konrad Michalik <hej@konradmichalik.dev>
+ * @author Konrad Michalik <km@move-elevator.de>
  * @license GPL-2.0
  */
 class DetectorConfigurationBuilder implements LoggerAwareInterface

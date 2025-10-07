@@ -28,7 +28,7 @@ use MoveElevator\Typo3LoginWarning\Notification\NotifierInterface;
 /**
  * NotificationRegistry.
  *
- * @author Konrad Michalik <hej@konradmichalik.dev>
+ * @author Konrad Michalik <km@move-elevator.de>
  * @license GPL-2.0
  */
 class NotificationRegistry
