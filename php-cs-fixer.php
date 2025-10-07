@@ -47,7 +47,7 @@ return PhpCsFixerConfig\Config::create()
         RuleSet::fromArray(
             KonradMichalik\PhpDocBlockHeaderFixer\Generators\DocBlockHeader::create(
                 [
-                    'author' => 'Konrad Michalik <hej@konradmichalik.dev>',
+                    'author' => 'Konrad Michalik <km@move-elevator.de>',
                     'license' => 'GPL-2.0',
                 ],
                 addStructureName: true,

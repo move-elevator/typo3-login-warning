@@ -32,7 +32,7 @@ use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 /**
  * OutOfOfficeDetectorTest.
  *
- * @author Konrad Michalik <hej@konradmichalik.dev>
+ * @author Konrad Michalik <km@move-elevator.de>
  * @license GPL-2.0
  */
 final class OutOfOfficeDetectorTest extends TestCase
@@ -415,7 +415,7 @@ final class OutOfOfficeDetectorTest extends TestCase
 /**
  * OutOfOfficeDetectorWithMockedTime.
  *
- * @author Konrad Michalik <hej@konradmichalik.dev>
+ * @author Konrad Michalik <km@move-elevator.de>
  * @license GPL-2.0
  */
 class OutOfOfficeDetectorWithMockedTime extends OutOfOfficeDetector

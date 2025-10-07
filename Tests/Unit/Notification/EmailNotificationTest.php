@@ -37,7 +37,7 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 /**
  * EmailNotificationTest.
  *
- * @author Konrad Michalik <hej@konradmichalik.dev>
+ * @author Konrad Michalik <km@move-elevator.de>
  * @license GPL-2.0
  */
 final class EmailNotificationTest extends TestCase

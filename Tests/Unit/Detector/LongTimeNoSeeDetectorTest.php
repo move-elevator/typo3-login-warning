@@ -33,7 +33,7 @@ use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 /**
  * LongTimeNoSeeDetectorTest.
  *
- * @author Konrad Michalik <hej@konradmichalik.dev>
+ * @author Konrad Michalik <km@move-elevator.de>
  * @license GPL-2.0
  */
 final class LongTimeNoSeeDetectorTest extends TestCase

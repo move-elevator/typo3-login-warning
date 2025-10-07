@@ -35,7 +35,7 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 /**
  * EmailNotification.
  *
- * @author Konrad Michalik <hej@konradmichalik.dev>
+ * @author Konrad Michalik <km@move-elevator.de>
  * @license GPL-2.0
  */
 class EmailNotification implements NotifierInterface, LoggerAwareInterface
