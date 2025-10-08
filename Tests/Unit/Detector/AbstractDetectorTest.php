@@ -33,7 +33,7 @@ final class AbstractDetectorTest extends TestCase
             /**
              * @param array<string, mixed> $configuration
              */
-            public function detect(AbstractUserAuthentication $user, array $configuration = []): bool
+            public function detect(AbstractUserAuthentication $user, array $configuration = [], ?\Psr\Http\Message\ServerRequestInterface $request = null): bool
             {
                 return true;
             }

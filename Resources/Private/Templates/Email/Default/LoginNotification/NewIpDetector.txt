@@ -7,6 +7,9 @@
 </f:variable>
 <f:if condition="{isUserNotification}">
 <f:then>You logged in from a new IP address "{normalizedParams.remoteAddress}"{locationInfo} at the site "{typo3.sitename}".
+<f:if condition="{deviceInfo}">
+(Device Info: <f:if condition="{deviceInfo.browser}">{deviceInfo.browser}</f:if><f:if condition="{deviceInfo.browser} && {deviceInfo.os}"> / </f:if><f:if condition="{deviceInfo.os}">{deviceInfo.os}</f:if><f:if condition="{deviceInfo.date}"> / {deviceInfo.date}</f:if>)
+</f:if>
 
 ---
 
@@ -14,6 +17,9 @@ Was this you?
 If you recognize this login, you can safely ignore this email. Your account remains secure.
 If you did not perform this login, please contact your system administrator immediately and change your password.</f:then>
 <f:else>The user "{user.username}" logged in from a new IP address "{normalizedParams.remoteAddress}"{locationInfo} at the site "{typo3.sitename}".
+<f:if condition="{deviceInfo}">
+(Device Info: <f:if condition="{deviceInfo.browser}">{deviceInfo.browser}</f:if><f:if condition="{deviceInfo.browser} && {deviceInfo.os}"> / </f:if><f:if condition="{deviceInfo.os}">{deviceInfo.os}</f:if><f:if condition="{deviceInfo.date}"> / {deviceInfo.date}</f:if>)
+</f:if>
 
 ---
 

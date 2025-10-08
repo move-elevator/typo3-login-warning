@@ -16,6 +16,12 @@
         <f:then>
             <p>You logged in from a <strong>new IP address</strong> <code>{normalizedParams.remoteAddress}</code>{locationInfo} at the site "{typo3.sitename}".</p>
 
+            <f:if condition="{deviceInfo}">
+                <p style="margin-top: 10px; font-size: 12px; color: #666;">
+                    <strong>Device Info:</strong> <f:if condition="{deviceInfo.browser}"><code>{deviceInfo.browser}</code></f:if><f:if condition="{deviceInfo.browser} && {deviceInfo.os}"> / </f:if><f:if condition="{deviceInfo.os}"><code>{deviceInfo.os}</code></f:if><f:if condition="{deviceInfo.date}"> / {deviceInfo.date}</f:if>
+                </p>
+            </f:if>
+
             <hr style="margin: 20px 0; border: 0; border-top: 1px solid #ddd;" />
 
             <p style="font-size: 12px; color: #666;">
@@ -26,6 +32,12 @@
         </f:then>
         <f:else>
             <p>The user <em>"{user.username}"</em> logged in from a <strong>new IP address</strong> <code>{normalizedParams.remoteAddress}</code>{locationInfo} at the site "{typo3.sitename}".</p>
+
+            <f:if condition="{deviceInfo}">
+                <p style="margin-top: 10px; font-size: 12px; color: #666;">
+                    <strong>Device Info:</strong> <f:if condition="{deviceInfo.browser}"><code>{deviceInfo.browser}</code></f:if><f:if condition="{deviceInfo.browser} && {deviceInfo.os}"> / </f:if><f:if condition="{deviceInfo.os}"><code>{deviceInfo.os}</code></f:if><f:if condition="{deviceInfo.date}"> / {deviceInfo.date}</f:if>
+                </p>
+            </f:if>
 
             <hr style="margin: 20px 0; border: 0; border-top: 1px solid #ddd;" />
 
