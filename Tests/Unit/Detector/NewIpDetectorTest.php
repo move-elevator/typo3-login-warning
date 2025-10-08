@@ -292,6 +292,90 @@ final class NewIpDetectorTest extends TestCase
         unset($GLOBALS['TYPO3_CONF_VARS']['SYS']['systemMaintainers']);
     }
 
+    public function testDetectAddsDeviceInfoWhenEnabled(): void
+    {
+        $GLOBALS['_SERVER']['REMOTE_ADDR'] = '203.0.113.42';
+        $request = $this->createMockRequest(
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        );
+
+        $user = $this->createMockUser(['uid' => 123]);
+        $configuration = ['includeDeviceInfo' => true];
+
+        $ipLogRepository = $this->createMock(IpLogRepository::class);
+        $ipLogRepository->expects(self::once())
+            ->method('findByUserAndIp')
+            ->willReturn(false);
+        $ipLogRepository->expects(self::once())
+            ->method('addUserIp');
+
+        $subject = new NewIpDetector($ipLogRepository);
+        $result = $subject->detect($user, $configuration, $request);
+
+        self::assertTrue($result);
+
+        $additionalData = $subject->getAdditionalData();
+        self::assertArrayHasKey('deviceInfo', $additionalData);
+        self::assertArrayHasKey('browser', $additionalData['deviceInfo']);
+        self::assertArrayHasKey('os', $additionalData['deviceInfo']);
+        self::assertArrayHasKey('userAgent', $additionalData['deviceInfo']);
+        self::assertArrayHasKey('date', $additionalData['deviceInfo']);
+        self::assertStringContainsString('Chrome', $additionalData['deviceInfo']['browser']);
+        self::assertStringContainsString('macOS', $additionalData['deviceInfo']['os']);
+    }
+
+    public function testDetectDoesNotAddDeviceInfoWhenDisabled(): void
+    {
+        $GLOBALS['_SERVER']['REMOTE_ADDR'] = '203.0.113.42';
+        $request = $this->createMockRequest('Mozilla/5.0');
+
+        $user = $this->createMockUser(['uid' => 123]);
+        $configuration = ['includeDeviceInfo' => false];
+
+        $ipLogRepository = $this->createMock(IpLogRepository::class);
+        $ipLogRepository->expects(self::once())
+            ->method('findByUserAndIp')
+            ->willReturn(false);
+        $ipLogRepository->expects(self::once())
+            ->method('addUserIp');
+
+        $subject = new NewIpDetector($ipLogRepository);
+        $result = $subject->detect($user, $configuration, $request);
+
+        self::assertTrue($result);
+
+        $additionalData = $subject->getAdditionalData();
+        self::assertArrayNotHasKey('deviceInfo', $additionalData);
+    }
+
+    public function testDetectAddsDeviceInfoByDefaultWhenNotConfigured(): void
+    {
+        $GLOBALS['_SERVER']['REMOTE_ADDR'] = '203.0.113.42';
+        $request = $this->createMockRequest(
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:120.0) Gecko/20100101 Firefox/120.0',
+        );
+
+        $user = $this->createMockUser(['uid' => 123]);
+        $configuration = [];
+
+        $ipLogRepository = $this->createMock(IpLogRepository::class);
+        $ipLogRepository->expects(self::once())
+            ->method('findByUserAndIp')
+            ->willReturn(false);
+        $ipLogRepository->expects(self::once())
+            ->method('addUserIp');
+
+        $subject = new NewIpDetector($ipLogRepository);
+        $result = $subject->detect($user, $configuration, $request);
+
+        self::assertTrue($result);
+
+        $additionalData = $subject->getAdditionalData();
+        self::assertArrayHasKey('deviceInfo', $additionalData);
+        self::assertStringContainsString('Firefox', $additionalData['deviceInfo']['browser']);
+        self::assertStringContainsString('Windows', $additionalData['deviceInfo']['os']);
+    }
+
     /**
      * @param array<string, mixed> $userData
      */
@@ -301,5 +385,15 @@ final class NewIpDetectorTest extends TestCase
         $user->user = $userData;
 
         return $user;
+    }
+
+    private function createMockRequest(string $userAgent): \Psr\Http\Message\ServerRequestInterface&MockObject
+    {
+        $request = $this->createMock(\Psr\Http\Message\ServerRequestInterface::class);
+        $request->method('getHeaderLine')
+            ->with('User-Agent')
+            ->willReturn($userAgent);
+
+        return $request;
     }
 }

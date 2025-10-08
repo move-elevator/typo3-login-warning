@@ -15,6 +15,7 @@ namespace MoveElevator\Typo3LoginWarning\Detector;
 
 use Doctrine\DBAL\Exception;
 use MoveElevator\Typo3LoginWarning\Domain\Repository\UserLogRepository;
+use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Core\Authentication\AbstractUserAuthentication;
 
 /**
@@ -41,7 +42,7 @@ class LongTimeNoSeeDetector extends AbstractDetector
      *
      * @throws Exception
      */
-    public function detect(AbstractUserAuthentication $user, array $configuration = []): bool
+    public function detect(AbstractUserAuthentication $user, array $configuration = [], ?ServerRequestInterface $request = null): bool
     {
         $userArray = $user->user;
         $userId = (int) $userArray['uid'];

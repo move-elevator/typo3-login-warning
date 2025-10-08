@@ -421,7 +421,7 @@ class OutOfOfficeDetectorWithMockedTime extends OutOfOfficeDetector
     /**
      * @param array<string, mixed> $configuration
      */
-    public function detect(\TYPO3\CMS\Core\Authentication\AbstractUserAuthentication $user, array $configuration = []): bool
+    public function detect(\TYPO3\CMS\Core\Authentication\AbstractUserAuthentication $user, array $configuration = [], ?\Psr\Http\Message\ServerRequestInterface $request = null): bool
     {
         // Check user role filtering
         if (!$this->shouldDetectForUser($user, $configuration)) {

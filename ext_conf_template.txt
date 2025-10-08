@@ -22,13 +22,16 @@ newIp.hashIpAddress = 1
 # cat=newip/newip/030; type=boolean; label=Fetch Geolocation:Enable IP geolocation lookup for new IPs
 newIp.fetchGeolocation = 1
 
-# cat=newip/newip/040; type=string; label=IP Whitelist:Comma-separated list of whitelisted IPs/networks (e.g. 127.0.0.1,192.168.1.0/24)
+# cat=newip/newip/040; type=boolean; label=Include Device Information:Include browser and OS information in notification emails
+newIp.includeDeviceInfo = 1
+
+# cat=newip/newip/050; type=string; label=IP Whitelist:Comma-separated list of whitelisted IPs/networks (e.g. 127.0.0.1,192.168.1.0/24)
 newIp.whitelist = 127.0.0.1
 
-# cat=newip/newip/050; type=options[All Users=all,Only Admins=admins,Only System Maintainers=maintainers]; label=Affected Users:Which users should trigger this detector
+# cat=newip/newip/060; type=options[All Users=all,Only Admins=admins,Only System Maintainers=maintainers]; label=Affected Users:Which users should trigger this detector
 newIp.affectedUsers = all
 
-# cat=newip/newip/060; type=options[Email Recipients=recipients,Logged-In User=user,Both=both]; label=Notification Receiver:Who should receive the notification
+# cat=newip/newip/070; type=options[Email Recipients=recipients,Logged-In User=user,Both=both]; label=Notification Receiver:Who should receive the notification
 newIp.notificationReceiver = recipients
 
 # cat=longtimenosee/longtimenosee/020; type=int+; label=Threshold Days:Days of inactivity before triggering notification

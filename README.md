@@ -78,7 +78,8 @@ Detects logins from new IP addresses and triggers a warning email.
 
 > The user "admin" logged in from a new IP address 192.168.97.5 at the site "EXT:typo3-login-warning Dev Environment".
 
-The IP address will be stored and can be hashed for privacy reasons. You can also define a whitelist of IP addresses that will not trigger a warning. An IP geolocation lookup can be enabled to add more information to the notification email.
+The IP address will be stored and can be hashed for privacy reasons. You can also define a whitelist of IP addresses that will not trigger a warning. 
+An IP geolocation lookup and a device information check can be enabled to add more information to the notification email.
 
 **Configuration Options:**
 
@@ -87,6 +88,7 @@ The IP address will be stored and can be hashed for privacy reasons. You can als
 | **Active** | Enable New IP detector | `true`      |
 | **Hash IP Addresses** | Hash IP addresses for privacy (SHA-256) | `true`      |
 | **Fetch Geolocation** | Enable IP geolocation lookup | `true`      |
+| **Include Device Information** | Include browser and OS information in notification emails | `true`      |
 | **IP Whitelist** | Comma-separated list of whitelisted IPs/networks (supports CIDR notation like `192.168.1.0/24`) | `127.0.0.1` |
 | **Affected Users** | Which users should trigger this detector: `All Users`, `Only Admins`, `Only System Maintainers` | `All Users` |
 | **Notification Receiver** | Who should receive the notification: `Email Recipients`, `Logged-In User`, `Both` | `Email Recipients` |

@@ -16,6 +16,7 @@ namespace MoveElevator\Typo3LoginWarning\Detector;
 use DateTime;
 use DateTimeZone;
 use Exception;
+use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Core\Authentication\AbstractUserAuthentication;
 
 use function count;
@@ -35,7 +36,7 @@ class OutOfOfficeDetector extends AbstractDetector
      *
      * @throws Exception
      */
-    public function detect(AbstractUserAuthentication $user, array $configuration = []): bool
+    public function detect(AbstractUserAuthentication $user, array $configuration = [], ?ServerRequestInterface $request = null): bool
     {
         $timezone = ($configuration['timezone'] ?? '') !== '' ? $configuration['timezone'] : 'UTC';
         $currentTime = $this->getCurrentTime($timezone);
