@@ -1,6 +1,6 @@
 {
 	"name": "move-elevator/typo3-login-warning",
-	"description": "",
+	"description": "Extends the TYPO3 backend login warning_mode functionality to inform about suspicious logins with several features.",
 	"license": [
 		"GPL-2.0-or-later"
 	],
@@ -25,11 +25,10 @@
 	},
 	"require-dev": {
 		"armin/editorconfig-cli": "^2.0",
-		"eliashaeussler/php-cs-fixer-config": "2.3.0",
 		"eliashaeussler/version-bumper": "^2.4 || ^3.0",
 		"ergebnis/composer-normalize": "^2.44",
 		"helhum/typo3-console": "^7.0 || ^8.1",
-		"helmich/typo3-typoscript-lint": "^3.2",
+		"konradmichalik/php-cs-fixer-preset": "^0.1.0",
 		"konradmichalik/php-doc-block-header-fixer": "^0.2.1",
 		"phpstan/phpstan-deprecation-rules": "^1.0 || ^2.0",
 		"phpstan/phpstan-phpunit": "^1.0 || ^2.0",
@@ -62,6 +61,9 @@
 		"sort-packages": true
 	},
 	"extra": {
+		"konradmichalik/php-cs-fixer-preset": {
+			"copyright": 2025
+		},
 		"typo3/cms": {
 			"cms-package-dir": "{$vendor-dir}/typo3/cms",
 			"extension-key": "typo3_login_warning",
@@ -76,19 +78,15 @@
 		],
 		"fix:composer": "@composer normalize",
 		"fix:editorconfig": "@lint:editorconfig --fix",
-		"fix:php": "php vendor/bin/php-cs-fixer --config=php-cs-fixer.php fix",
+		"fix:php": "php vendor/bin/php-cs-fixer --config=.php-cs-fixer.php fix",
 		"lint": [
 			"@lint:composer",
 			"@lint:editorconfig",
-			"@lint:php",
-			"@lint:typoscript",
-			"@lint:yaml"
+			"@lint:php"
 		],
 		"lint:composer": "@fix:composer --dry-run",
 		"lint:editorconfig": "ec --git-only",
 		"lint:php": "@fix:php --dry-run",
-		"lint:typoscript": "typoscript-lint --fail-on-warnings",
-		"lint:yaml": "find ./ ! -path './vendor/*' ! -path '*/node_modules/*' ! -path './.Build/*' ! -path './xima_typo3_content_planner/*' \\( -name '*.yaml' -o -name '*.yml' \\) -exec yaml-lint {} +",
 		"migration": [
 			"@migration:rector"
 		],

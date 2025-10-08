@@ -1,33 +1,26 @@
 <?php
 
+declare(strict_types=1);
+
 /*
- * This file is part of the TYPO3 CMS extension "typo3_login_warning".
+ * This file is part of the "typo3_login_warning" TYPO3 CMS extension.
  *
- * Copyright (C) 2025 Konrad Michalik <km@move-elevator.de>
+ * (c) 2025 Konrad Michalik <km@move-elevator.de>
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace MoveElevator\Typo3LoginWarning\Tests\Unit\Service;
 
+use Exception;
+use JsonException;
 use MoveElevator\Typo3LoginWarning\Service\IpApiGeolocationService;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Client\ClientExceptionInterface;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\StreamInterface;
-use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
+use Psr\Http\Message\{ResponseInterface, StreamInterface};
+use Psr\Log\{LoggerInterface, NullLogger};
+use RuntimeException;
 use TYPO3\CMS\Core\Http\RequestFactory;
 
 /**
@@ -202,7 +195,7 @@ class IpApiGeolocationServiceTest extends TestCase
         $logger = $this->createMock(LoggerInterface::class);
         $this->subject->setLogger($logger);
 
-        $exception = new class ('Network error') extends \Exception implements ClientExceptionInterface {};
+        $exception = new class('Network error') extends Exception implements ClientExceptionInterface {};
 
         $this->requestFactory
             ->method('request')
@@ -213,9 +206,9 @@ class IpApiGeolocationServiceTest extends TestCase
             ->with(
                 'Failed to fetch IP geolocation data',
                 self::callback(function (array $context): bool {
-                    return $context['exception'] === 'Network error'
-                        && $context['ipAddress'] === '8.8.8.8';
-                })
+                    return 'Network error' === $context['exception']
+                        && '8.8.8.8' === $context['ipAddress'];
+                }),
             );
 
         $result = $this->subject->getLocationData('8.8.8.8');
@@ -229,7 +222,7 @@ class IpApiGeolocationServiceTest extends TestCase
         $this->subject->setLogger($logger);
 
         $stream = $this->createMock(StreamInterface::class);
-        $stream->method('getContents')->willThrowException(new \JsonException('Invalid JSON'));
+        $stream->method('getContents')->willThrowException(new JsonException('Invalid JSON'));
 
         $response = $this->createMock(ResponseInterface::class);
         $response->method('getStatusCode')->willReturn(200);
@@ -244,9 +237,9 @@ class IpApiGeolocationServiceTest extends TestCase
             ->with(
                 'Failed to decode IP geolocation response',
                 self::callback(function (array $context): bool {
-                    return $context['exception'] === 'Invalid JSON'
-                        && $context['ipAddress'] === '8.8.8.8';
-                })
+                    return 'Invalid JSON' === $context['exception']
+                        && '8.8.8.8' === $context['ipAddress'];
+                }),
             );
 
         $result = $this->subject->getLocationData('8.8.8.8');
@@ -261,16 +254,16 @@ class IpApiGeolocationServiceTest extends TestCase
 
         $this->requestFactory
             ->method('request')
-            ->willThrowException(new \RuntimeException('Unexpected error'));
+            ->willThrowException(new RuntimeException('Unexpected error'));
 
         $logger->expects(self::once())
             ->method('error')
             ->with(
                 'Unexpected error during IP geolocation lookup',
                 self::callback(function (array $context): bool {
-                    return $context['exception'] === 'Unexpected error'
-                        && $context['ipAddress'] === '8.8.8.8';
-                })
+                    return 'Unexpected error' === $context['exception']
+                        && '8.8.8.8' === $context['ipAddress'];
+                }),
             );
 
         $result = $this->subject->getLocationData('8.8.8.8');
@@ -297,7 +290,7 @@ class IpApiGeolocationServiceTest extends TestCase
                 [
                     'statusCode' => 429,
                     'ipAddress' => '8.8.8.8',
-                ]
+                ],
             );
 
         $result = $this->subject->getLocationData('8.8.8.8');
@@ -333,7 +326,7 @@ class IpApiGeolocationServiceTest extends TestCase
                 [
                     'response' => $responseData,
                     'ipAddress' => '192.168.1.1',
-                ]
+                ],
             );
 
         $result = $this->subject->getLocationData('192.168.1.1');

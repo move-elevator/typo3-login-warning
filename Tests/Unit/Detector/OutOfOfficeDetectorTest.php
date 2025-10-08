@@ -3,31 +3,26 @@
 declare(strict_types=1);
 
 /*
- * This file is part of the TYPO3 CMS extension "typo3_login_warning".
+ * This file is part of the "typo3_login_warning" TYPO3 CMS extension.
  *
- * Copyright (C) 2025 Konrad Michalik <km@move-elevator.de>
+ * (c) 2025 Konrad Michalik <km@move-elevator.de>
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace MoveElevator\Typo3LoginWarning\Tests\Unit\Detector;
 
-use MoveElevator\Typo3LoginWarning\Detector\DetectorInterface;
-use MoveElevator\Typo3LoginWarning\Detector\OutOfOfficeDetector;
+use DateTime;
+use DateTimeZone;
+use MoveElevator\Typo3LoginWarning\Detector\{DetectorInterface, OutOfOfficeDetector};
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
+
+use function count;
+use function in_array;
+use function is_array;
 
 /**
  * OutOfOfficeDetectorTest.
@@ -408,6 +403,7 @@ final class OutOfOfficeDetectorTest extends TestCase
     {
         $user = $this->createMock(BackendUserAuthentication::class);
         $user->user = $userData;
+
         return $user;
     }
 }
@@ -433,11 +429,11 @@ class OutOfOfficeDetectorWithMockedTime extends OutOfOfficeDetector
         }
 
         $timezone = $configuration['timezone'] ?? $this->defaultTimezone;
-        $currentTime = new \DateTime($this->mockedTime, new \DateTimeZone($this->defaultTimezone));
+        $currentTime = new DateTime($this->mockedTime, new DateTimeZone($this->defaultTimezone));
 
         // Convert to the configuration timezone if different
         if ($timezone !== $this->defaultTimezone) {
-            $currentTime->setTimezone(new \DateTimeZone($timezone));
+            $currentTime->setTimezone(new DateTimeZone($timezone));
         }
 
         // Copy of original detect method with mocked time
@@ -448,6 +444,7 @@ class OutOfOfficeDetectorWithMockedTime extends OutOfOfficeDetector
                 'time' => $currentTime->format('H:i:s'),
                 'dayOfWeek' => $currentTime->format('l'),
             ];
+
             return true;
         }
 
@@ -458,11 +455,12 @@ class OutOfOfficeDetectorWithMockedTime extends OutOfOfficeDetector
                 'time' => $currentTime->format('H:i:s'),
                 'dayOfWeek' => $currentTime->format('l'),
             ];
+
             return true;
         }
 
         $workingHours = $configuration['workingHours'] ?? [];
-        if ($workingHours === []) {
+        if ([] === $workingHours) {
             return false;
         }
 
@@ -475,6 +473,7 @@ class OutOfOfficeDetectorWithMockedTime extends OutOfOfficeDetector
                 'dayOfWeek' => $currentTime->format('l'),
                 'workingHours' => $workingHours[$dayOfWeek] ?? null,
             ];
+
             return true;
         }
 
@@ -484,7 +483,7 @@ class OutOfOfficeDetectorWithMockedTime extends OutOfOfficeDetector
     /**
      * @param array<string, mixed> $workingHours
      */
-    private function isWithinWorkingHours(\DateTime $time, array $workingHours): bool
+    private function isWithinWorkingHours(DateTime $time, array $workingHours): bool
     {
         $dayOfWeek = strtolower($time->format('l'));
         $currentTime = $time->format('H:i');
@@ -497,14 +496,15 @@ class OutOfOfficeDetectorWithMockedTime extends OutOfOfficeDetector
 
         if (is_array($hours) && isset($hours[0]) && is_array($hours[0])) {
             foreach ($hours as $timeRange) {
-                if (count($timeRange) === 2 && $this->isTimeInRange($currentTime, $timeRange[0], $timeRange[1])) {
+                if (2 === count($timeRange) && $this->isTimeInRange($currentTime, $timeRange[0], $timeRange[1])) {
                     return true;
                 }
             }
+
             return false;
         }
 
-        if (is_array($hours) && count($hours) === 2) {
+        if (is_array($hours) && 2 === count($hours)) {
             return $this->isTimeInRange($currentTime, $hours[0], $hours[1]);
         }
 
@@ -519,17 +519,18 @@ class OutOfOfficeDetectorWithMockedTime extends OutOfOfficeDetector
     /**
      * @param array<string, mixed> $configuration
      */
-    private function isHoliday(\DateTime $time, array $configuration): bool
+    private function isHoliday(DateTime $time, array $configuration): bool
     {
         $date = $time->format('Y-m-d');
         $holidays = $configuration['holidays'] ?? [];
+
         return is_array($holidays) && in_array($date, $holidays, true);
     }
 
     /**
      * @param array<string, mixed> $configuration
      */
-    private function isVacationPeriod(\DateTime $time, array $configuration): bool
+    private function isVacationPeriod(DateTime $time, array $configuration): bool
     {
         $date = $time->format('Y-m-d');
         $vacationPeriods = $configuration['vacationPeriods'] ?? [];
@@ -539,7 +540,7 @@ class OutOfOfficeDetectorWithMockedTime extends OutOfOfficeDetector
         }
 
         foreach ($vacationPeriods as $period) {
-            if (is_array($period) && count($period) === 2) {
+            if (is_array($period) && 2 === count($period)) {
                 if ($date >= $period[0] && $date <= $period[1]) {
                     return true;
                 }

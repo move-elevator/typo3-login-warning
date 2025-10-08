@@ -1,27 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 /*
- * This file is part of the TYPO3 CMS extension "typo3_login_warning".
+ * This file is part of the "typo3_login_warning" TYPO3 CMS extension.
  *
- * Copyright (C) 2025 Konrad Michalik <km@move-elevator.de>
+ * (c) 2025 Konrad Michalik <km@move-elevator.de>
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace MoveElevator\Typo3LoginWarning\Detector;
 
 use TYPO3\CMS\Core\Authentication\AbstractUserAuthentication;
+
+use function in_array;
 
 /**
  * AbstractDetector.
@@ -47,8 +41,8 @@ abstract class AbstractDetector implements DetectorInterface
         $affectedUsers = $configuration['affectedUsers'] ?? 'all';
 
         return match ($affectedUsers) {
-            'admins' => (bool)($userArray['admin'] ?? false),
-            'maintainers' => in_array((int)$userArray['uid'], $GLOBALS['TYPO3_CONF_VARS']['SYS']['systemMaintainers'] ?? [], true),
+            'admins' => (bool) ($userArray['admin'] ?? false),
+            'maintainers' => in_array((int) $userArray['uid'], $GLOBALS['TYPO3_CONF_VARS']['SYS']['systemMaintainers'] ?? [], true),
             default => true, // 'all'
         };
     }
