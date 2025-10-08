@@ -3,22 +3,12 @@
 declare(strict_types=1);
 
 /*
- * This file is part of the TYPO3 CMS extension "typo3_login_warning".
+ * This file is part of the "typo3_login_warning" TYPO3 CMS extension.
  *
- * Copyright (C) 2025 Konrad Michalik <km@move-elevator.de>
+ * (c) 2025 Konrad Michalik <km@move-elevator.de>
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace MoveElevator\Typo3LoginWarning\Tests\Unit\Domain\Repository;
@@ -27,8 +17,7 @@ use Doctrine\DBAL\Result;
 use MoveElevator\Typo3LoginWarning\Domain\Repository\IpLogRepository;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use TYPO3\CMS\Core\Database\Connection;
-use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Database\{Connection, ConnectionPool};
 use TYPO3\CMS\Core\Database\Query\Expression\ExpressionBuilder;
 use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 
@@ -81,12 +70,13 @@ final class IpLogRepositoryTest extends TestCase
         $this->queryBuilder->expects(self::exactly(2))
             ->method('createNamedParameter')
             ->willReturnCallback(function (mixed $value, mixed $type) use ($userId, $ipAddress): string {
-                if ($value === $userId && $type === Connection::PARAM_INT) {
+                if ($value === $userId && Connection::PARAM_INT === $type) {
                     return ':userId';
                 }
-                if ($value === $ipAddress && $type === Connection::PARAM_STR) {
+                if ($value === $ipAddress && Connection::PARAM_STR === $type) {
                     return ':ipAddress';
                 }
+
                 return ':param';
             });
 

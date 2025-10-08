@@ -3,35 +3,24 @@
 declare(strict_types=1);
 
 /*
- * This file is part of the TYPO3 CMS extension "typo3_login_warning".
+ * This file is part of the "typo3_login_warning" TYPO3 CMS extension.
  *
- * Copyright (C) 2025 Konrad Michalik <km@move-elevator.de>
+ * (c) 2025 Konrad Michalik <km@move-elevator.de>
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace MoveElevator\Typo3LoginWarning\Tests\Unit\Notification;
 
-use MoveElevator\Typo3LoginWarning\Notification\EmailNotification;
-use MoveElevator\Typo3LoginWarning\Notification\NotifierInterface;
+use MoveElevator\Typo3LoginWarning\Notification\{EmailNotification, NotifierInterface};
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
-use TYPO3\CMS\Core\Mail\FluidEmail;
-use TYPO3\CMS\Core\Mail\MailerInterface;
+use TYPO3\CMS\Core\Mail\{FluidEmail, MailerInterface};
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
@@ -169,7 +158,7 @@ final class EmailNotificationTest extends TestCase
         $fluidEmail->expects(self::once())->method('setRequest')->willReturnSelf();
         $fluidEmail->expects(self::once())->method('setTemplate')->willReturnSelf();
         $fluidEmail->expects(self::once())->method('assignMultiple')->with(
-            self::callback(fn(array $vars) => $vars['prefix'] === '[AdminLoginWarning]')
+            self::callback(fn (array $vars) => '[AdminLoginWarning]' === $vars['prefix']),
         )->willReturnSelf();
 
         GeneralUtility::addInstance(FluidEmail::class, $fluidEmail);
@@ -193,7 +182,7 @@ final class EmailNotificationTest extends TestCase
         $adminEmail->expects(self::once())->method('setRequest')->willReturnSelf();
         $adminEmail->expects(self::once())->method('setTemplate')->willReturnSelf();
         $adminEmail->expects(self::once())->method('assignMultiple')->with(
-            self::callback(fn(array $vars) => $vars['isUserNotification'] === false)
+            self::callback(fn (array $vars) => false === $vars['isUserNotification']),
         )->willReturnSelf();
 
         $userEmail = $this->createMock(FluidEmail::class);
@@ -201,7 +190,7 @@ final class EmailNotificationTest extends TestCase
         $userEmail->expects(self::once())->method('setRequest')->willReturnSelf();
         $userEmail->expects(self::once())->method('setTemplate')->willReturnSelf();
         $userEmail->expects(self::once())->method('assignMultiple')->with(
-            self::callback(fn(array $vars) => $vars['isUserNotification'] === true)
+            self::callback(fn (array $vars) => true === $vars['isUserNotification']),
         )->willReturnSelf();
 
         GeneralUtility::addInstance(FluidEmail::class, $adminEmail);
@@ -225,7 +214,7 @@ final class EmailNotificationTest extends TestCase
         $fluidEmail->expects(self::once())->method('setRequest')->willReturnSelf();
         $fluidEmail->expects(self::once())->method('setTemplate')->willReturnSelf();
         $fluidEmail->expects(self::once())->method('assignMultiple')->with(
-            self::callback(fn(array $vars) => $vars['isUserNotification'] === true)
+            self::callback(fn (array $vars) => true === $vars['isUserNotification']),
         )->willReturnSelf();
 
         GeneralUtility::addInstance(FluidEmail::class, $fluidEmail);
@@ -271,7 +260,7 @@ final class EmailNotificationTest extends TestCase
                 return isset($vars['locationData'])
                     && $vars['locationData'] === $additionalValues['locationData']
                     && $vars['daysSinceLastLogin'] === $additionalValues['daysSinceLastLogin'];
-            })
+            }),
         )->willReturnSelf();
 
         GeneralUtility::addInstance(FluidEmail::class, $fluidEmail);
@@ -305,10 +294,9 @@ final class EmailNotificationTest extends TestCase
             ->with(
                 self::stringContains('mailer settings error'),
                 self::callback(
-                    fn(array $context) =>
-                    $context['recipient'] === 'admin@example.com'
-                    && $context['userId'] === 123
-                )
+                    fn (array $context) => 'admin@example.com' === $context['recipient']
+                    && 123 === $context['userId'],
+                ),
             );
 
         $this->subject->notify($user, $this->request, 'TestTrigger', $configuration);
@@ -338,9 +326,8 @@ final class EmailNotificationTest extends TestCase
             ->with(
                 self::stringContains('invalid email address'),
                 self::callback(
-                    fn(array $context) =>
-                    $context['recipient'] === 'invalid-email'
-                )
+                    fn (array $context) => 'invalid-email' === $context['recipient'],
+                ),
             );
 
         $this->subject->notify($user, $this->request, 'TestTrigger', $configuration);
@@ -362,7 +349,7 @@ final class EmailNotificationTest extends TestCase
         $this->mailer
             ->expects(self::once())
             ->method('send')
-            ->willThrowException(new \RuntimeException('Unexpected error'));
+            ->willThrowException(new RuntimeException('Unexpected error'));
 
         $this->logger
             ->expects(self::once())
@@ -370,9 +357,8 @@ final class EmailNotificationTest extends TestCase
             ->with(
                 self::stringContains('PHP exception'),
                 self::callback(
-                    fn(array $context) =>
-                    isset($context['exception']) && $context['exception'] instanceof \RuntimeException
-                )
+                    fn (array $context) => isset($context['exception']) && $context['exception'] instanceof RuntimeException,
+                ),
             );
 
         $this->subject->notify($user, $this->request, 'TestTrigger', $configuration);
@@ -386,6 +372,7 @@ final class EmailNotificationTest extends TestCase
         $user = $this->createMock(BackendUserAuthentication::class);
         $user->user = $userData;
         $user->method('isAdmin')->willReturn($isAdmin);
+
         return $user;
     }
 }

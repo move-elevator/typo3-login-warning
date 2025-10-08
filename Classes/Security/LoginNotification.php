@@ -3,32 +3,20 @@
 declare(strict_types=1);
 
 /*
- * This file is part of the TYPO3 CMS extension "typo3_login_warning".
+ * This file is part of the "typo3_login_warning" TYPO3 CMS extension.
  *
- * Copyright (C) 2025 Konrad Michalik <km@move-elevator.de>
+ * (c) 2025 Konrad Michalik <km@move-elevator.de>
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace MoveElevator\Typo3LoginWarning\Security;
 
 use MoveElevator\Typo3LoginWarning\Configuration\DetectorConfigurationBuilder;
 use MoveElevator\Typo3LoginWarning\Detector\DetectorInterface;
-use MoveElevator\Typo3LoginWarning\Registry\DetectorRegistry;
-use MoveElevator\Typo3LoginWarning\Registry\NotificationRegistry;
-use Psr\Log\LoggerAwareInterface;
-use Psr\Log\LoggerAwareTrait;
+use MoveElevator\Typo3LoginWarning\Registry\{DetectorRegistry, NotificationRegistry};
+use Psr\Log\{LoggerAwareInterface, LoggerAwareTrait};
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Authentication\Event\AfterUserLoggedInEvent;
 use TYPO3\CMS\Core\Core\SystemEnvironmentBuilder;
@@ -82,7 +70,7 @@ final class LoginNotification implements LoggerAwareInterface
             }
         }
 
-        if ($currentDetector === null) {
+        if (null === $currentDetector) {
             return;
         }
 
@@ -91,7 +79,7 @@ final class LoginNotification implements LoggerAwareInterface
             $event->getRequest() ?? $GLOBALS['TYPO3_REQUEST'] ?? ServerRequestFactory::fromGlobals()->withAttribute('applicationType', SystemEnvironmentBuilder::REQUESTTYPE_BE),
             $currentDetector,
             $globalNotificationConfig,
-            $currentDetectorConfiguration
+            $currentDetectorConfiguration,
         );
     }
 
@@ -104,7 +92,7 @@ final class LoginNotification implements LoggerAwareInterface
         mixed $request,
         DetectorInterface $detector,
         array $notificationConfig,
-        array $detectorConfig
+        array $detectorConfig,
     ): void {
         $mergedConfig = array_merge($notificationConfig, [
             'notificationReceiver' => $detectorConfig['notificationReceiver'] ?? 'recipients',
@@ -116,9 +104,8 @@ final class LoginNotification implements LoggerAwareInterface
                 $request,
                 $detector::class,
                 $mergedConfig,
-                $detector->getAdditionalData()
+                $detector->getAdditionalData(),
             );
         }
     }
-
 }
