@@ -11,6 +11,4 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-use MoveElevator\Typo3LoginWarning\Configuration;
-
-$GLOBALS['TYPO3_CONF_VARS']['MAIL']['templateRootPaths'][500] = 'EXT:'.Configuration::EXT_KEY.'/Resources/Private/Templates/Email';
+MoveElevator\Typo3LoginWarning\Configuration::initExtLocalConfig();

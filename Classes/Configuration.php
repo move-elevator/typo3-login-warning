@@ -23,4 +23,14 @@ class Configuration
 {
     final public const EXT_KEY = 'typo3_login_warning';
     final public const EXT_NAME = 'Typo3LoginWarning';
+
+    public static function initExtLocalConfig(): void
+    {
+        self::registerMailTemplate();
+    }
+
+    private static function registerMailTemplate(): void
+    {
+        $GLOBALS['TYPO3_CONF_VARS']['MAIL']['templateRootPaths'][500] = 'EXT:'.self::EXT_KEY.'/Resources/Private/Templates/Email';
+    }
 }
