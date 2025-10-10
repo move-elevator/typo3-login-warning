@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f1f5badee0690dfb71958dc94d3b9a92",
+    "content-hash": "5426529b77a314d741029f5b821fad8d",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -6663,16 +6663,16 @@
         },
         {
             "name": "konradmichalik/phpstan-typo3-preset",
-            "version": "dev-main",
+            "version": "0.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/jackd248/phpstan-typo3-preset.git",
-                "reference": "dfc25818bb6e62c45113304a56518e6ce57bb25a"
+                "reference": "975ccea47b03a8dd32bbc400b916909894c9f7aa"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/jackd248/phpstan-typo3-preset/zipball/dfc25818bb6e62c45113304a56518e6ce57bb25a",
-                "reference": "dfc25818bb6e62c45113304a56518e6ce57bb25a",
+                "url": "https://api.github.com/repos/jackd248/phpstan-typo3-preset/zipball/975ccea47b03a8dd32bbc400b916909894c9f7aa",
+                "reference": "975ccea47b03a8dd32bbc400b916909894c9f7aa",
                 "shasum": ""
             },
             "require": {
@@ -6689,7 +6689,6 @@
                 "armin/editorconfig-cli": "^1.0 || ^2.0",
                 "ergebnis/composer-normalize": "^2.44"
             },
-            "default-branch": true,
             "type": "library",
             "extra": {
                 "phpstan": {
@@ -6712,9 +6711,9 @@
             "description": "TYPO3 preset configuration for PHPStan",
             "support": {
                 "issues": "https://github.com/jackd248/phpstan-typo3-preset/issues",
-                "source": "https://github.com/jackd248/phpstan-typo3-preset/tree/main"
+                "source": "https://github.com/jackd248/phpstan-typo3-preset/tree/0.1.0"
             },
-            "time": "2025-10-10T08:30:09+00:00"
+            "time": "2025-10-10T09:22:04+00:00"
         },
         {
             "name": "league/flysystem",
@@ -12839,9 +12838,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "konradmichalik/phpstan-typo3-preset": 20
-    },
+    "stability-flags": {},
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
