@@ -25,27 +25,11 @@ use TYPO3\CMS\Core\Authentication\AbstractUserAuthentication;
  */
 final class AbstractDetectorTest extends TestCase
 {
-    private AbstractDetector $subject;
+    private AbstractDetectorTestDouble $subject;
 
     protected function setUp(): void
     {
-        $this->subject = new class extends AbstractDetector {
-            /**
-             * @param array<string, mixed> $configuration
-             */
-            public function detect(AbstractUserAuthentication $user, array $configuration = [], ?\Psr\Http\Message\ServerRequestInterface $request = null): bool
-            {
-                return true;
-            }
-
-            /**
-             * @param array<string, mixed> $configuration
-             */
-            public function exposeShouldDetectForUser(AbstractUserAuthentication $user, array $configuration): bool
-            {
-                return $this->shouldDetectForUser($user, $configuration);
-            }
-        };
+        $this->subject = new AbstractDetectorTestDouble();
     }
 
     public function testShouldDetectForUserReturnsTrueWithoutRestrictions(): void
@@ -103,5 +87,30 @@ final class AbstractDetectorTest extends TestCase
         ];
 
         return $user;
+    }
+}
+
+/**
+ * AbstractDetectorTestDouble.
+ *
+ * @author Konrad Michalik <km@move-elevator.de>
+ * @license GPL-2.0
+ */
+class AbstractDetectorTestDouble extends AbstractDetector
+{
+    /**
+     * @param array<string, mixed> $configuration
+     */
+    public function detect(AbstractUserAuthentication $user, array $configuration = [], ?\Psr\Http\Message\ServerRequestInterface $request = null): bool
+    {
+        return true;
+    }
+
+    /**
+     * @param array<string, mixed> $configuration
+     */
+    public function exposeShouldDetectForUser(AbstractUserAuthentication $user, array $configuration): bool
+    {
+        return $this->shouldDetectForUser($user, $configuration);
     }
 }

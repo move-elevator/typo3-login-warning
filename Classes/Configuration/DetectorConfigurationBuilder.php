@@ -171,40 +171,62 @@ class DetectorConfigurationBuilder implements LoggerAwareInterface
             'notificationReceiver' => $config['notificationReceiver'] ?? 'recipients',
         ];
 
-        // Parse working hours JSON
+        $result['workingHours'] = $this->parseWorkingHours($config);
+        $result['holidays'] = $this->parseHolidays($config);
+        $result['vacationPeriods'] = $this->parseConfigVacationPeriods($config);
+
+        return $result;
+    }
+
+    /**
+     * @param array<string, mixed> $config
+     *
+     * @return array<string, array<int, string>>
+     */
+    private function parseWorkingHours(array $config): array
+    {
         if (isset($config['workingHours']) && is_string($config['workingHours']) && '' !== $config['workingHours']) {
             $workingHours = json_decode($config['workingHours'], true);
             if (is_array($workingHours)) {
-                $result['workingHours'] = $workingHours;
+                return $workingHours;
             }
         }
 
-        // Default working hours if not set
-        if (!isset($result['workingHours'])) {
-            $result['workingHours'] = [
-                'monday' => ['06:00', '19:00'],
-                'tuesday' => ['06:00', '19:00'],
-                'wednesday' => ['06:00', '19:00'],
-                'thursday' => ['06:00', '19:00'],
-                'friday' => ['06:00', '19:00'],
-            ];
-        }
+        return [
+            'monday' => ['06:00', '19:00'],
+            'tuesday' => ['06:00', '19:00'],
+            'wednesday' => ['06:00', '19:00'],
+            'thursday' => ['06:00', '19:00'],
+            'friday' => ['06:00', '19:00'],
+        ];
+    }
 
-        // Parse holidays
+    /**
+     * @param array<string, mixed> $config
+     *
+     * @return array<int, string>
+     */
+    private function parseHolidays(array $config): array
+    {
         if (isset($config['holidays']) && is_string($config['holidays']) && '' !== $config['holidays']) {
-            $result['holidays'] = $this->parseCommaSeparatedList($config['holidays']);
-        } else {
-            $result['holidays'] = [];
+            return $this->parseCommaSeparatedList($config['holidays']);
         }
 
-        // Parse vacation periods
+        return [];
+    }
+
+    /**
+     * @param array<string, mixed> $config
+     *
+     * @return array<int, array<int, string>>
+     */
+    private function parseConfigVacationPeriods(array $config): array
+    {
         if (isset($config['vacationPeriods']) && is_string($config['vacationPeriods']) && '' !== $config['vacationPeriods']) {
-            $result['vacationPeriods'] = $this->parseVacationPeriods($config['vacationPeriods']);
-        } else {
-            $result['vacationPeriods'] = [];
+            return $this->parseVacationPeriods($config['vacationPeriods']);
         }
 
-        return $result;
+        return [];
     }
 
     /**
