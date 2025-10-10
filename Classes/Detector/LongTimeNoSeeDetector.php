@@ -16,7 +16,6 @@ namespace MoveElevator\Typo3LoginWarning\Detector;
 use Doctrine\DBAL\Exception;
 use MoveElevator\Typo3LoginWarning\Domain\Repository\UserLogRepository;
 use Psr\Http\Message\ServerRequestInterface;
-use TYPO3\CMS\Core\Authentication\AbstractUserAuthentication;
 
 /**
  * LongTimeNoSeeDetector.
@@ -38,14 +37,14 @@ class LongTimeNoSeeDetector extends AbstractDetector
      * Unfortunately, I was also unable to find another event or hook to access this information “earlier” during
      * authentication. For the time being, the only option was to store this information in a separate table.
      *
+     * @param array<string, mixed> $userArray
      * @param array<string, mixed> $configuration
      *
      * @throws Exception
      */
-    public function detect(AbstractUserAuthentication $user, array $configuration = [], ?ServerRequestInterface $request = null): bool
+    public function detect(array $userArray, array $configuration = [], ?ServerRequestInterface $request = null): bool
     {
-        $userArray = $user->user;
-        $userId = (int) $userArray['uid'];
+        $userId = (int) ($userArray['uid'] ?? 0);
         $currentTimestamp = time();
 
         $thresholdDays = (int) ($configuration['thresholdDays'] ?? self::DEFAULT_THRESHOLD_DAYS);

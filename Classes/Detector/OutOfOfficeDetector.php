@@ -17,7 +17,6 @@ use DateTime;
 use DateTimeZone;
 use Exception;
 use Psr\Http\Message\ServerRequestInterface;
-use TYPO3\CMS\Core\Authentication\AbstractUserAuthentication;
 
 use function count;
 use function in_array;
@@ -32,11 +31,12 @@ use function is_array;
 class OutOfOfficeDetector extends AbstractDetector
 {
     /**
+     * @param array<string, mixed> $user
      * @param array<string, mixed> $configuration
      *
      * @throws Exception
      */
-    public function detect(AbstractUserAuthentication $user, array $configuration = [], ?ServerRequestInterface $request = null): bool
+    public function detect(array $user, array $configuration = [], ?ServerRequestInterface $request = null): bool
     {
         $timezone = ($configuration['timezone'] ?? '') !== '' ? $configuration['timezone'] : 'UTC';
         $currentTime = $this->getCurrentTime($timezone);
@@ -85,8 +85,6 @@ class OutOfOfficeDetector extends AbstractDetector
     }
 
     /**
-     * Get current time - can be overridden in tests.
-     *
      * @throws Exception
      */
     protected function getCurrentTime(string $timezone): DateTime
@@ -97,7 +95,7 @@ class OutOfOfficeDetector extends AbstractDetector
     /**
      * @param array<string, mixed> $workingHours
      */
-    private function isWithinWorkingHours(DateTime $time, array $workingHours): bool
+    protected function isWithinWorkingHours(DateTime $time, array $workingHours): bool
     {
         $dayOfWeek = strtolower($time->format('l'));
         $currentTime = $time->format('H:i');
@@ -108,32 +106,13 @@ class OutOfOfficeDetector extends AbstractDetector
 
         $hours = $workingHours[$dayOfWeek];
 
-        if (is_array($hours) && isset($hours[0]) && is_array($hours[0])) {
-            foreach ($hours as $timeRange) {
-                if (2 === count($timeRange) && $this->isTimeInRange($currentTime, $timeRange[0], $timeRange[1])) {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        if (is_array($hours) && 2 === count($hours)) {
-            return $this->isTimeInRange($currentTime, $hours[0], $hours[1]);
-        }
-
-        return false;
-    }
-
-    private function isTimeInRange(string $time, string $start, string $end): bool
-    {
-        return $time >= $start && $time <= $end;
+        return $this->checkTimeRanges($currentTime, $hours);
     }
 
     /**
      * @param array<string, mixed> $configuration
      */
-    private function isHoliday(DateTime $time, array $configuration): bool
+    protected function isHoliday(DateTime $time, array $configuration): bool
     {
         $date = $time->format('Y-m-d');
         $holidays = $configuration['holidays'] ?? [];
@@ -147,7 +126,7 @@ class OutOfOfficeDetector extends AbstractDetector
     /**
      * @param array<string, mixed> $configuration
      */
-    private function isVacationPeriod(DateTime $time, array $configuration): bool
+    protected function isVacationPeriod(DateTime $time, array $configuration): bool
     {
         $date = $time->format('Y-m-d');
         $vacationPeriods = $configuration['vacationPeriods'] ?? [];
@@ -164,5 +143,57 @@ class OutOfOfficeDetector extends AbstractDetector
         }
 
         return false;
+    }
+
+    private function checkTimeRanges(string $currentTime, mixed $hours): bool
+    {
+        if (!is_array($hours)) {
+            return false;
+        }
+
+        if ($this->isMultipleTimeRanges($hours)) {
+            return $this->checkMultipleTimeRanges($currentTime, $hours);
+        }
+
+        if ($this->isSingleTimeRange($hours)) {
+            return $this->isTimeInRange($currentTime, $hours[0], $hours[1]);
+        }
+
+        return false;
+    }
+
+    /**
+     * @param array<mixed> $hours
+     */
+    private function isMultipleTimeRanges(array $hours): bool
+    {
+        return isset($hours[0]) && is_array($hours[0]);
+    }
+
+    /**
+     * @param array<mixed> $hours
+     */
+    private function isSingleTimeRange(array $hours): bool
+    {
+        return 2 === count($hours);
+    }
+
+    /**
+     * @param array<int, mixed> $ranges
+     */
+    private function checkMultipleTimeRanges(string $currentTime, array $ranges): bool
+    {
+        foreach ($ranges as $timeRange) {
+            if (is_array($timeRange) && 2 === count($timeRange) && $this->isTimeInRange($currentTime, $timeRange[0], $timeRange[1])) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function isTimeInRange(string $time, string $start, string $end): bool
+    {
+        return $time >= $start && $time <= $end;
     }
 }

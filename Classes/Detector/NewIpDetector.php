@@ -17,7 +17,6 @@ use Doctrine\DBAL\Exception;
 use MoveElevator\Typo3LoginWarning\Domain\Repository\IpLogRepository;
 use MoveElevator\Typo3LoginWarning\Service\GeolocationServiceInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use TYPO3\CMS\Core\Authentication\AbstractUserAuthentication;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 use function array_key_exists;
@@ -41,14 +40,13 @@ class NewIpDetector extends AbstractDetector
     ) {}
 
     /**
+     * @param array<string, mixed> $userArray
      * @param array<string, mixed> $configuration
      *
      * @throws Exception
      */
-    public function detect(AbstractUserAuthentication $user, array $configuration = [], ?ServerRequestInterface $request = null): bool
+    public function detect(array $userArray, array $configuration = [], ?ServerRequestInterface $request = null): bool
     {
-        $userArray = $user->user;
-
         if (
             array_key_exists('whitelist', $configuration)
             && is_array($configuration['whitelist'])
@@ -60,8 +58,9 @@ class NewIpDetector extends AbstractDetector
         $shouldHashIp = !array_key_exists('hashIpAddress', $configuration) || (bool) $configuration['hashIpAddress'];
         $ipAddress = $this->getIpAddress($shouldHashIp);
         $rawIpAddress = $shouldHashIp ? $this->getIpAddress(false) : $ipAddress;
+        $userId = (int) ($userArray['uid'] ?? 0);
 
-        if (!$this->ipLogRepository->findByUserAndIp((int) $userArray['uid'], $ipAddress)) {
+        if (!$this->ipLogRepository->findByUserAndIp($userId, $ipAddress)) {
             if ($this->shouldFetchGeolocation($configuration, $rawIpAddress)) {
                 $this->additionalData['locationData'] = $this->geolocationService?->getLocationData($rawIpAddress);
             }
@@ -70,7 +69,7 @@ class NewIpDetector extends AbstractDetector
                 $this->addDeviceInfo($request);
             }
 
-            $this->ipLogRepository->addUserIp((int) $userArray['uid'], $ipAddress);
+            $this->ipLogRepository->addUserIp($userId, $ipAddress);
 
             return true;
         }

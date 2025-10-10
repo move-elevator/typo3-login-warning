@@ -16,13 +16,7 @@ namespace MoveElevator\Typo3LoginWarning\Tests\Unit\Detector;
 use DateTime;
 use DateTimeZone;
 use MoveElevator\Typo3LoginWarning\Detector\{DetectorInterface, OutOfOfficeDetector};
-use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
-
-use function count;
-use function in_array;
-use function is_array;
 
 /**
  * OutOfOfficeDetectorTest.
@@ -398,13 +392,12 @@ final class OutOfOfficeDetectorTest extends TestCase
 
     /**
      * @param array<string, mixed> $userData
+     *
+     * @return array<string, mixed>
      */
-    private function createMockUser(array $userData): BackendUserAuthentication&MockObject
+    private function createMockUser(array $userData): array
     {
-        $user = $this->createMock(BackendUserAuthentication::class);
-        $user->user = $userData;
-
-        return $user;
+        return $userData;
     }
 }
 
@@ -419,12 +412,13 @@ class OutOfOfficeDetectorWithMockedTime extends OutOfOfficeDetector
     public function __construct(private string $mockedTime, private string $defaultTimezone = 'UTC') {}
 
     /**
+     * @param array<string, mixed> $userArray
      * @param array<string, mixed> $configuration
      */
-    public function detect(\TYPO3\CMS\Core\Authentication\AbstractUserAuthentication $user, array $configuration = [], ?\Psr\Http\Message\ServerRequestInterface $request = null): bool
+    public function detect(array $userArray, array $configuration = [], ?\Psr\Http\Message\ServerRequestInterface $request = null): bool
     {
         // Check user role filtering
-        if (!$this->shouldDetectForUser($user, $configuration)) {
+        if (!$this->shouldDetectForUser($userArray, $configuration)) {
             return false;
         }
 
@@ -475,76 +469,6 @@ class OutOfOfficeDetectorWithMockedTime extends OutOfOfficeDetector
             ];
 
             return true;
-        }
-
-        return false;
-    }
-
-    /**
-     * @param array<string, mixed> $workingHours
-     */
-    private function isWithinWorkingHours(DateTime $time, array $workingHours): bool
-    {
-        $dayOfWeek = strtolower($time->format('l'));
-        $currentTime = $time->format('H:i');
-
-        if (!isset($workingHours[$dayOfWeek])) {
-            return false;
-        }
-
-        $hours = $workingHours[$dayOfWeek];
-
-        if (is_array($hours) && isset($hours[0]) && is_array($hours[0])) {
-            foreach ($hours as $timeRange) {
-                if (2 === count($timeRange) && $this->isTimeInRange($currentTime, $timeRange[0], $timeRange[1])) {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        if (is_array($hours) && 2 === count($hours)) {
-            return $this->isTimeInRange($currentTime, $hours[0], $hours[1]);
-        }
-
-        return false;
-    }
-
-    private function isTimeInRange(string $time, string $start, string $end): bool
-    {
-        return $time >= $start && $time <= $end;
-    }
-
-    /**
-     * @param array<string, mixed> $configuration
-     */
-    private function isHoliday(DateTime $time, array $configuration): bool
-    {
-        $date = $time->format('Y-m-d');
-        $holidays = $configuration['holidays'] ?? [];
-
-        return is_array($holidays) && in_array($date, $holidays, true);
-    }
-
-    /**
-     * @param array<string, mixed> $configuration
-     */
-    private function isVacationPeriod(DateTime $time, array $configuration): bool
-    {
-        $date = $time->format('Y-m-d');
-        $vacationPeriods = $configuration['vacationPeriods'] ?? [];
-
-        if (!is_array($vacationPeriods)) {
-            return false;
-        }
-
-        foreach ($vacationPeriods as $period) {
-            if (is_array($period) && 2 === count($period)) {
-                if ($date >= $period[0] && $date <= $period[1]) {
-                    return true;
-                }
-            }
         }
 
         return false;

@@ -22,6 +22,8 @@ use TYPO3\CMS\Core\Authentication\Event\AfterUserLoggedInEvent;
 use TYPO3\CMS\Core\Core\SystemEnvironmentBuilder;
 use TYPO3\CMS\Core\Http\ServerRequestFactory;
 
+use function is_array;
+
 /**
  * LoginNotification.
  *
@@ -44,10 +46,16 @@ final class LoginNotification implements LoggerAwareInterface
             return;
         }
         $currentUser = $event->getUser();
+        $currentUserArray = $currentUser->user;
+        if (!is_array($currentUserArray)) {
+            return;
+        }
 
         $currentDetector = null;
         $currentDetectorConfiguration = [];
-        $this->configBuilder->setLogger($this->logger);
+        if (null !== $this->logger) {
+            $this->configBuilder->setLogger($this->logger);
+        }
 
         $globalNotificationConfig = $this->configBuilder->buildNotificationConfig();
 
@@ -60,11 +68,11 @@ final class LoginNotification implements LoggerAwareInterface
 
             $currentDetectorConfiguration = $this->configBuilder->build($detectorClass);
 
-            if (!$detector->shouldDetectForUser($currentUser, $currentDetectorConfiguration)) {
+            if (!$detector->shouldDetectForUser($currentUserArray, $currentDetectorConfiguration)) {
                 continue;
             }
 
-            if ($detector->detect($currentUser, $currentDetectorConfiguration, $event->getRequest())) {
+            if ($detector->detect($currentUserArray, $currentDetectorConfiguration, $event->getRequest())) {
                 $currentDetector = $detector;
                 break;
             }
@@ -98,13 +106,15 @@ final class LoginNotification implements LoggerAwareInterface
             'notificationReceiver' => $detectorConfig['notificationReceiver'] ?? 'recipients',
         ]);
 
+        $additionalData = $detector->getAdditionalData() ?? [];
+
         foreach ($this->notificationRegistry->getNotifiers() as $notifier) {
             $notifier->notify(
                 $user,
                 $request,
                 $detector::class,
                 $mergedConfig,
-                $detector->getAdditionalData(),
+                $additionalData,
             );
         }
     }
