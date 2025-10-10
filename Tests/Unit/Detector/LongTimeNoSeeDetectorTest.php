@@ -17,7 +17,6 @@ use MoveElevator\Typo3LoginWarning\Detector\{DetectorInterface, LongTimeNoSeeDet
 use MoveElevator\Typo3LoginWarning\Domain\Repository\UserLogRepository;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 
 /**
  * LongTimeNoSeeDetectorTest.
@@ -444,12 +443,11 @@ final class LongTimeNoSeeDetectorTest extends TestCase
 
     /**
      * @param array<string, mixed> $userData
+     *
+     * @return array<string, mixed>
      */
-    private function createMockUser(array $userData): BackendUserAuthentication&MockObject
+    private function createMockUser(array $userData): array
     {
-        $user = $this->createMock(BackendUserAuthentication::class);
-        $user->user = $userData;
-
-        return $user;
+        return $userData;
     }
 }

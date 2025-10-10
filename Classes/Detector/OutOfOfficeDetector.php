@@ -17,7 +17,6 @@ use DateTime;
 use DateTimeZone;
 use Exception;
 use Psr\Http\Message\ServerRequestInterface;
-use TYPO3\CMS\Core\Authentication\AbstractUserAuthentication;
 
 use function count;
 use function in_array;
@@ -32,11 +31,12 @@ use function is_array;
 class OutOfOfficeDetector extends AbstractDetector
 {
     /**
+     * @param array<string, mixed> $user
      * @param array<string, mixed> $configuration
      *
      * @throws Exception
      */
-    public function detect(AbstractUserAuthentication $user, array $configuration = [], ?ServerRequestInterface $request = null): bool
+    public function detect(array $user, array $configuration = [], ?ServerRequestInterface $request = null): bool
     {
         $timezone = ($configuration['timezone'] ?? '') !== '' ? $configuration['timezone'] : 'UTC';
         $currentTime = $this->getCurrentTime($timezone);

@@ -54,7 +54,7 @@ class EmailNotification implements NotifierInterface, LoggerAwareInterface
         $recipientsList = $this->buildRecipientsList($user, $configuration);
 
         if ([] === $recipientsList) {
-            $this->logger->info('No recipient configured for login notification email. Please set $GLOBALS[\'TYPO3_CONF_VARS\'][\'BE\'][\'warning_email_addr\'], configure the recipient via Typo3LoginWarning configuration, or use notificationReceiver setting with a valid user email.');
+            $this->logger?->info('No recipient configured for login notification email. Please set $GLOBALS[\'TYPO3_CONF_VARS\'][\'BE\'][\'warning_email_addr\'], configure the recipient via Typo3LoginWarning configuration, or use notificationReceiver setting with a valid user email.');
 
             return;
         }
@@ -137,19 +137,19 @@ class EmailNotification implements NotifierInterface, LoggerAwareInterface
             try {
                 $this->mailer->send($email);
             } catch (TransportException $e) {
-                $this->logger->warning('Could not send notification email to "{recipient}" due to mailer settings error', [
+                $this->logger?->warning('Could not send notification email to "{recipient}" due to mailer settings error', [
                     'recipient' => $recipient,
                     'userId' => $user->user['uid'] ?? 0,
                     'exception' => $e,
                 ]);
             } catch (RfcComplianceException $e) {
-                $this->logger->warning('Could not send notification email to "{recipient}" due to invalid email address', [
+                $this->logger?->warning('Could not send notification email to "{recipient}" due to invalid email address', [
                     'recipient' => $recipient,
                     'userId' => $user->user['uid'] ?? 0,
                     'exception' => $e,
                 ]);
             } catch (Exception $e) {
-                $this->logger->error('Could not send notification email to "{recipient}" due to a PHP exception', [
+                $this->logger?->error('Could not send notification email to "{recipient}" due to a PHP exception', [
                     'recipient' => $recipient,
                     'userId' => $user->user['uid'] ?? 0,
                     'exception' => $e,

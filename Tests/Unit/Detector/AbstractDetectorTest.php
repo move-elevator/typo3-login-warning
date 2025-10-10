@@ -15,7 +15,6 @@ namespace MoveElevator\Typo3LoginWarning\Tests\Unit\Detector;
 
 use MoveElevator\Typo3LoginWarning\Detector\AbstractDetector;
 use PHPUnit\Framework\TestCase;
-use TYPO3\CMS\Core\Authentication\AbstractUserAuthentication;
 
 /**
  * AbstractDetectorTest.
@@ -34,59 +33,59 @@ final class AbstractDetectorTest extends TestCase
 
     public function testShouldDetectForUserReturnsTrueWithoutRestrictions(): void
     {
-        $user = $this->createMockUser();
+        $userArray = $this->createUserArray();
 
-        self::assertTrue($this->subject->exposeShouldDetectForUser($user, []));
+        self::assertTrue($this->subject->exposeShouldDetectForUser($userArray, []));
     }
 
     public function testShouldDetectForUserReturnsTrueForAdminWhenAffectedUsersIsAdmins(): void
     {
-        $user = $this->createMockUser(isAdmin: true);
+        $userArray = $this->createUserArray(isAdmin: true);
 
-        self::assertTrue($this->subject->exposeShouldDetectForUser($user, ['affectedUsers' => 'admins']));
+        self::assertTrue($this->subject->exposeShouldDetectForUser($userArray, ['affectedUsers' => 'admins']));
     }
 
     public function testShouldDetectForUserReturnsFalseForNonAdminWhenAffectedUsersIsAdmins(): void
     {
-        $user = $this->createMockUser(isAdmin: false);
+        $userArray = $this->createUserArray(isAdmin: false);
 
-        self::assertFalse($this->subject->exposeShouldDetectForUser($user, ['affectedUsers' => 'admins']));
+        self::assertFalse($this->subject->exposeShouldDetectForUser($userArray, ['affectedUsers' => 'admins']));
     }
 
     public function testShouldDetectForUserReturnsTrueForSystemMaintainerWhenAffectedUsersIsMaintainers(): void
     {
         $GLOBALS['TYPO3_CONF_VARS']['SYS']['systemMaintainers'] = [1, 2];
-        $user = $this->createMockUser(uid: 1);
+        $userArray = $this->createUserArray(uid: 1);
 
-        self::assertTrue($this->subject->exposeShouldDetectForUser($user, ['affectedUsers' => 'maintainers']));
+        self::assertTrue($this->subject->exposeShouldDetectForUser($userArray, ['affectedUsers' => 'maintainers']));
     }
 
     public function testShouldDetectForUserReturnsFalseForNonSystemMaintainerWhenAffectedUsersIsMaintainers(): void
     {
         $GLOBALS['TYPO3_CONF_VARS']['SYS']['systemMaintainers'] = [2, 3];
-        $user = $this->createMockUser(uid: 1);
+        $userArray = $this->createUserArray(uid: 1);
 
-        self::assertFalse($this->subject->exposeShouldDetectForUser($user, ['affectedUsers' => 'maintainers']));
+        self::assertFalse($this->subject->exposeShouldDetectForUser($userArray, ['affectedUsers' => 'maintainers']));
     }
 
     public function testShouldDetectForUserReturnsTrueWhenAffectedUsersIsAll(): void
     {
-        $user = $this->createMockUser(isAdmin: false);
+        $userArray = $this->createUserArray(isAdmin: false);
 
-        self::assertTrue($this->subject->exposeShouldDetectForUser($user, [
+        self::assertTrue($this->subject->exposeShouldDetectForUser($userArray, [
             'affectedUsers' => 'all',
         ]));
     }
 
-    private function createMockUser(bool $isAdmin = false, int $uid = 1): AbstractUserAuthentication
+    /**
+     * @return array<string, mixed>
+     */
+    private function createUserArray(bool $isAdmin = false, int $uid = 1): array
     {
-        $user = $this->createMock(AbstractUserAuthentication::class);
-        $user->user = [
+        return [
             'uid' => $uid,
             'admin' => $isAdmin,
         ];
-
-        return $user;
     }
 }
 
@@ -99,18 +98,20 @@ final class AbstractDetectorTest extends TestCase
 class AbstractDetectorTestDouble extends AbstractDetector
 {
     /**
+     * @param array<string, mixed> $userArray
      * @param array<string, mixed> $configuration
      */
-    public function detect(AbstractUserAuthentication $user, array $configuration = [], ?\Psr\Http\Message\ServerRequestInterface $request = null): bool
+    public function detect(array $userArray, array $configuration = [], ?\Psr\Http\Message\ServerRequestInterface $request = null): bool
     {
         return true;
     }
 
     /**
+     * @param array<string, mixed> $userArray
      * @param array<string, mixed> $configuration
      */
-    public function exposeShouldDetectForUser(AbstractUserAuthentication $user, array $configuration): bool
+    public function exposeShouldDetectForUser(array $userArray, array $configuration): bool
     {
-        return $this->shouldDetectForUser($user, $configuration);
+        return $this->shouldDetectForUser($userArray, $configuration);
     }
 }

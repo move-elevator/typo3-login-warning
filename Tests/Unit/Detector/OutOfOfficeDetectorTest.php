@@ -16,9 +16,7 @@ namespace MoveElevator\Typo3LoginWarning\Tests\Unit\Detector;
 use DateTime;
 use DateTimeZone;
 use MoveElevator\Typo3LoginWarning\Detector\{DetectorInterface, OutOfOfficeDetector};
-use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 
 /**
  * OutOfOfficeDetectorTest.
@@ -394,13 +392,12 @@ final class OutOfOfficeDetectorTest extends TestCase
 
     /**
      * @param array<string, mixed> $userData
+     *
+     * @return array<string, mixed>
      */
-    private function createMockUser(array $userData): BackendUserAuthentication&MockObject
+    private function createMockUser(array $userData): array
     {
-        $user = $this->createMock(BackendUserAuthentication::class);
-        $user->user = $userData;
-
-        return $user;
+        return $userData;
     }
 }
 
@@ -415,12 +412,13 @@ class OutOfOfficeDetectorWithMockedTime extends OutOfOfficeDetector
     public function __construct(private string $mockedTime, private string $defaultTimezone = 'UTC') {}
 
     /**
+     * @param array<string, mixed> $userArray
      * @param array<string, mixed> $configuration
      */
-    public function detect(\TYPO3\CMS\Core\Authentication\AbstractUserAuthentication $user, array $configuration = [], ?\Psr\Http\Message\ServerRequestInterface $request = null): bool
+    public function detect(array $userArray, array $configuration = [], ?\Psr\Http\Message\ServerRequestInterface $request = null): bool
     {
         // Check user role filtering
-        if (!$this->shouldDetectForUser($user, $configuration)) {
+        if (!$this->shouldDetectForUser($userArray, $configuration)) {
             return false;
         }
 

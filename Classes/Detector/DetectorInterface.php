@@ -14,7 +14,6 @@ declare(strict_types=1);
 namespace MoveElevator\Typo3LoginWarning\Detector;
 
 use Psr\Http\Message\ServerRequestInterface;
-use TYPO3\CMS\Core\Authentication\AbstractUserAuthentication;
 
 /**
  * DetectorInterface.
@@ -25,14 +24,16 @@ use TYPO3\CMS\Core\Authentication\AbstractUserAuthentication;
 interface DetectorInterface
 {
     /**
+     * @param array<string, mixed> $userArray
      * @param array<string, mixed> $configuration
      */
-    public function shouldDetectForUser(AbstractUserAuthentication $user, array $configuration = []): bool;
+    public function shouldDetectForUser(array $userArray, array $configuration = []): bool;
 
     /**
+     * @param array<string, mixed> $userArray
      * @param array<string, mixed> $configuration
      */
-    public function detect(AbstractUserAuthentication $user, array $configuration = [], ?ServerRequestInterface $request = null): bool;
+    public function detect(array $userArray, array $configuration = [], ?ServerRequestInterface $request = null): bool;
 
     /**
      * @return array<string, mixed>|null

@@ -13,8 +13,6 @@ declare(strict_types=1);
 
 namespace MoveElevator\Typo3LoginWarning\Detector;
 
-use TYPO3\CMS\Core\Authentication\AbstractUserAuthentication;
-
 use function in_array;
 
 /**
@@ -31,18 +29,16 @@ abstract class AbstractDetector implements DetectorInterface
     protected array $additionalData = [];
 
     /**
-     * Check if detection should be performed for the given user based on role filtering configuration.
-     *
+     * @param array<string, mixed> $userArray
      * @param array<string, mixed> $configuration
      */
-    public function shouldDetectForUser(AbstractUserAuthentication $user, array $configuration = []): bool
+    public function shouldDetectForUser(array $userArray, array $configuration = []): bool
     {
-        $userArray = $user->user;
         $affectedUsers = $configuration['affectedUsers'] ?? 'all';
 
         return match ($affectedUsers) {
             'admins' => (bool) ($userArray['admin'] ?? false),
-            'maintainers' => in_array((int) $userArray['uid'], $GLOBALS['TYPO3_CONF_VARS']['SYS']['systemMaintainers'] ?? [], true),
+            'maintainers' => in_array((int) ($userArray['uid'] ?? 0), $GLOBALS['TYPO3_CONF_VARS']['SYS']['systemMaintainers'] ?? [], true),
             default => true, // 'all'
         };
     }
