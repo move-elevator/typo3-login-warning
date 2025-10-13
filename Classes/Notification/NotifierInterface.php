@@ -20,7 +20,7 @@ use TYPO3\CMS\Core\Authentication\AbstractUserAuthentication;
  * NotifierInterface.
  *
  * @author Konrad Michalik <km@move-elevator.de>
- * @license GPL-2.0
+ * @license GPL-2.0-or-later
  */
 interface NotifierInterface
 {

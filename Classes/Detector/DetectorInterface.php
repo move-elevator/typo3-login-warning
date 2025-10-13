@@ -19,7 +19,7 @@ use Psr\Http\Message\ServerRequestInterface;
  * DetectorInterface.
  *
  * @author Konrad Michalik <km@move-elevator.de>
- * @license GPL-2.0
+ * @license GPL-2.0-or-later
  */
 interface DetectorInterface
 {

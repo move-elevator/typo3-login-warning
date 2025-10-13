@@ -23,7 +23,7 @@ use PHPUnit\Framework\TestCase;
  * NewIpDetectorTest.
  *
  * @author Konrad Michalik <km@move-elevator.de>
- * @license GPL-2.0
+ * @license GPL-2.0-or-later
  */
 final class NewIpDetectorTest extends TestCase
 {

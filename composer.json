@@ -29,7 +29,7 @@
 		"ergebnis/composer-normalize": "^2.44",
 		"helhum/typo3-console": "^7.0 || ^8.1",
 		"konradmichalik/php-cs-fixer-preset": "^0.1.0",
-		"konradmichalik/php-doc-block-header-fixer": "^0.2.1",
+		"konradmichalik/php-doc-block-header-fixer": "^0.3.0",
 		"konradmichalik/phpstan-typo3-preset": "^0.1",
 		"phpstan/phpstan-deprecation-rules": "^1.0 || ^2.0",
 		"phpstan/phpstan-phpunit": "^1.0 || ^2.0",

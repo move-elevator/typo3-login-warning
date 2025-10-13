@@ -20,7 +20,7 @@ use PHPUnit\Framework\TestCase;
  * ConfigurationTest.
  *
  * @author Konrad Michalik <km@move-elevator.de>
- * @license GPL-2.0
+ * @license GPL-2.0-or-later
  */
 final class ConfigurationTest extends TestCase
 {
