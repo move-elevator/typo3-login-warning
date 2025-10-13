@@ -29,7 +29,7 @@ use function sprintf;
  * EmailNotification.
  *
  * @author Konrad Michalik <km@move-elevator.de>
- * @license GPL-2.0
+ * @license GPL-2.0-or-later
  */
 class EmailNotification implements NotifierInterface, LoggerAwareInterface
 {

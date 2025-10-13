@@ -25,7 +25,7 @@ use function is_array;
  * IpApiGeolocationService.
  *
  * @author Konrad Michalik <km@move-elevator.de>
- * @license GPL-2.0
+ * @license GPL-2.0-or-later
  */
 class IpApiGeolocationService implements GeolocationServiceInterface, LoggerAwareInterface
 {

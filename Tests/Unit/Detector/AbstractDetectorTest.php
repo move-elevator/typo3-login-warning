@@ -20,7 +20,7 @@ use PHPUnit\Framework\TestCase;
  * AbstractDetectorTest.
  *
  * @author Konrad Michalik <km@move-elevator.de>
- * @license GPL-2.0
+ * @license GPL-2.0-or-later
  */
 final class AbstractDetectorTest extends TestCase
 {
@@ -93,7 +93,7 @@ final class AbstractDetectorTest extends TestCase
  * AbstractDetectorTestDouble.
  *
  * @author Konrad Michalik <km@move-elevator.de>
- * @license GPL-2.0
+ * @license GPL-2.0-or-later
  */
 class AbstractDetectorTestDouble extends AbstractDetector
 {

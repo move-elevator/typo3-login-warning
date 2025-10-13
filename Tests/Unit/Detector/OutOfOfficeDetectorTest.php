@@ -22,7 +22,7 @@ use PHPUnit\Framework\TestCase;
  * OutOfOfficeDetectorTest.
  *
  * @author Konrad Michalik <km@move-elevator.de>
- * @license GPL-2.0
+ * @license GPL-2.0-or-later
  */
 final class OutOfOfficeDetectorTest extends TestCase
 {
@@ -405,7 +405,7 @@ final class OutOfOfficeDetectorTest extends TestCase
  * OutOfOfficeDetectorWithMockedTime.
  *
  * @author Konrad Michalik <km@move-elevator.de>
- * @license GPL-2.0
+ * @license GPL-2.0-or-later
  */
 class OutOfOfficeDetectorWithMockedTime extends OutOfOfficeDetector
 {

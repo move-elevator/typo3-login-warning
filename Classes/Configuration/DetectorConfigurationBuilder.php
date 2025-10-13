@@ -26,7 +26,7 @@ use function is_string;
  * DetectorConfigurationBuilder.
  *
  * @author Konrad Michalik <km@move-elevator.de>
- * @license GPL-2.0
+ * @license GPL-2.0-or-later
  */
 class DetectorConfigurationBuilder implements LoggerAwareInterface
 {
