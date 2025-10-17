@@ -14,7 +14,9 @@ declare(strict_types=1);
 namespace MoveElevator\Typo3LoginWarning\Middleware;
 
 use MoveElevator\Typo3LoginWarning\Configuration;
+use MoveElevator\Typo3LoginWarning\Configuration\DetectorConfigurationBuilder;
 use MoveElevator\Typo3LoginWarning\Context\LastLoginAspect;
+use MoveElevator\Typo3LoginWarning\Detector\LongTimeNoSeeDetector;
 use Psr\Http\Message\{ResponseInterface, ServerRequestInterface};
 use Psr\Http\Server\{MiddlewareInterface, RequestHandlerInterface};
 use TYPO3\CMS\Backend\Routing\RouteResult;
@@ -36,12 +38,17 @@ class LastLoginMiddleware implements MiddlewareInterface
 {
     public function __construct(
         protected readonly Context $context,
+        protected readonly DetectorConfigurationBuilder $configBuilder,
     ) {}
 
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
         $routing = $request->getAttribute('routing');
         if (!$routing instanceof RouteResult || 'login' !== $routing->getRouteName()) {
+            return $handler->handle($request);
+        }
+
+        if (!$this->configBuilder->isActive(LongTimeNoSeeDetector::class)) {
             return $handler->handle($request);
         }
 

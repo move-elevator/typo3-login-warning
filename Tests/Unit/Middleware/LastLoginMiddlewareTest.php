@@ -15,7 +15,9 @@ namespace MoveElevator\Typo3LoginWarning\Tests\Unit\Middleware;
 
 use DateTime;
 use MoveElevator\Typo3LoginWarning\Configuration;
+use MoveElevator\Typo3LoginWarning\Configuration\DetectorConfigurationBuilder;
 use MoveElevator\Typo3LoginWarning\Context\LastLoginAspect;
+use MoveElevator\Typo3LoginWarning\Detector\LongTimeNoSeeDetector;
 use MoveElevator\Typo3LoginWarning\Middleware\LastLoginMiddleware;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -36,18 +38,57 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 final class LastLoginMiddlewareTest extends TestCase
 {
     private Context&MockObject $context;
+    private DetectorConfigurationBuilder&MockObject $configBuilder;
     private LastLoginMiddleware $subject;
 
     protected function setUp(): void
     {
         parent::setUp();
         $this->context = $this->createMock(Context::class);
-        $this->subject = new LastLoginMiddleware($this->context);
+        $this->configBuilder = $this->createMock(DetectorConfigurationBuilder::class);
+        $this->configBuilder->method('isActive')->willReturn(true);
+        $this->subject = new LastLoginMiddleware($this->context, $this->configBuilder);
     }
 
     public function testImplementsMiddlewareInterface(): void
     {
         self::assertInstanceOf(MiddlewareInterface::class, $this->subject);
+    }
+
+    public function testProcessReturnsEarlyWhenDetectorIsInactive(): void
+    {
+        $configBuilder = $this->createMock(DetectorConfigurationBuilder::class);
+        $configBuilder->expects(self::once())
+            ->method('isActive')
+            ->with(LongTimeNoSeeDetector::class)
+            ->willReturn(false);
+
+        $subject = new LastLoginMiddleware($this->context, $configBuilder);
+
+        $routing = $this->createMock(RouteResult::class);
+        $routing->expects(self::once())
+            ->method('getRouteName')
+            ->willReturn('login');
+
+        $request = $this->createMock(ServerRequestInterface::class);
+        $request->expects(self::once())
+            ->method('getAttribute')
+            ->with('routing')
+            ->willReturn($routing);
+
+        $handler = $this->createMock(RequestHandlerInterface::class);
+        $response = $this->createMock(ResponseInterface::class);
+        $handler->expects(self::once())
+            ->method('handle')
+            ->with($request)
+            ->willReturn($response);
+
+        $this->context->expects(self::never())
+            ->method('setAspect');
+
+        $result = $subject->process($request, $handler);
+
+        self::assertSame($response, $result);
     }
 
     public function testProcessReturnsEarlyWhenRoutingAttributeIsNotRouteResult(): void
