@@ -13,9 +13,11 @@ declare(strict_types=1);
 
 namespace MoveElevator\Typo3LoginWarning\Detector;
 
+use DateTime;
 use Doctrine\DBAL\Exception;
-use MoveElevator\Typo3LoginWarning\Domain\Repository\UserLogRepository;
+use MoveElevator\Typo3LoginWarning\Configuration;
 use Psr\Http\Message\ServerRequestInterface;
+use TYPO3\CMS\Core\Context\Context;
 
 /**
  * LongTimeNoSeeDetector.
@@ -28,15 +30,10 @@ class LongTimeNoSeeDetector extends AbstractDetector
     private const DEFAULT_THRESHOLD_DAYS = 365;
 
     public function __construct(
-        private UserLogRepository $userLogRepository,
+        private readonly Context $context,
     ) {}
 
     /**
-     * Unfortunately, I was unable to use the existing “lastlogin” field in the backend user. In the AfterUserLoggedInEvent,
-     * the field is already overwritten with the current time, so that the required time span can no longer be accessed.
-     * Unfortunately, I was also unable to find another event or hook to access this information “earlier” during
-     * authentication. For the time being, the only option was to store this information in a separate table.
-     *
      * @param array<string, mixed> $userArray
      * @param array<string, mixed> $configuration
      *
@@ -44,22 +41,28 @@ class LongTimeNoSeeDetector extends AbstractDetector
      */
     public function detect(array $userArray, array $configuration = [], ?ServerRequestInterface $request = null): bool
     {
-        $userId = (int) ($userArray['uid'] ?? 0);
-        $currentTimestamp = time();
+        if (!$this->context->hasAspect(Configuration::EXT_KEY)) {
+            return false;
+        }
+        $lastLogin = $this->context->getPropertyFromAspect(Configuration::EXT_KEY, 'last_login');
 
-        $thresholdDays = (int) ($configuration['thresholdDays'] ?? self::DEFAULT_THRESHOLD_DAYS);
-        $thresholdTimestamp = $currentTimestamp - ($thresholdDays * 24 * 60 * 60);
-
-        $lastLoginCheckTimestamp = $this->userLogRepository->getLastLoginCheckTimestamp($userId);
-
-        if (null !== $lastLoginCheckTimestamp) {
-            $this->additionalData = [
-                'daysSinceLastLogin' => (int) floor(($currentTimestamp - $lastLoginCheckTimestamp) / (24 * 60 * 60)),
-            ];
+        if (null === $lastLogin) {
+            return false;
         }
 
-        $this->userLogRepository->updateLastLoginCheckTimestamp($userId, $currentTimestamp);
+        $currentDate = new DateTime();
 
-        return null !== $lastLoginCheckTimestamp && $lastLoginCheckTimestamp <= $thresholdTimestamp;
+        $interval = $lastLogin->diff($currentDate);
+        $thresholdDays = (int) ($configuration['thresholdDays'] ?? self::DEFAULT_THRESHOLD_DAYS);
+
+        if ($interval->days <= $thresholdDays) {
+            return false;
+        }
+
+        $this->additionalData = [
+            'daysSinceLastLogin' => $interval->days,
+        ];
+
+        return true;
     }
 }

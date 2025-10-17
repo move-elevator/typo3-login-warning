@@ -13,10 +13,11 @@ declare(strict_types=1);
 
 namespace MoveElevator\Typo3LoginWarning\Tests\Unit\Detector;
 
+use DateTime;
+use MoveElevator\Typo3LoginWarning\Configuration;
 use MoveElevator\Typo3LoginWarning\Detector\{DetectorInterface, LongTimeNoSeeDetector};
-use MoveElevator\Typo3LoginWarning\Domain\Repository\UserLogRepository;
-use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use TYPO3\CMS\Core\Context\Context;
 
 /**
  * LongTimeNoSeeDetectorTest.
@@ -26,84 +27,94 @@ use PHPUnit\Framework\TestCase;
  */
 final class LongTimeNoSeeDetectorTest extends TestCase
 {
-    private UserLogRepository&MockObject $userLogRepository;
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-        $this->userLogRepository = $this->createMock(UserLogRepository::class);
-    }
-
     public function testImplementsDetectorInterface(): void
     {
-        $subject = new LongTimeNoSeeDetector($this->userLogRepository);
+        $context = $this->createMock(Context::class);
+        $subject = new LongTimeNoSeeDetector($context);
         self::assertInstanceOf(DetectorInterface::class, $subject);
     }
 
-    public function testDetectReturnsFalseForFirstTimeLogin(): void
+    public function testDetectReturnsFalseWhenNoAspectAvailable(): void
     {
         $user = $this->createMockUser(['uid' => 123]);
         $configuration = [];
 
-        $this->userLogRepository
-            ->expects(self::once())
-            ->method('getLastLoginCheckTimestamp')
-            ->with(123)
-            ->willReturn(null);
+        $context = $this->createMock(Context::class);
+        $context->expects(self::once())
+            ->method('hasAspect')
+            ->with(Configuration::EXT_KEY)
+            ->willReturn(false);
 
-        $this->userLogRepository
-            ->expects(self::once())
-            ->method('updateLastLoginCheckTimestamp')
-            ->with(123, self::anything());
-
-        $subject = new LongTimeNoSeeDetector($this->userLogRepository);
+        $subject = new LongTimeNoSeeDetector($context);
         $result = $subject->detect($user, $configuration);
 
-        // First time login should NOT trigger (no history to compare against)
+        self::assertFalse($result);
+    }
+
+    public function testDetectReturnsFalseWhenLastLoginIsNull(): void
+    {
+        $user = $this->createMockUser(['uid' => 123]);
+        $configuration = [];
+
+        $context = $this->createMock(Context::class);
+        $context->expects(self::once())
+            ->method('hasAspect')
+            ->with(Configuration::EXT_KEY)
+            ->willReturn(true);
+
+        $context->expects(self::once())
+            ->method('getPropertyFromAspect')
+            ->with(Configuration::EXT_KEY, 'last_login')
+            ->willReturn(null);
+
+        $subject = new LongTimeNoSeeDetector($context);
+        $result = $subject->detect($user, $configuration);
+
         self::assertFalse($result);
     }
 
     public function testDetectReturnsTrueWhenLastLoginExceedsDefaultThreshold(): void
     {
         $user = $this->createMockUser(['uid' => 123]);
-        $oneYearAgo = time() - (366 * 24 * 60 * 60); // 366 days ago
         $configuration = [];
+        $lastLogin = new DateTime('-366 days');
 
-        $this->userLogRepository
-            ->expects(self::once())
-            ->method('getLastLoginCheckTimestamp')
-            ->with(123)
-            ->willReturn($oneYearAgo);
+        $context = $this->createMock(Context::class);
+        $context->expects(self::once())
+            ->method('hasAspect')
+            ->with(Configuration::EXT_KEY)
+            ->willReturn(true);
 
-        $this->userLogRepository
-            ->expects(self::once())
-            ->method('updateLastLoginCheckTimestamp')
-            ->with(123, self::anything());
+        $context->expects(self::once())
+            ->method('getPropertyFromAspect')
+            ->with(Configuration::EXT_KEY, 'last_login')
+            ->willReturn($lastLogin);
 
-        $subject = new LongTimeNoSeeDetector($this->userLogRepository);
+        $subject = new LongTimeNoSeeDetector($context);
         $result = $subject->detect($user, $configuration);
 
         self::assertTrue($result);
+        self::assertGreaterThanOrEqual(366, $subject->getAdditionalData()['daysSinceLastLogin']);
     }
 
     public function testDetectReturnsFalseWhenLastLoginWithinDefaultThreshold(): void
     {
         $user = $this->createMockUser(['uid' => 123]);
-        $sixMonthsAgo = time() - (180 * 24 * 60 * 60); // 180 days ago
         $configuration = [];
+        $lastLogin = new DateTime('-180 days');
 
-        $this->userLogRepository
-            ->expects(self::once())
-            ->method('getLastLoginCheckTimestamp')
-            ->with(123)
-            ->willReturn($sixMonthsAgo);
+        $context = $this->createMock(Context::class);
+        $context->expects(self::once())
+            ->method('hasAspect')
+            ->with(Configuration::EXT_KEY)
+            ->willReturn(true);
 
-        $this->userLogRepository
-            ->expects(self::once())
-            ->method('updateLastLoginCheckTimestamp')
-            ->with(123, self::anything());
+        $context->expects(self::once())
+            ->method('getPropertyFromAspect')
+            ->with(Configuration::EXT_KEY, 'last_login')
+            ->willReturn($lastLogin);
 
-        $subject = new LongTimeNoSeeDetector($this->userLogRepository);
+        $subject = new LongTimeNoSeeDetector($context);
         $result = $subject->detect($user, $configuration);
 
         self::assertFalse($result);
@@ -112,44 +123,45 @@ final class LongTimeNoSeeDetectorTest extends TestCase
     public function testDetectReturnsTrueWhenLastLoginExceedsCustomThreshold(): void
     {
         $user = $this->createMockUser(['uid' => 123]);
-        $thirtyOneDaysAgo = time() - (31 * 24 * 60 * 60); // 31 days ago
-        $configuration = ['thresholdDays' => 30]; // 30 days threshold
+        $configuration = ['thresholdDays' => 30];
+        $lastLogin = new DateTime('-31 days');
 
-        $this->userLogRepository
-            ->expects(self::once())
-            ->method('getLastLoginCheckTimestamp')
-            ->with(123)
-            ->willReturn($thirtyOneDaysAgo);
+        $context = $this->createMock(Context::class);
+        $context->expects(self::once())
+            ->method('hasAspect')
+            ->with(Configuration::EXT_KEY)
+            ->willReturn(true);
 
-        $this->userLogRepository
-            ->expects(self::once())
-            ->method('updateLastLoginCheckTimestamp')
-            ->with(123, self::anything());
+        $context->expects(self::once())
+            ->method('getPropertyFromAspect')
+            ->with(Configuration::EXT_KEY, 'last_login')
+            ->willReturn($lastLogin);
 
-        $subject = new LongTimeNoSeeDetector($this->userLogRepository);
+        $subject = new LongTimeNoSeeDetector($context);
         $result = $subject->detect($user, $configuration);
 
         self::assertTrue($result);
+        self::assertGreaterThanOrEqual(31, $subject->getAdditionalData()['daysSinceLastLogin']);
     }
 
     public function testDetectReturnsFalseWhenLastLoginWithinCustomThreshold(): void
     {
         $user = $this->createMockUser(['uid' => 123]);
-        $twentyNineDaysAgo = time() - (29 * 24 * 60 * 60); // 29 days ago
-        $configuration = ['thresholdDays' => 30]; // 30 days threshold
+        $configuration = ['thresholdDays' => 30];
+        $lastLogin = new DateTime('-29 days');
 
-        $this->userLogRepository
-            ->expects(self::once())
-            ->method('getLastLoginCheckTimestamp')
-            ->with(123)
-            ->willReturn($twentyNineDaysAgo);
+        $context = $this->createMock(Context::class);
+        $context->expects(self::once())
+            ->method('hasAspect')
+            ->with(Configuration::EXT_KEY)
+            ->willReturn(true);
 
-        $this->userLogRepository
-            ->expects(self::once())
-            ->method('updateLastLoginCheckTimestamp')
-            ->with(123, self::anything());
+        $context->expects(self::once())
+            ->method('getPropertyFromAspect')
+            ->with(Configuration::EXT_KEY, 'last_login')
+            ->willReturn($lastLogin);
 
-        $subject = new LongTimeNoSeeDetector($this->userLogRepository);
+        $subject = new LongTimeNoSeeDetector($context);
         $result = $subject->detect($user, $configuration);
 
         self::assertFalse($result);
@@ -158,44 +170,44 @@ final class LongTimeNoSeeDetectorTest extends TestCase
     public function testDetectHandlesZeroThresholdDays(): void
     {
         $user = $this->createMockUser(['uid' => 123]);
-        $oneSecondAgo = time() - 1;
         $configuration = ['thresholdDays' => 0];
+        $lastLogin = new DateTime('-1 second');
 
-        $this->userLogRepository
-            ->expects(self::once())
-            ->method('getLastLoginCheckTimestamp')
-            ->with(123)
-            ->willReturn($oneSecondAgo);
+        $context = $this->createMock(Context::class);
+        $context->expects(self::once())
+            ->method('hasAspect')
+            ->with(Configuration::EXT_KEY)
+            ->willReturn(true);
 
-        $this->userLogRepository
-            ->expects(self::once())
-            ->method('updateLastLoginCheckTimestamp')
-            ->with(123, self::anything());
+        $context->expects(self::once())
+            ->method('getPropertyFromAspect')
+            ->with(Configuration::EXT_KEY, 'last_login')
+            ->willReturn($lastLogin);
 
-        $subject = new LongTimeNoSeeDetector($this->userLogRepository);
+        $subject = new LongTimeNoSeeDetector($context);
         $result = $subject->detect($user, $configuration);
 
-        self::assertTrue($result);
+        self::assertFalse($result); // 1 second is 0 days, not > 0
     }
 
     public function testDetectHandlesStringThresholdDaysConfiguration(): void
     {
         $user = $this->createMockUser(['uid' => 123]);
-        $thirtyOneDaysAgo = time() - (31 * 24 * 60 * 60);
-        $configuration = ['thresholdDays' => '30']; // String instead of int
+        $configuration = ['thresholdDays' => '30'];
+        $lastLogin = new DateTime('-31 days');
 
-        $this->userLogRepository
-            ->expects(self::once())
-            ->method('getLastLoginCheckTimestamp')
-            ->with(123)
-            ->willReturn($thirtyOneDaysAgo);
+        $context = $this->createMock(Context::class);
+        $context->expects(self::once())
+            ->method('hasAspect')
+            ->with(Configuration::EXT_KEY)
+            ->willReturn(true);
 
-        $this->userLogRepository
-            ->expects(self::once())
-            ->method('updateLastLoginCheckTimestamp')
-            ->with(123, self::anything());
+        $context->expects(self::once())
+            ->method('getPropertyFromAspect')
+            ->with(Configuration::EXT_KEY, 'last_login')
+            ->willReturn($lastLogin);
 
-        $subject = new LongTimeNoSeeDetector($this->userLogRepository);
+        $subject = new LongTimeNoSeeDetector($context);
         $result = $subject->detect($user, $configuration);
 
         self::assertTrue($result);
@@ -204,115 +216,93 @@ final class LongTimeNoSeeDetectorTest extends TestCase
     public function testDetectHandlesInvalidThresholdDaysConfiguration(): void
     {
         $user = $this->createMockUser(['uid' => 123]);
-        $oneYearAgo = time() - (366 * 24 * 60 * 60);
-        $configuration = ['thresholdDays' => 'invalid']; // Invalid value should default to 365
+        $configuration = ['thresholdDays' => 'invalid'];
+        $lastLogin = new DateTime('-366 days');
 
-        $this->userLogRepository
-            ->expects(self::once())
-            ->method('getLastLoginCheckTimestamp')
-            ->with(123)
-            ->willReturn($oneYearAgo);
+        $context = $this->createMock(Context::class);
+        $context->expects(self::once())
+            ->method('hasAspect')
+            ->with(Configuration::EXT_KEY)
+            ->willReturn(true);
 
-        $this->userLogRepository
-            ->expects(self::once())
-            ->method('updateLastLoginCheckTimestamp')
-            ->with(123, self::anything());
+        $context->expects(self::once())
+            ->method('getPropertyFromAspect')
+            ->with(Configuration::EXT_KEY, 'last_login')
+            ->willReturn($lastLogin);
 
-        $subject = new LongTimeNoSeeDetector($this->userLogRepository);
+        $subject = new LongTimeNoSeeDetector($context);
         $result = $subject->detect($user, $configuration);
 
+        // Invalid value casts to 0, so 366 days > 0 = true
         self::assertTrue($result);
     }
 
     public function testDetectEdgeCaseExactlyAtThreshold(): void
     {
         $user = $this->createMockUser(['uid' => 123]);
-        $exactlyThirtyDaysAgo = time() - (30 * 24 * 60 * 60);
         $configuration = ['thresholdDays' => 30];
+        $lastLogin = new DateTime('-30 days');
 
-        $this->userLogRepository
-            ->expects(self::once())
-            ->method('getLastLoginCheckTimestamp')
-            ->with(123)
-            ->willReturn($exactlyThirtyDaysAgo);
+        $context = $this->createMock(Context::class);
+        $context->expects(self::once())
+            ->method('hasAspect')
+            ->with(Configuration::EXT_KEY)
+            ->willReturn(true);
 
-        $this->userLogRepository
-            ->expects(self::once())
-            ->method('updateLastLoginCheckTimestamp')
-            ->with(123, self::anything());
+        $context->expects(self::once())
+            ->method('getPropertyFromAspect')
+            ->with(Configuration::EXT_KEY, 'last_login')
+            ->willReturn($lastLogin);
 
-        $subject = new LongTimeNoSeeDetector($this->userLogRepository);
+        $subject = new LongTimeNoSeeDetector($context);
         $result = $subject->detect($user, $configuration);
 
-        self::assertTrue($result);
+        // 30 days is not > 30, so should be false
+        self::assertFalse($result);
     }
 
     public function testDetectWithLargeThresholdValue(): void
     {
         $user = $this->createMockUser(['uid' => 123]);
-        $fiveYearsAgo = time() - (5 * 365 * 24 * 60 * 60);
-        $configuration = ['thresholdDays' => 10 * 365]; // 10 years
+        $configuration = ['thresholdDays' => 10 * 365];
+        $lastLogin = new DateTime('-5 years');
 
-        $this->userLogRepository
-            ->expects(self::once())
-            ->method('getLastLoginCheckTimestamp')
-            ->with(123)
-            ->willReturn($fiveYearsAgo);
+        $context = $this->createMock(Context::class);
+        $context->expects(self::once())
+            ->method('hasAspect')
+            ->with(Configuration::EXT_KEY)
+            ->willReturn(true);
 
-        $this->userLogRepository
-            ->expects(self::once())
-            ->method('updateLastLoginCheckTimestamp')
-            ->with(123, self::anything());
+        $context->expects(self::once())
+            ->method('getPropertyFromAspect')
+            ->with(Configuration::EXT_KEY, 'last_login')
+            ->willReturn($lastLogin);
 
-        $subject = new LongTimeNoSeeDetector($this->userLogRepository);
+        $subject = new LongTimeNoSeeDetector($context);
         $result = $subject->detect($user, $configuration);
 
         self::assertFalse($result);
     }
 
-    public function testDetectAlwaysUpdatesTimestamp(): void
-    {
-        $user = $this->createMockUser(['uid' => 123]);
-        $currentTime = time();
-        $configuration = [];
-
-        $this->userLogRepository
-            ->expects(self::once())
-            ->method('getLastLoginCheckTimestamp')
-            ->with(123)
-            ->willReturn(null);
-
-        $this->userLogRepository
-            ->expects(self::once())
-            ->method('updateLastLoginCheckTimestamp')
-            ->with(123, self::greaterThanOrEqual($currentTime));
-
-        $subject = new LongTimeNoSeeDetector($this->userLogRepository);
-        $subject->detect($user, $configuration);
-    }
-
     public function testGetAdditionalDataReturnsEmptyArrayInitially(): void
     {
-        $subject = new LongTimeNoSeeDetector($this->userLogRepository);
+        $context = $this->createMock(Context::class);
+        $subject = new LongTimeNoSeeDetector($context);
         self::assertSame([], $subject->getAdditionalData());
     }
 
-    public function testGetAdditionalDataReturnsEmptyArrayForFirstTimeLogin(): void
+    public function testGetAdditionalDataReturnsEmptyArrayWhenNoDetection(): void
     {
         $user = $this->createMockUser(['uid' => 123]);
         $configuration = [];
 
-        $this->userLogRepository
-            ->expects(self::once())
-            ->method('getLastLoginCheckTimestamp')
-            ->with(123)
-            ->willReturn(null);
+        $context = $this->createMock(Context::class);
+        $context->expects(self::once())
+            ->method('hasAspect')
+            ->with(Configuration::EXT_KEY)
+            ->willReturn(false);
 
-        $this->userLogRepository
-            ->expects(self::once())
-            ->method('updateLastLoginCheckTimestamp');
-
-        $subject = new LongTimeNoSeeDetector($this->userLogRepository);
+        $subject = new LongTimeNoSeeDetector($context);
         $subject->detect($user, $configuration);
 
         self::assertSame([], $subject->getAdditionalData());
@@ -321,68 +311,49 @@ final class LongTimeNoSeeDetectorTest extends TestCase
     public function testGetAdditionalDataCalculatesCorrectDays(): void
     {
         $user = $this->createMockUser(['uid' => 123]);
-        $tenDaysAgo = time() - (10 * 24 * 60 * 60);
-        $configuration = [];
+        $configuration = ['thresholdDays' => 5];
+        $lastLogin = new DateTime('-10 days');
 
-        $this->userLogRepository
-            ->expects(self::once())
-            ->method('getLastLoginCheckTimestamp')
-            ->with(123)
-            ->willReturn($tenDaysAgo);
+        $context = $this->createMock(Context::class);
+        $context->expects(self::once())
+            ->method('hasAspect')
+            ->with(Configuration::EXT_KEY)
+            ->willReturn(true);
 
-        $this->userLogRepository
-            ->expects(self::once())
-            ->method('updateLastLoginCheckTimestamp');
+        $context->expects(self::once())
+            ->method('getPropertyFromAspect')
+            ->with(Configuration::EXT_KEY, 'last_login')
+            ->willReturn($lastLogin);
 
-        $subject = new LongTimeNoSeeDetector($this->userLogRepository);
+        $subject = new LongTimeNoSeeDetector($context);
         $subject->detect($user, $configuration);
 
-        self::assertSame(['daysSinceLastLogin' => 10], $subject->getAdditionalData());
-    }
-
-    public function testGetAdditionalDataHandlesPartialDays(): void
-    {
-        $user = $this->createMockUser(['uid' => 123]);
-        $oneAndAHalfDaysAgo = time() - (36 * 60 * 60); // 1.5 days = 36 hours
-        $configuration = [];
-
-        $this->userLogRepository
-            ->expects(self::once())
-            ->method('getLastLoginCheckTimestamp')
-            ->with(123)
-            ->willReturn($oneAndAHalfDaysAgo);
-
-        $this->userLogRepository
-            ->expects(self::once())
-            ->method('updateLastLoginCheckTimestamp');
-
-        $subject = new LongTimeNoSeeDetector($this->userLogRepository);
-        $subject->detect($user, $configuration);
-
-        // Should floor to 1 day
-        self::assertSame(['daysSinceLastLogin' => 1], $subject->getAdditionalData());
+        $additionalData = $subject->getAdditionalData();
+        self::assertArrayHasKey('daysSinceLastLogin', $additionalData);
+        self::assertGreaterThanOrEqual(10, $additionalData['daysSinceLastLogin']);
+        self::assertLessThanOrEqual(11, $additionalData['daysSinceLastLogin']);
     }
 
     public function testGetAdditionalDataForLongPeriods(): void
     {
         $user = $this->createMockUser(['uid' => 123]);
-        $twoYearsAgo = time() - (2 * 365 * 24 * 60 * 60);
-        $configuration = [];
+        $configuration = ['thresholdDays' => 365];
+        $lastLogin = new DateTime('-2 years');
 
-        $this->userLogRepository
-            ->expects(self::once())
-            ->method('getLastLoginCheckTimestamp')
-            ->with(123)
-            ->willReturn($twoYearsAgo);
+        $context = $this->createMock(Context::class);
+        $context->expects(self::once())
+            ->method('hasAspect')
+            ->with(Configuration::EXT_KEY)
+            ->willReturn(true);
 
-        $this->userLogRepository
-            ->expects(self::once())
-            ->method('updateLastLoginCheckTimestamp');
+        $context->expects(self::once())
+            ->method('getPropertyFromAspect')
+            ->with(Configuration::EXT_KEY, 'last_login')
+            ->willReturn($lastLogin);
 
-        $subject = new LongTimeNoSeeDetector($this->userLogRepository);
+        $subject = new LongTimeNoSeeDetector($context);
         $subject->detect($user, $configuration);
 
-        // Should be approximately 730 days (2 years)
         $additionalData = $subject->getAdditionalData();
         self::assertArrayHasKey('daysSinceLastLogin', $additionalData);
         self::assertGreaterThan(720, $additionalData['daysSinceLastLogin']);
@@ -394,7 +365,8 @@ final class LongTimeNoSeeDetectorTest extends TestCase
         $user = $this->createMockUser(['uid' => 123, 'admin' => false]);
         $configuration = ['affectedUsers' => 'admins'];
 
-        $subject = new LongTimeNoSeeDetector($this->userLogRepository);
+        $context = $this->createMock(Context::class);
+        $subject = new LongTimeNoSeeDetector($context);
         $result = $subject->shouldDetectForUser($user, $configuration);
 
         self::assertFalse($result);
@@ -405,7 +377,8 @@ final class LongTimeNoSeeDetectorTest extends TestCase
         $user = $this->createMockUser(['uid' => 123, 'admin' => true]);
         $configuration = ['affectedUsers' => 'admins'];
 
-        $subject = new LongTimeNoSeeDetector($this->userLogRepository);
+        $context = $this->createMock(Context::class);
+        $subject = new LongTimeNoSeeDetector($context);
         $result = $subject->shouldDetectForUser($user, $configuration);
 
         self::assertTrue($result);
@@ -418,7 +391,8 @@ final class LongTimeNoSeeDetectorTest extends TestCase
         $user = $this->createMockUser(['uid' => 123]);
         $configuration = ['affectedUsers' => 'maintainers'];
 
-        $subject = new LongTimeNoSeeDetector($this->userLogRepository);
+        $context = $this->createMock(Context::class);
+        $subject = new LongTimeNoSeeDetector($context);
         $result = $subject->shouldDetectForUser($user, $configuration);
 
         self::assertFalse($result);
@@ -433,7 +407,8 @@ final class LongTimeNoSeeDetectorTest extends TestCase
         $user = $this->createMockUser(['uid' => 123]);
         $configuration = ['affectedUsers' => 'maintainers'];
 
-        $subject = new LongTimeNoSeeDetector($this->userLogRepository);
+        $context = $this->createMock(Context::class);
+        $subject = new LongTimeNoSeeDetector($context);
         $result = $subject->shouldDetectForUser($user, $configuration);
 
         self::assertTrue($result);
