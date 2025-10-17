@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /*
  * This file is part of the "typo3_login_warning" TYPO3 CMS extension.
  *
