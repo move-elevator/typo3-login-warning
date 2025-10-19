@@ -34,7 +34,7 @@ class LastLoginAspect implements AspectInterface
         $this->lastLogin = $lastLogin;
     }
 
-    public function get(string $name): ?DateTime
+    public function get(string $name): mixed
     {
         if ('last_login' === $name) {
             return $this->lastLogin;
