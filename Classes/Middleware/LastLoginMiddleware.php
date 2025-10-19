@@ -27,6 +27,7 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 use function array_key_exists;
 use function is_array;
+use function is_string;
 
 /**
  * LastLoginMiddleware.
@@ -58,6 +59,10 @@ class LastLoginMiddleware implements MiddlewareInterface
         }
 
         $username = $requestBody['username'];
+        if (!is_string($username) || '' === trim($username)) {
+            return $handler->handle($request);
+        }
+
         $repository = GeneralUtility::makeInstance(BackendUserRepository::class);
 
         $user = $repository->findOneBy(['userName' => $username]);

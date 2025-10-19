@@ -17,14 +17,12 @@ use DateTime;
 use TYPO3\CMS\Core\Context\AspectInterface;
 use TYPO3\CMS\Core\Context\Exception\AspectPropertyNotFoundException;
 
-
 /**
  * LastLoginAspect.
  *
  * @author Konrad Michalik <km@move-elevator.de>
  * @license GPL-2.0-or-later
  */
-
 class LastLoginAspect implements AspectInterface
 {
     protected ?DateTime $lastLogin = null;
