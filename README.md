@@ -89,7 +89,7 @@ An IP geolocation lookup and a device information check can be enabled to add mo
 | Setting | Description | Default     |
 |---------|-------------|-------------|
 | **Active** | Enable New IP detector | `true`      |
-| **Hash IP Addresses** | Hash IP addresses for privacy (SHA-256) | `true`      |
+| **Hash IP Addresses** | Hash IP addresses for privacy (HMAC‑SHA‑256) | `true`      |
 | **Fetch Geolocation** | Enable IP geolocation lookup | `true`      |
 | **Include Device Information** | Include browser and OS information in notification emails | `true`      |
 | **IP Whitelist** | Comma-separated list of whitelisted IPs/networks (supports CIDR notation like `192.168.1.0/24`) | `127.0.0.1` |

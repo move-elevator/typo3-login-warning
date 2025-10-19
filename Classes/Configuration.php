@@ -31,6 +31,9 @@ class Configuration
 
     public static function registerHmacKey(): void
     {
-        $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][self::EXT_KEY]['hmacKey'] = $GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey'];
+        if (!isset($GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][self::EXT_KEY]['hmacKey'])) {
+            $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][self::EXT_KEY]['hmacKey'] =
+                (string) ($GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey'] ?? '');
+        }
     }
 }
