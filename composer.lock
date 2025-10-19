@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "675a06af251c920220d089e673f7735b",
+    "content-hash": "9e5b013756df4ceafb2485015817f018",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -8378,6 +8378,68 @@
                 }
             ],
             "time": "2025-02-07T04:59:38+00:00"
+        },
+        {
+            "name": "phpunit/phpcov",
+            "version": "11.0.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/sebastianbergmann/phpcov.git",
+                "reference": "658f73ae247de6fd5ef83e081dba6ac19e39bf4a"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/sebastianbergmann/phpcov/zipball/658f73ae247de6fd5ef83e081dba6ac19e39bf4a",
+                "reference": "658f73ae247de6fd5ef83e081dba6ac19e39bf4a",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.3",
+                "phpunit/php-code-coverage": "^12.3.6",
+                "phpunit/php-file-iterator": "^6.0",
+                "phpunit/phpunit": "^12.3.7",
+                "sebastian/cli-parser": "^4.0",
+                "sebastian/diff": "^7.0",
+                "sebastian/version": "^6.0"
+            },
+            "bin": [
+                "phpcov"
+            ],
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-main": "11.0-dev"
+                }
+            },
+            "autoload": {
+                "classmap": [
+                    "src/"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "BSD-3-Clause"
+            ],
+            "authors": [
+                {
+                    "name": "Sebastian Bergmann",
+                    "email": "sebastian@phpunit.de",
+                    "role": "lead"
+                }
+            ],
+            "description": "CLI frontend for php-code-coverage",
+            "homepage": "https://github.com/sebastianbergmann/phpcov",
+            "support": {
+                "issues": "https://github.com/sebastianbergmann/phpcov/issues",
+                "source": "https://github.com/sebastianbergmann/phpcov/tree/11.0.2"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/sebastianbergmann",
+                    "type": "github"
+                }
+            ],
+            "time": "2025-09-02T06:46:07+00:00"
         },
         {
             "name": "phpunit/phpunit",
