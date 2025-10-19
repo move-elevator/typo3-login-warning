@@ -15,6 +15,9 @@ return [
     'backend' => [
         'middleware-identifier' => [
             'target' => MoveElevator\Typo3LoginWarning\Middleware\LastLoginMiddleware::class,
+            'after' => [
+                'typo3/cms-backend/backend-routing',
+            ],
             'before' => [
                 'typo3/cms-backend/authentication',
             ],
