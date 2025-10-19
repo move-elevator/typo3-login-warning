@@ -16,3 +16,7 @@ parameters:
 
 	type_coverage:
 		constant: 0 # TODO: Set to 100, when PHP 8.3 is minimum requirement
+
+	typo3:
+		requestGetAttributeMapping:
+			routing: 'TYPO3\CMS\Backend\Routing\RouteResult'
