@@ -11,4 +11,5 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-MoveElevator\Typo3LoginWarning\Configuration::initExtLocalConfig();
+MoveElevator\Typo3LoginWarning\Configuration::registerMailTemplate();
+MoveElevator\Typo3LoginWarning\Configuration::registerHmacKey();

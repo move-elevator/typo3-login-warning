@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace MoveElevator\Typo3LoginWarning\Detector;
 
 use Doctrine\DBAL\Exception;
+use MoveElevator\Typo3LoginWarning\Configuration;
 use MoveElevator\Typo3LoginWarning\Domain\Repository\IpLogRepository;
 use MoveElevator\Typo3LoginWarning\Service\GeolocationServiceInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -100,10 +101,15 @@ class NewIpDetector extends AbstractDetector
         $ipAddress = GeneralUtility::getIndpEnv('REMOTE_ADDR');
 
         if ($hashedIpAddress) {
-            $ipAddress = hash('sha256', $ipAddress);
+            $ipAddress = hash_hmac('sha256', $ipAddress, $this->getHmacKey());
         }
 
         return $ipAddress;
+    }
+
+    private function getHmacKey(): string
+    {
+        return $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['hmacKey'] ?? '';
     }
 
     /**
