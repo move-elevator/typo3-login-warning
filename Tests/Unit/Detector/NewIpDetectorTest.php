@@ -30,8 +30,8 @@ final class NewIpDetectorTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        // Clean slate for each test
-        unset($GLOBALS['_SERVER']['REMOTE_ADDR']);
+        // Clean slate for each test - set default to avoid issues
+        $GLOBALS['_SERVER']['REMOTE_ADDR'] = '127.0.0.1';
     }
 
     protected function tearDown(): void
@@ -373,6 +373,103 @@ final class NewIpDetectorTest extends TestCase
         self::assertArrayHasKey('deviceInfo', $additionalData);
         self::assertStringContainsString('Firefox', $additionalData['deviceInfo']['browser']);
         self::assertStringContainsString('Windows', $additionalData['deviceInfo']['os']);
+    }
+
+    public function testDetectDoesNotAddDeviceInfoWhenRequestIsNull(): void
+    {
+        $GLOBALS['_SERVER']['REMOTE_ADDR'] = '203.0.113.42';
+
+        $user = $this->createMockUser(['uid' => 123]);
+        $configuration = ['includeDeviceInfo' => true];
+
+        $ipLogRepository = $this->createMock(IpLogRepository::class);
+        $ipLogRepository->expects(self::once())
+            ->method('findByUserAndIp')
+            ->willReturn(false);
+        $ipLogRepository->expects(self::once())
+            ->method('addUserIp');
+
+        $subject = new NewIpDetector($ipLogRepository);
+        $result = $subject->detect($user, $configuration, null);
+
+        self::assertTrue($result);
+
+        $additionalData = $subject->getAdditionalData();
+        self::assertArrayNotHasKey('deviceInfo', $additionalData);
+    }
+
+    public function testDetectDoesNotAddDeviceInfoWhenUserAgentIsEmpty(): void
+    {
+        $GLOBALS['_SERVER']['REMOTE_ADDR'] = '203.0.113.42';
+        $request = $this->createMockRequest('');
+
+        $user = $this->createMockUser(['uid' => 123]);
+        $configuration = ['includeDeviceInfo' => true];
+
+        $ipLogRepository = $this->createMock(IpLogRepository::class);
+        $ipLogRepository->expects(self::once())
+            ->method('findByUserAndIp')
+            ->willReturn(false);
+        $ipLogRepository->expects(self::once())
+            ->method('addUserIp');
+
+        $subject = new NewIpDetector($ipLogRepository);
+        $result = $subject->detect($user, $configuration, $request);
+
+        self::assertTrue($result);
+
+        $additionalData = $subject->getAdditionalData();
+        self::assertArrayNotHasKey('deviceInfo', $additionalData);
+    }
+
+    public function testDetectParsesUnknownBrowser(): void
+    {
+        $GLOBALS['_SERVER']['REMOTE_ADDR'] = '203.0.113.42';
+        $request = $this->createMockRequest('UnknownBot/1.0');
+
+        $user = $this->createMockUser(['uid' => 123]);
+        $configuration = ['includeDeviceInfo' => true];
+
+        $ipLogRepository = $this->createMock(IpLogRepository::class);
+        $ipLogRepository->expects(self::once())
+            ->method('findByUserAndIp')
+            ->willReturn(false);
+        $ipLogRepository->expects(self::once())
+            ->method('addUserIp');
+
+        $subject = new NewIpDetector($ipLogRepository);
+        $result = $subject->detect($user, $configuration, $request);
+
+        self::assertTrue($result);
+
+        $additionalData = $subject->getAdditionalData();
+        self::assertArrayHasKey('deviceInfo', $additionalData);
+        self::assertSame('Unknown', $additionalData['deviceInfo']['browser']);
+    }
+
+    public function testDetectParsesUnknownOperatingSystem(): void
+    {
+        $GLOBALS['_SERVER']['REMOTE_ADDR'] = '203.0.113.42';
+        $request = $this->createMockRequest('UnknownOS/1.0');
+
+        $user = $this->createMockUser(['uid' => 123]);
+        $configuration = ['includeDeviceInfo' => true];
+
+        $ipLogRepository = $this->createMock(IpLogRepository::class);
+        $ipLogRepository->expects(self::once())
+            ->method('findByUserAndIp')
+            ->willReturn(false);
+        $ipLogRepository->expects(self::once())
+            ->method('addUserIp');
+
+        $subject = new NewIpDetector($ipLogRepository);
+        $result = $subject->detect($user, $configuration, $request);
+
+        self::assertTrue($result);
+
+        $additionalData = $subject->getAdditionalData();
+        self::assertArrayHasKey('deviceInfo', $additionalData);
+        self::assertSame('Unknown', $additionalData['deviceInfo']['os']);
     }
 
     /**

@@ -56,11 +56,13 @@ final class EmailNotificationTest extends TestCase
 
     public function testNotifyDoesNothingForNonBackendUsers(): void
     {
-        $user = $this->createMock(BackendUserAuthentication::class);
-        $user->method('isAdmin')->willReturn(false);
+        // Create a non-BackendUserAuthentication user (e.g., FrontendUserAuthentication)
+        $user = $this->createMock(\TYPO3\CMS\Core\Authentication\AbstractUserAuthentication::class);
 
         $this->mailer->expects(self::never())->method('send');
+        $this->logger->expects(self::never())->method('info');
 
+        // This should hit line 51 - early return for non-backend users
         $this->subject->notify($user, $this->request, 'TestTrigger', []);
     }
 

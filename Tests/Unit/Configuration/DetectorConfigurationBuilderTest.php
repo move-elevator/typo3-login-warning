@@ -290,4 +290,79 @@ final class DetectorConfigurationBuilderTest extends TestCase
     {
         self::assertSame('', $this->subject->getConfigPrefix('UnknownDetector'));
     }
+
+    public function testGetExtensionConfigurationReturnsCachedValue(): void
+    {
+        // First call should fetch from ExtensionConfiguration
+        $this->extensionConfiguration
+            ->expects(self::once()) // Should only be called once
+            ->method('get')
+            ->with(Configuration::EXT_KEY)
+            ->willReturn(['newIp' => ['active' => true]]);
+
+        // First call - fetches and caches
+        $result1 = $this->subject->getExtensionConfiguration();
+        self::assertSame(['newIp' => ['active' => true]], $result1);
+
+        // Second call - should return cached value (line 50)
+        $result2 = $this->subject->getExtensionConfiguration();
+        self::assertSame(['newIp' => ['active' => true]], $result2);
+    }
+
+    public function testBuildReturnsEmptyArrayWhenPrefixDoesNotExist(): void
+    {
+        $this->extensionConfiguration
+            ->method('get')
+            ->with(Configuration::EXT_KEY)
+            ->willReturn(['someOtherConfig' => ['key' => 'value']]);
+
+        // Test with NewIpDetector - prefix 'newIp' doesn't exist in config
+        $result = $this->subject->build(NewIpDetector::class);
+
+        // Should get defaults from buildNewIpConfig
+        self::assertSame([
+            'hashIpAddress' => true,
+            'fetchGeolocation' => true,
+            'affectedUsers' => 'all',
+            'notificationReceiver' => 'recipients',
+            'whitelist' => ['127.0.0.1'],
+        ], $result);
+    }
+
+    public function testBuildReturnsEmptyArrayWhenPrefixIsNotArray(): void
+    {
+        $this->extensionConfiguration
+            ->method('get')
+            ->with(Configuration::EXT_KEY)
+            ->willReturn(['newIp' => 'invalid-not-an-array']); // Tests line 120
+
+        // Should still build config with defaults
+        $result = $this->subject->build(NewIpDetector::class);
+
+        self::assertSame([
+            'hashIpAddress' => true,
+            'fetchGeolocation' => true,
+            'affectedUsers' => 'all',
+            'notificationReceiver' => 'recipients',
+            'whitelist' => ['127.0.0.1'],
+        ], $result);
+    }
+
+    public function testBuildNewIpConfigHandlesEmptyWhitelist(): void
+    {
+        $this->extensionConfiguration
+            ->method('get')
+            ->with(Configuration::EXT_KEY)
+            ->willReturn([
+                'newIp' => [
+                    'active' => true,
+                    'whitelist' => '', // Tests line 238
+                ],
+            ]);
+
+        $result = $this->subject->build(NewIpDetector::class);
+
+        // Empty whitelist should return empty array
+        self::assertSame([], $result['whitelist']);
+    }
 }

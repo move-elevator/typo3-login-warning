@@ -204,6 +204,99 @@ final class LastLoginMiddlewareTest extends TestCase
         self::assertSame($response, $result);
     }
 
+    public function testProcessReturnsEarlyWhenUsernameIsEmptyString(): void
+    {
+        $routing = $this->createMock(RouteResult::class);
+        $routing->expects(self::once())
+            ->method('getRouteName')
+            ->willReturn('login');
+
+        $request = $this->createMock(ServerRequestInterface::class);
+        $request->expects(self::once())
+            ->method('getAttribute')
+            ->with('routing')
+            ->willReturn($routing);
+        $request->expects(self::once())
+            ->method('getParsedBody')
+            ->willReturn(['username' => '']); // Empty username - tests line 63
+
+        $handler = $this->createMock(RequestHandlerInterface::class);
+        $response = $this->createMock(ResponseInterface::class);
+        $handler->expects(self::once())
+            ->method('handle')
+            ->with($request)
+            ->willReturn($response);
+
+        $this->context->expects(self::never())
+            ->method('setAspect');
+
+        $result = $this->subject->process($request, $handler);
+
+        self::assertSame($response, $result);
+    }
+
+    public function testProcessReturnsEarlyWhenUsernameIsWhitespaceOnly(): void
+    {
+        $routing = $this->createMock(RouteResult::class);
+        $routing->expects(self::once())
+            ->method('getRouteName')
+            ->willReturn('login');
+
+        $request = $this->createMock(ServerRequestInterface::class);
+        $request->expects(self::once())
+            ->method('getAttribute')
+            ->with('routing')
+            ->willReturn($routing);
+        $request->expects(self::once())
+            ->method('getParsedBody')
+            ->willReturn(['username' => '   ']); // Whitespace only - also tests line 63
+
+        $handler = $this->createMock(RequestHandlerInterface::class);
+        $response = $this->createMock(ResponseInterface::class);
+        $handler->expects(self::once())
+            ->method('handle')
+            ->with($request)
+            ->willReturn($response);
+
+        $this->context->expects(self::never())
+            ->method('setAspect');
+
+        $result = $this->subject->process($request, $handler);
+
+        self::assertSame($response, $result);
+    }
+
+    public function testProcessReturnsEarlyWhenUsernameIsNotString(): void
+    {
+        $routing = $this->createMock(RouteResult::class);
+        $routing->expects(self::once())
+            ->method('getRouteName')
+            ->willReturn('login');
+
+        $request = $this->createMock(ServerRequestInterface::class);
+        $request->expects(self::once())
+            ->method('getAttribute')
+            ->with('routing')
+            ->willReturn($routing);
+        $request->expects(self::once())
+            ->method('getParsedBody')
+            ->willReturn(['username' => 123]); // Not a string - tests line 63
+
+        $handler = $this->createMock(RequestHandlerInterface::class);
+        $response = $this->createMock(ResponseInterface::class);
+        $handler->expects(self::once())
+            ->method('handle')
+            ->with($request)
+            ->willReturn($response);
+
+        $this->context->expects(self::never())
+            ->method('setAspect');
+
+        $result = $this->subject->process($request, $handler);
+
+        self::assertSame($response, $result);
+    }
+
     public function testProcessReturnsEarlyWhenUserIsNotFound(): void
     {
         $routing = $this->createMock(RouteResult::class);
