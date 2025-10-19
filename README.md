@@ -63,7 +63,7 @@ Configure the extension through the TYPO3 backend:
 2. Select **typo3_login_warning**
 3. Configure your detectors and notification settings
 
-### Detectors
+## 🔎 Detectors
 
 Detectors are used to detect certain login events. If a detector matches, a notification will be sent.
 
@@ -72,7 +72,7 @@ Detectors are used to detect certain login events. If a detector matches, a noti
 
 The following detectors are available (in order of execution):
 
-#### [NewIpDetector](Classes/Detector/NewIpDetector.php)
+### [NewIpDetector](Classes/Detector/NewIpDetector.php)
 
 Detects logins from new IP addresses and triggers a warning email.
 
@@ -80,6 +80,9 @@ Detects logins from new IP addresses and triggers a warning email.
 
 The IP address will be stored and can be hashed for privacy reasons. You can also define a whitelist of IP addresses that will not trigger a warning. 
 An IP geolocation lookup and a device information check can be enabled to add more information to the notification email.
+
+> [!IMPORTANT]
+> Keep in mind, that this detector stores hashed IP addresses in the database table `tx_typo3loginwarning_iplog` to track known IPs.
 
 **Configuration Options:**
 
@@ -93,7 +96,7 @@ An IP geolocation lookup and a device information check can be enabled to add mo
 | **Affected Users** | Which users should trigger this detector: `All Users`, `Only Admins`, `Only System Maintainers` | `All Users` |
 | **Notification Receiver** | Who should receive the notification: `Email Recipients`, `Logged-In User`, `Both` | `Email Recipients` |
 
-##### Geolocation
+#### Geolocation
 
 If `Fetch Geolocation` is enabled, the extension will use the [ip-api.com](https://ip-api.com/) service to fetch geolocation information for the IP address. Only public IP addresses will be looked up to respect privacy.
 
@@ -106,7 +109,7 @@ services:
     alias: Vendor\MyExtension\Service\MyCustomGeolocationService
 ```
 
-#### [LongTimeNoSeeDetector](Classes/Detector/LongTimeNoSeeDetector.php)
+### [LongTimeNoSeeDetector](Classes/Detector/LongTimeNoSeeDetector.php)
 
 Detects logins after a long period of inactivity (default: 365 days).
 
@@ -121,7 +124,7 @@ Detects logins after a long period of inactivity (default: 365 days).
 | **Affected Users** | Which users should trigger this detector: `All Users`, `Only Admins`, `Only System Maintainers` | `All Users` |
 | **Notification Receiver** | Who should receive the notification: `Email Recipients`, `Logged-In User`, `Both` | `Email Recipients` |
 
-#### [OutOfOfficeDetector](Classes/Detector/OutOfOfficeDetector.php)
+### [OutOfOfficeDetector](Classes/Detector/OutOfOfficeDetector.php)
 
 Detects logins outside defined working hours, holidays, or vacation periods. Supports flexible working hours with multiple time ranges per day (e.g., lunch breaks), timezone handling, and comprehensive out-of-office period configuration.
 
@@ -148,7 +151,7 @@ Detects logins outside defined working hours, holidays, or vacation periods. Sup
 }
 ```
 
-#### Custom Detectors
+### Custom Detectors
 
 > [!TIP]
 > You can implement your own detector by implementing the [`DetectorInterface`](Classes/Detector/DetectorInterface.php), extending the [`AbstractDetector`](Classes/Detector/AbstractDetector.php) and registering it in the DI container.
@@ -160,13 +163,13 @@ services:
       - { name: typo3_login_warning.detector, priority: 200 }
 ```
 
-### Notification
+## 📢 Notification
 
 Notification methods are used to notify about detected login events.
 
 The following notification methods are available:
 
-#### [EmailNotification](Classes/Notification/EmailNotification.php)
+### [EmailNotification](Classes/Notification/EmailNotification.php)
 
 Sends a warning email to defined recipients. If no recipient is defined, the email will be sent to the address defined in `$GLOBALS['TYPO3_CONF_VARS']['BE']['warning_email_addr']`.
 
@@ -190,7 +193,7 @@ You can override the email templates located in `Resources/Private/Templates/Ema
 $GLOBALS['TYPO3_CONF_VARS']['MAIL']['templateRootPaths'][1000] = 'EXT:my_sitepackage/Resources/Private/Templates/Email/';
 ```
 
-#### Custom Notifiers
+### Custom Notifiers
 
 > [!TIP]
 > You can implement your own notification method by implementing the [`NotifierInterface`](Classes/Notification/NotifierInterface.php) and registering it in the DI container.
