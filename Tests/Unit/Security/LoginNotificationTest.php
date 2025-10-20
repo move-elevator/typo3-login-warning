@@ -172,4 +172,83 @@ final class LoginNotificationTest extends TestCase
 
         ($this->subject)($event);
     }
+
+    public function testNotificationIsPreventedByEventListener(): void
+    {
+        $user = $this->createMock(BackendUserAuthentication::class);
+        $user->user = ['uid' => 456, 'username' => 'testuser'];
+        $request = $this->createMock(ServerRequestInterface::class);
+        $event = new AfterUserLoggedInEvent($user, $request);
+
+        // Create mock detector that will trigger
+        $mockDetector = $this->createMock(\MoveElevator\Typo3LoginWarning\Detector\DetectorInterface::class);
+        $mockDetector->expects(self::once())
+            ->method('shouldDetectForUser')
+            ->willReturn(true);
+        $mockDetector->expects(self::once())
+            ->method('detect')
+            ->willReturn(true);
+        $mockDetector->expects(self::once())
+            ->method('getAdditionalData')
+            ->willReturn([]);
+
+        // Create mock notifier - should NOT be called when notification is prevented
+        $mockNotifier = $this->createMock(\MoveElevator\Typo3LoginWarning\Notification\NotifierInterface::class);
+        $mockNotifier->expects(self::never())
+            ->method('notify');
+
+        // Use registries with our mocks
+        $this->detectorRegistry = new DetectorRegistry([$mockDetector]);
+        $this->notificationRegistry = new NotificationRegistry([$mockNotifier]);
+
+        // Create a new event dispatcher that prevents the notification
+        $eventDispatcher = $this->createMock(EventDispatcherInterface::class);
+        $eventDispatcher->expects(self::once())
+            ->method('dispatch')
+            ->willReturnCallback(function ($event) {
+                $event->preventNotification();
+
+                return $event;
+            });
+
+        $this->subject = new LoginNotification(
+            $this->detectorRegistry,
+            $this->configBuilder,
+            $this->notificationRegistry,
+            $eventDispatcher,
+        );
+        $this->subject->setLogger($this->logger);
+
+        // Configure mocks
+        $this->configBuilder->expects(self::once())
+            ->method('setLogger')
+            ->with($this->logger);
+
+        $this->configBuilder->expects(self::once())
+            ->method('buildNotificationConfig')
+            ->willReturn(['recipients' => 'test@example.com']);
+
+        $this->configBuilder->expects(self::once())
+            ->method('isActive')
+            ->with($mockDetector::class)
+            ->willReturn(true);
+
+        $this->configBuilder->expects(self::once())
+            ->method('build')
+            ->with($mockDetector::class)
+            ->willReturn(['notificationReceiver' => 'recipients']);
+
+        // Logger should log that notification was prevented
+        $this->logger->expects(self::once())
+            ->method('info')
+            ->with(
+                'Login notification was prevented by event listener',
+                [
+                    'detector' => $mockDetector::class,
+                    'userId' => 456,
+                ],
+            );
+
+        ($this->subject)($event);
+    }
 }
