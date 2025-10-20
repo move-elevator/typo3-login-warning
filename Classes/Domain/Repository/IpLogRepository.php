@@ -29,7 +29,7 @@ class IpLogRepository
     /**
      * @throws Exception
      */
-    public function findByUserAndIp(int $userId, string $ipAddress): bool
+    public function findByHash(string $identifierHash): bool
     {
         $queryBuilder = $this->connectionPool->getQueryBuilderForTable('tx_typo3loginwarning_iplog');
 
@@ -37,20 +37,18 @@ class IpLogRepository
             ->select('*')
             ->from('tx_typo3loginwarning_iplog')
             ->where(
-                $queryBuilder->expr()->eq('user_id', $queryBuilder->createNamedParameter($userId, Connection::PARAM_INT)),
-                $queryBuilder->expr()->eq('ip_address', $queryBuilder->createNamedParameter($ipAddress, Connection::PARAM_STR)),
+                $queryBuilder->expr()->eq('identifier_hash', $queryBuilder->createNamedParameter($identifierHash, Connection::PARAM_STR)),
             )
             ->executeQuery()->fetchAssociative();
     }
 
-    public function addUserIp(int $userId, string $ipAddress): void
+    public function addHash(string $identifierHash): void
     {
         $queryBuilder = $this->connectionPool->getQueryBuilderForTable('tx_typo3loginwarning_iplog');
         $queryBuilder
             ->insert('tx_typo3loginwarning_iplog')
             ->values([
-                'user_id' => $userId,
-                'ip_address' => $ipAddress,
+                'identifier_hash' => $identifierHash,
             ])
             ->executeStatement();
     }

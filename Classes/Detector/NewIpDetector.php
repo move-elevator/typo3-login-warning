@@ -45,7 +45,7 @@ class NewIpDetector extends AbstractDetector
      */
     public function detect(array $userArray, array $configuration = [], ?ServerRequestInterface $request = null): bool
     {
-        $rawIpAddress = $this->getIpAddress(false);
+        $rawIpAddress = GeneralUtility::getIndpEnv('REMOTE_ADDR');
 
         if (
             array_key_exists('whitelist', $configuration)
@@ -55,13 +55,16 @@ class NewIpDetector extends AbstractDetector
             return false;
         }
 
-        $shouldHashIp = !array_key_exists('hashIpAddress', $configuration) || (bool) $configuration['hashIpAddress'];
-        $ipAddress = $this->getIpAddress($shouldHashIp);
         $userId = (int) ($userArray['uid'] ?? 0);
 
-        if (!$this->ipLogRepository->findByUserAndIp($userId, $ipAddress)) {
+        $shouldHashIp = !array_key_exists('hashIpAddress', $configuration) || (bool) $configuration['hashIpAddress'];
+        $ipForStorage = $shouldHashIp ? hash_hmac('sha256', $rawIpAddress, $this->getHmacKey()) : $rawIpAddress;
+
+        $identifierHash = $this->generateIdentifierHash($userId, $ipForStorage);
+
+        if (!$this->ipLogRepository->findByHash($identifierHash)) {
             $this->collectAdditionalData($configuration, $rawIpAddress, $request);
-            $this->ipLogRepository->addUserIp($userId, $ipAddress);
+            $this->ipLogRepository->addHash($identifierHash);
 
             return true;
         }
@@ -86,15 +89,11 @@ class NewIpDetector extends AbstractDetector
         }
     }
 
-    private function getIpAddress(bool $hashedIpAddress = true): string
+    private function generateIdentifierHash(int $userId, string $ipAddress): string
     {
-        $ipAddress = GeneralUtility::getIndpEnv('REMOTE_ADDR');
+        $identifier = $userId.':'.$ipAddress;
 
-        if ($hashedIpAddress) {
-            $ipAddress = hash_hmac('sha256', $ipAddress, $this->getHmacKey());
-        }
-
-        return $ipAddress;
+        return hash_hmac('sha256', $identifier, $this->getHmacKey());
     }
 
     private function getHmacKey(): string

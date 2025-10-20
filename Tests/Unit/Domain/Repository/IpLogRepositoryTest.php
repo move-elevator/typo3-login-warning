@@ -52,10 +52,9 @@ final class IpLogRepositoryTest extends TestCase
         $this->subject = new IpLogRepository($this->connectionPool);
     }
 
-    public function testFindByUserAndIpReturnsTrue(): void
+    public function testFindByHashReturnsTrue(): void
     {
-        $userId = 123;
-        $ipAddress = '192.168.1.1';
+        $identifierHash = 'abc123def456';
 
         $this->queryBuilder->expects(self::once())
             ->method('select')
@@ -67,48 +66,38 @@ final class IpLogRepositoryTest extends TestCase
             ->with('tx_typo3loginwarning_iplog')
             ->willReturnSelf();
 
-        $this->queryBuilder->expects(self::exactly(2))
+        $this->queryBuilder->expects(self::once())
             ->method('createNamedParameter')
-            ->willReturnCallback(function (mixed $value, mixed $type) use ($userId, $ipAddress): string {
-                if ($value === $userId && Connection::PARAM_INT === $type) {
-                    return ':userId';
-                }
-                if ($value === $ipAddress && Connection::PARAM_STR === $type) {
-                    return ':ipAddress';
-                }
+            ->with($identifierHash, Connection::PARAM_STR)
+            ->willReturn(':hash');
 
-                return ':param';
-            });
-
-        $this->expressionBuilder->expects(self::exactly(2))
+        $this->expressionBuilder->expects(self::once())
             ->method('eq')
-            ->willReturnCallback(function (string $field, string $param): string {
-                return "$field = $param";
-            });
+            ->with('identifier_hash', ':hash')
+            ->willReturn('identifier_hash = :hash');
 
         $this->queryBuilder->expects(self::once())
             ->method('where')
-            ->with('user_id = :userId', 'ip_address = :ipAddress')
+            ->with('identifier_hash = :hash')
             ->willReturnSelf();
 
         $result = $this->createMock(Result::class);
         $result->expects(self::once())
             ->method('fetchAssociative')
-            ->willReturn(['user_id' => $userId, 'ip_address' => $ipAddress]);
+            ->willReturn(['identifier_hash' => $identifierHash]);
 
         $this->queryBuilder->expects(self::once())
             ->method('executeQuery')
             ->willReturn($result);
 
-        $found = $this->subject->findByUserAndIp($userId, $ipAddress);
+        $found = $this->subject->findByHash($identifierHash);
 
         self::assertTrue($found);
     }
 
-    public function testFindByUserAndIpReturnsFalse(): void
+    public function testFindByHashReturnsFalse(): void
     {
-        $userId = 123;
-        $ipAddress = '192.168.1.1';
+        $identifierHash = 'abc123def456';
 
         $this->queryBuilder->method('select')->willReturnSelf();
         $this->queryBuilder->method('from')->willReturnSelf();
@@ -125,15 +114,14 @@ final class IpLogRepositoryTest extends TestCase
             ->method('executeQuery')
             ->willReturn($result);
 
-        $found = $this->subject->findByUserAndIp($userId, $ipAddress);
+        $found = $this->subject->findByHash($identifierHash);
 
         self::assertFalse($found);
     }
 
-    public function testAddUserIp(): void
+    public function testAddHash(): void
     {
-        $userId = 123;
-        $ipAddress = '192.168.1.1';
+        $identifierHash = 'abc123def456';
 
         $this->queryBuilder->expects(self::once())
             ->method('insert')
@@ -143,8 +131,7 @@ final class IpLogRepositoryTest extends TestCase
         $this->queryBuilder->expects(self::once())
             ->method('values')
             ->with([
-                'user_id' => $userId,
-                'ip_address' => $ipAddress,
+                'identifier_hash' => $identifierHash,
             ])
             ->willReturnSelf();
 
@@ -152,6 +139,6 @@ final class IpLogRepositoryTest extends TestCase
             ->method('executeStatement')
             ->willReturn(1);
 
-        $this->subject->addUserIp($userId, $ipAddress);
+        $this->subject->addHash($identifierHash);
     }
 }
