@@ -185,12 +185,24 @@ Each detector has its own **Notification Receiver** setting that controls who re
 
 ![email.jpg](Documentation/Images/email.jpg)
 
-### Templates
+#### Templates
 
 You can override the email templates located in `Resources/Private/Templates/Email/Default/LoginNotification/`.
 
 ```php
 $GLOBALS['TYPO3_CONF_VARS']['MAIL']['templateRootPaths'][1000] = 'EXT:my_sitepackage/Resources/Private/Templates/Email/';
+```
+
+### Custom Notifiers
+
+> [!TIP]
+> You can implement your own notification method by implementing the [`NotifierInterface`](Classes/Notification/NotifierInterface.php) and registering it in the DI container.
+
+```yaml
+services:
+  Vendor\MyExtension\Notification\SlackNotification:
+    tags:
+      - { name: typo3_login_warning.notifier }
 ```
 
 ### Event
@@ -218,18 +230,6 @@ final class CustomNotificationListener
 
 > [!NOTE]
 > Register your event listener via the `AsEventListener` attribute (TYPO3 >= 13) or in your service configuration (see [docs](https://docs.typo3.org/m/typo3/reference-coreapi/12.4/en-us/ExtensionArchitecture/HowTo/Events/Index.html#extension-development-event-listener)).
-
-### Custom Notifiers
-
-> [!TIP]
-> You can implement your own notification method by implementing the [`NotifierInterface`](Classes/Notification/NotifierInterface.php) and registering it in the DI container.
-
-```yaml
-services:
-  Vendor\MyExtension\Notification\SlackNotification:
-    tags:
-      - { name: typo3_login_warning.notifier }
-```
 
 ## 🧑‍💻 Contributing
 
