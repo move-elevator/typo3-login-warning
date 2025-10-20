@@ -185,12 +185,34 @@ Each detector has its own **Notification Receiver** setting that controls who re
 
 ![email.jpg](Documentation/Images/email.jpg)
 
-##### Templates
+### Templates
 
 You can override the email templates located in `Resources/Private/Templates/Email/Default/LoginNotification/`.
 
 ```php
 $GLOBALS['TYPO3_CONF_VARS']['MAIL']['templateRootPaths'][1000] = 'EXT:my_sitepackage/Resources/Private/Templates/Email/';
+```
+
+### Event
+
+You can modify the notification by listening to the [`ModifyLoginNotificationEvent`](Classes/Event/ModifyLoginNotificationEvent.php).
+
+```php
+use MoveElevator\Typo3LoginWarning\Event\ModifyLoginNotificationEvent;
+
+final class CustomNotificationListener
+{
+     #[AsEventListener(identifier: 'my-extension/modify-login-notification')]
+     public function __invoke(ModifyLoginNotificationEvent $event): void
+     {
+         // Example: Prevent notifications for test users
+          $user = $event->getUser();
+          if (str_starts_with($user->user['username'] ?? '', 'test_')) {
+              $event->preventNotification();
+              return;
+          }
+    }
+}
 ```
 
 ### Custom Notifiers
