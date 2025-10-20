@@ -199,10 +199,11 @@ You can modify the notification by listening to the [`ModifyLoginNotificationEve
 
 ```php
 use MoveElevator\Typo3LoginWarning\Event\ModifyLoginNotificationEvent;
+use TYPO3\CMS\Core\Attribute\AsEventListener;
 
+#[AsEventListener]
 final class CustomNotificationListener
 {
-     #[AsEventListener(identifier: 'my-extension/modify-login-notification')]
      public function __invoke(ModifyLoginNotificationEvent $event): void
      {
          // Example: Prevent notifications for test users
@@ -214,6 +215,9 @@ final class CustomNotificationListener
     }
 }
 ```
+
+> [!NOTE]
+> Register your event listener via the `AsEventListener` attribute (TYPO3 >= 13) or in your service configuration (see [docs](https://docs.typo3.org/m/typo3/reference-coreapi/12.4/en-us/ExtensionArchitecture/HowTo/Events/Index.html#extension-development-event-listener)).
 
 ### Custom Notifiers
 
