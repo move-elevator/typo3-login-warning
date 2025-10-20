@@ -15,7 +15,9 @@ namespace MoveElevator\Typo3LoginWarning\Security;
 
 use MoveElevator\Typo3LoginWarning\Configuration\DetectorConfigurationBuilder;
 use MoveElevator\Typo3LoginWarning\Detector\DetectorInterface;
+use MoveElevator\Typo3LoginWarning\Event\ModifyLoginNotificationEvent;
 use MoveElevator\Typo3LoginWarning\Registry\{DetectorRegistry, NotificationRegistry};
+use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\{LoggerAwareInterface, LoggerAwareTrait};
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
@@ -39,6 +41,7 @@ final class LoginNotification implements LoggerAwareInterface
         private readonly DetectorRegistry $detectorRegistry,
         private readonly DetectorConfigurationBuilder $configBuilder,
         private readonly NotificationRegistry $notificationRegistry,
+        private readonly EventDispatcherInterface $eventDispatcher,
     ) {}
 
     public function __invoke(AfterUserLoggedInEvent $event): void
@@ -109,13 +112,34 @@ final class LoginNotification implements LoggerAwareInterface
 
         $additionalData = $detector->getAdditionalData() ?? [];
 
+        $event = new ModifyLoginNotificationEvent(
+            $user,
+            $request,
+            $detector,
+            $mergedConfig,
+            $detectorConfig,
+            $additionalData,
+        );
+
+        /** @var ModifyLoginNotificationEvent $event */
+        $event = $this->eventDispatcher->dispatch($event);
+
+        if ($event->isNotificationPrevented()) {
+            $this->logger?->info('Login notification was prevented by event listener', [
+                'detector' => $detector::class,
+                'userId' => $user->user['uid'] ?? 0,
+            ]);
+
+            return;
+        }
+
         foreach ($this->notificationRegistry->getNotifiers() as $notifier) {
             $notifier->notify(
                 $user,
                 $request,
                 $detector::class,
-                $mergedConfig,
-                $additionalData,
+                $event->getNotificationConfig(),
+                $event->getAdditionalData(),
             );
         }
     }

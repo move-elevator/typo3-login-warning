@@ -19,6 +19,7 @@ use MoveElevator\Typo3LoginWarning\Registry\{DetectorRegistry, NotificationRegis
 use MoveElevator\Typo3LoginWarning\Security\LoginNotification;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
@@ -36,12 +37,18 @@ final class LoginNotificationTest extends TestCase
     private DetectorRegistry $detectorRegistry;
     private DetectorConfigurationBuilder&MockObject $configBuilder;
     private NotificationRegistry $notificationRegistry;
+    private EventDispatcherInterface&MockObject $eventDispatcher;
     private LoginNotification $subject;
 
     protected function setUp(): void
     {
         $this->logger = $this->createMock(LoggerInterface::class);
         $this->configBuilder = $this->createMock(DetectorConfigurationBuilder::class);
+        $this->eventDispatcher = $this->createMock(EventDispatcherInterface::class);
+
+        // Event dispatcher returns event unchanged by default
+        $this->eventDispatcher->method('dispatch')
+            ->willReturnArgument(0);
 
         // Use real registries with empty lists
         $this->detectorRegistry = new DetectorRegistry([]);
@@ -51,6 +58,7 @@ final class LoginNotificationTest extends TestCase
             $this->detectorRegistry,
             $this->configBuilder,
             $this->notificationRegistry,
+            $this->eventDispatcher,
         );
         $this->subject->setLogger($this->logger);
 
@@ -139,6 +147,7 @@ final class LoginNotificationTest extends TestCase
             $this->detectorRegistry,
             $this->configBuilder,
             $this->notificationRegistry,
+            $this->eventDispatcher,
         );
         $this->subject->setLogger($this->logger);
 
