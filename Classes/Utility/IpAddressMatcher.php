@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace MoveElevator\Typo3LoginWarning\Utility;
 
+use function assert;
 use function count;
 use function explode;
 use function filter_var;
@@ -72,9 +73,7 @@ final class IpAddressMatcher
         $ipBinary = inet_pton($ipAddress);
         $subnetBinary = inet_pton($subnet);
 
-        if (false === $ipBinary || false === $subnetBinary) {
-            return false;
-        }
+        assert(false !== $ipBinary && false !== $subnetBinary);
 
         if (!self::validateBinaryIps($ipBinary, $subnetBinary, $mask)) {
             return false;
