@@ -5,5 +5,5 @@ CREATE TABLE tx_typo3loginwarning_iplog
 
 	identifier_hash varchar(64) DEFAULT '' NOT NULL,
 	PRIMARY KEY (uid),
-	KEY identifier_hash (identifier_hash)
+	UNIQUE KEY identifier_hash (identifier_hash)
 );
