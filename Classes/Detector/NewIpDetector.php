@@ -17,11 +17,11 @@ use Doctrine\DBAL\Exception;
 use MoveElevator\Typo3LoginWarning\Configuration;
 use MoveElevator\Typo3LoginWarning\Domain\Repository\IpLogRepository;
 use MoveElevator\Typo3LoginWarning\Service\GeolocationServiceInterface;
+use MoveElevator\Typo3LoginWarning\Utility\IpAddressMatcher;
 use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 use function array_key_exists;
-use function in_array;
 use function is_array;
 use function sprintf;
 use function str_contains;
@@ -48,17 +48,18 @@ class NewIpDetector extends AbstractDetector
      */
     public function detect(array $userArray, array $configuration = [], ?ServerRequestInterface $request = null): bool
     {
+        $rawIpAddress = $this->getIpAddress(false);
+
         if (
             array_key_exists('whitelist', $configuration)
             && is_array($configuration['whitelist'])
-            && in_array($this->getIpAddress(false), $configuration['whitelist'], true)
+            && IpAddressMatcher::isWhitelisted($rawIpAddress, $configuration['whitelist'])
         ) {
             return false;
         }
 
         $shouldHashIp = !array_key_exists('hashIpAddress', $configuration) || (bool) $configuration['hashIpAddress'];
         $ipAddress = $this->getIpAddress($shouldHashIp);
-        $rawIpAddress = $shouldHashIp ? $this->getIpAddress(false) : $ipAddress;
         $userId = (int) ($userArray['uid'] ?? 0);
 
         if (!$this->ipLogRepository->findByUserAndIp($userId, $ipAddress)) {
