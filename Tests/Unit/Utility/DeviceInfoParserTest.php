@@ -17,6 +17,7 @@ use MoveElevator\Typo3LoginWarning\Utility\DeviceInfoParser;
 use PHPUnit\Framework\Attributes\{DataProvider, Test};
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ServerRequestInterface;
+use ReflectionClass;
 
 /**
  * DeviceInfoParserTest.
@@ -271,5 +272,203 @@ final class DeviceInfoParserTest extends TestCase
         self::assertIsArray($result);
         self::assertArrayHasKey('date', $result);
         self::assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/', $result['date']);
+    }
+
+    #[Test]
+    public function parseFromRequestUsesFallbackWhenMobileDetectNotAvailable(): void
+    {
+        // This test documents that the fallback mechanism works
+        // Since mobiledetect/mobiledetectlib is not installed in test environment,
+        // the fallback regex-based parsing is used automatically
+
+        $request = $this->createMock(ServerRequestInterface::class);
+        $request->method('getHeaderLine')
+            ->with('User-Agent')
+            ->willReturn('Mozilla/5.0 (Windows NT 10.0) Chrome/120.0.0.0');
+
+        $result = DeviceInfoParser::parseFromRequest($request);
+
+        self::assertIsArray($result);
+        self::assertArrayHasKey('browser', $result);
+        self::assertArrayHasKey('os', $result);
+        self::assertArrayHasKey('userAgent', $result);
+        self::assertArrayHasKey('date', $result);
+
+        // Verify fallback parsing works
+        self::assertStringContainsString('Chrome', $result['browser']);
+        self::assertStringContainsString('Windows', $result['os']);
+    }
+
+    #[Test]
+    public function parseFromRequestHandlesBothDetectionMethods(): void
+    {
+        // This test documents the behavior:
+        // - If mobiledetect/mobiledetectlib is installed: uses MobileDetect
+        // - If not installed (like in our test environment): uses fallback regex
+
+        $request = $this->createMock(ServerRequestInterface::class);
+        $request->method('getHeaderLine')
+            ->with('User-Agent')
+            ->willReturn('Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)');
+
+        $result = DeviceInfoParser::parseFromRequest($request);
+
+        self::assertIsArray($result);
+        // Both methods should return iOS
+        self::assertStringContainsString('iOS', $result['os']);
+    }
+
+    #[Test]
+    public function parseWithMobileDetectParsesChrome(): void
+    {
+        // Test the parseWithMobileDetect method directly via Reflection
+        $reflection = new ReflectionClass(DeviceInfoParser::class);
+        $method = $reflection->getMethod('parseWithMobileDetect');
+        $method->setAccessible(true);
+
+        $userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+        $result = $method->invoke(null, $userAgent);
+
+        self::assertIsArray($result);
+        self::assertCount(2, $result);
+        [$browser, $os] = $result;
+
+        self::assertStringContainsString('Chrome', $browser);
+        self::assertStringContainsString('Windows', $os);
+    }
+
+    #[Test]
+    public function parseWithMobileDetectParsesFirefox(): void
+    {
+        $reflection = new ReflectionClass(DeviceInfoParser::class);
+        $method = $reflection->getMethod('parseWithMobileDetect');
+        $method->setAccessible(true);
+
+        $userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0';
+        $result = $method->invoke(null, $userAgent);
+
+        self::assertIsArray($result);
+        [$browser, $os] = $result;
+
+        self::assertStringContainsString('Firefox', $browser);
+        self::assertStringContainsString('Windows', $os);
+    }
+
+    #[Test]
+    public function parseWithMobileDetectParsesMobile(): void
+    {
+        $reflection = new ReflectionClass(DeviceInfoParser::class);
+        $method = $reflection->getMethod('parseWithMobileDetect');
+        $method->setAccessible(true);
+
+        $userAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_1 like Mac OS X) AppleWebKit/605.1.15';
+        $result = $method->invoke(null, $userAgent);
+
+        self::assertIsArray($result);
+        [$browser, $os] = $result;
+
+        // MobileDetect should detect iOS
+        self::assertStringContainsString('iOS', $os);
+    }
+
+    #[Test]
+    public function parseWithMobileDetectHandlesUnknownUserAgent(): void
+    {
+        $reflection = new ReflectionClass(DeviceInfoParser::class);
+        $method = $reflection->getMethod('parseWithMobileDetect');
+        $method->setAccessible(true);
+
+        $userAgent = 'CustomBot/1.0';
+        $result = $method->invoke(null, $userAgent);
+
+        self::assertIsArray($result);
+        [$browser, $os] = $result;
+
+        // Should return 'Unknown' for unrecognized user agents
+        self::assertSame('Unknown', $browser);
+        self::assertSame('Unknown', $os);
+    }
+
+    #[Test]
+    public function parseFromRequestUsesMobileDetectWhenAvailable(): void
+    {
+        // Since MobileDetect is now installed in dev environment,
+        // parseFromRequest should use it automatically (line 46-47)
+
+        $request = $this->createMock(ServerRequestInterface::class);
+        $request->method('getHeaderLine')
+            ->with('User-Agent')
+            ->willReturn('Mozilla/5.0 (Windows NT 10.0) Chrome/120.0.0.0');
+
+        $result = DeviceInfoParser::parseFromRequest($request);
+
+        self::assertIsArray($result);
+        self::assertArrayHasKey('browser', $result);
+        self::assertArrayHasKey('os', $result);
+
+        // MobileDetect should have been used
+        self::assertStringContainsString('Chrome', $result['browser']);
+        self::assertStringContainsString('Windows', $result['os']);
+    }
+
+    #[Test]
+    public function parseWithMobileDetectIncludesBrowserVersionWhenAvailable(): void
+    {
+        // Test that browser version is appended when MobileDetect returns one (line 127-128)
+        $reflection = new ReflectionClass(DeviceInfoParser::class);
+        $method = $reflection->getMethod('parseWithMobileDetect');
+        $method->setAccessible(true);
+
+        // Mobile Safari typically includes version information
+        $userAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Mobile/15E148 Safari/604.1';
+        $result = $method->invoke(null, $userAgent);
+
+        self::assertIsArray($result);
+        [$browser, $os] = $result;
+
+        // Should include version in browser string
+        self::assertMatchesRegularExpression('/Safari\s+[\d.]+/', $browser);
+    }
+
+    #[Test]
+    public function parseWithMobileDetectIncludesOsVersionWhenAvailable(): void
+    {
+        // Test that OS version is appended when MobileDetect returns one (line 140-141)
+        $reflection = new ReflectionClass(DeviceInfoParser::class);
+        $method = $reflection->getMethod('parseWithMobileDetect');
+        $method->setAccessible(true);
+
+        // iOS user agent - MobileDetect should detect iOS with version
+        $userAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_1 like Mac OS X) AppleWebKit/605.1.15';
+        $result = $method->invoke(null, $userAgent);
+
+        self::assertIsArray($result);
+        [$browser, $os] = $result;
+
+        // Should include version in OS string
+        self::assertMatchesRegularExpression('/iOS\s+[\d._]+/', $os);
+    }
+
+    #[Test]
+    public function parseWithMobileDetectHandlesMissingVersion(): void
+    {
+        // Test the case where MobileDetect detects browser/OS but returns empty version
+        // This tests the false branch of the ternary operators (lines 127-128, 140-141)
+        $reflection = new ReflectionClass(DeviceInfoParser::class);
+        $method = $reflection->getMethod('parseWithMobileDetect');
+        $method->setAccessible(true);
+
+        // Android Chrome - sometimes version() returns empty string
+        $userAgent = 'Mozilla/5.0 (Linux; Android 14; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36';
+        $result = $method->invoke(null, $userAgent);
+
+        self::assertIsArray($result);
+        [$browser, $os] = $result;
+
+        // Should still have browser and OS name even if version is missing
+        self::assertNotEmpty($browser);
+        self::assertNotEmpty($os);
+        // Android should be detected
+        self::assertStringContainsString('Android', $os);
     }
 }

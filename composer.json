@@ -36,6 +36,7 @@
 		"konradmichalik/php-cs-fixer-preset": "^0.1.0",
 		"konradmichalik/php-doc-block-header-fixer": "^0.3.0",
 		"konradmichalik/phpstan-typo3-preset": "^0.1",
+		"mobiledetect/mobiledetectlib": "^4.8",
 		"phpstan/phpstan-deprecation-rules": "^1.0 || ^2.0",
 		"phpstan/phpstan-phpunit": "^1.0 || ^2.0",
 		"phpstan/phpstan-strict-rules": "^1.0 || ^2.0",
@@ -49,6 +50,9 @@
 		"typo3/cms-base-distribution": "^12.0 || ^13.4",
 		"typo3/cms-lowlevel": "^12.0 || ^13.4",
 		"typo3/coding-standards": "^0.7 || ^0.8"
+	},
+	"suggest": {
+		"mobiledetect/mobiledetectlib": "Provides more accurate and comprehensive browser/OS/device detection. Falls back to basic detection if not installed."
 	},
 	"autoload": {
 		"psr-4": {

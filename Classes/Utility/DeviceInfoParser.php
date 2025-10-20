@@ -13,8 +13,10 @@ declare(strict_types=1);
 
 namespace MoveElevator\Typo3LoginWarning\Utility;
 
+use Detection\Exception\MobileDetectException;
 use Psr\Http\Message\ServerRequestInterface;
 
+use function class_exists;
 use function date;
 use function preg_match;
 use function sprintf;
@@ -42,10 +44,17 @@ final class DeviceInfoParser
             return null;
         }
 
+        if (class_exists(\Detection\MobileDetect::class)) {
+            [$browser, $os] = self::parseWithMobileDetect($userAgent);
+        } else {
+            $browser = self::parseBrowser($userAgent);
+            $os = self::parseOperatingSystem($userAgent);
+        }
+
         return [
             'userAgent' => $userAgent,
-            'browser' => self::parseBrowser($userAgent),
-            'os' => self::parseOperatingSystem($userAgent),
+            'browser' => $browser,
+            'os' => $os,
             'date' => date(sprintf(
                 '%s %s',
                 $GLOBALS['TYPO3_CONF_VARS']['SYS']['ddmmyy'] ?? 'Y-m-d',
@@ -101,5 +110,54 @@ final class DeviceInfoParser
         }
 
         return 'Unknown';
+    }
+
+    /**
+     * @return array{0: string, 1: string}
+     *
+     * @throws MobileDetectException
+     */
+    private static function parseWithMobileDetect(string $userAgent): array
+    {
+        $detector = new \Detection\MobileDetect();
+        $detector->setUserAgent($userAgent);
+
+        return [self::getMobileDetectBrowsers($detector, $userAgent), self::getMobileDetectOperatingSystems($detector, $userAgent)];
+    }
+
+    private static function getMobileDetectBrowsers(\Detection\MobileDetect $detector, string $userAgent): string
+    {
+        $browser = 'Unknown';
+        foreach (\Detection\MobileDetect::getBrowsers() as $browserName => $regex) {
+            if ($detector->is($browserName)) {
+                $version = $detector->version($browserName);
+                $browser = $browserName.('' !== $version ? ' '.$version : '');
+                break;
+            }
+        }
+
+        if ('Unknown' === $browser) {
+            $browser = self::parseBrowser($userAgent);
+        }
+
+        return $browser;
+    }
+
+    private static function getMobileDetectOperatingSystems(\Detection\MobileDetect $detector, string $userAgent): string
+    {
+        $os = 'Unknown';
+        foreach (\Detection\MobileDetect::getOperatingSystems() as $osName => $regex) {
+            if ($detector->is($osName)) {
+                $version = $detector->version($osName);
+                $os = $osName.('' !== $version ? ' '.$version : '');
+                break;
+            }
+        }
+
+        if ('Unknown' === $os) {
+            $os = self::parseOperatingSystem($userAgent);
+        }
+
+        return $os;
     }
 }
