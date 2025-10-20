@@ -120,6 +120,7 @@ final class IpAddressMatcher
         }
 
         $maxMask = 4 === strlen($ipBinary) ? 32 : 128;
+
         return !($mask < 0 || $mask > $maxMask);
     }
 
