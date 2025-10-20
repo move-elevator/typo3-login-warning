@@ -17,15 +17,13 @@ use Doctrine\DBAL\Exception;
 use MoveElevator\Typo3LoginWarning\Configuration;
 use MoveElevator\Typo3LoginWarning\Domain\Repository\IpLogRepository;
 use MoveElevator\Typo3LoginWarning\Service\GeolocationServiceInterface;
+use MoveElevator\Typo3LoginWarning\Utility\DeviceInfoParser;
 use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 use function array_key_exists;
 use function in_array;
 use function is_array;
-use function sprintf;
-use function str_contains;
-use function str_replace;
 
 /**
  * NewIpDetector.
@@ -62,14 +60,7 @@ class NewIpDetector extends AbstractDetector
         $userId = (int) ($userArray['uid'] ?? 0);
 
         if (!$this->ipLogRepository->findByUserAndIp($userId, $ipAddress)) {
-            if ($this->shouldFetchGeolocation($configuration, $rawIpAddress)) {
-                $this->additionalData['locationData'] = $this->geolocationService?->getLocationData($rawIpAddress);
-            }
-
-            if (($configuration['includeDeviceInfo'] ?? true) === true) {
-                $this->addDeviceInfo($request);
-            }
-
+            $this->collectAdditionalData($configuration, $rawIpAddress, $request);
             $this->ipLogRepository->addUserIp($userId, $ipAddress);
 
             return true;
@@ -78,22 +69,21 @@ class NewIpDetector extends AbstractDetector
         return false;
     }
 
-    private function addDeviceInfo(?ServerRequestInterface $request = null): void
+    /**
+     * @param array<string, mixed> $configuration
+     */
+    private function collectAdditionalData(array $configuration, string $rawIpAddress, ?ServerRequestInterface $request): void
     {
-        if (null === $request) {
-            return;
-        }
-        $userAgent = $request->getHeaderLine('User-Agent');
-        if ('' === $userAgent) {
-            return;
+        if ($this->shouldFetchGeolocation($configuration, $rawIpAddress)) {
+            $this->additionalData['locationData'] = $this->geolocationService?->getLocationData($rawIpAddress);
         }
 
-        $this->additionalData['deviceInfo'] = [
-            'userAgent' => $userAgent,
-            'browser' => $this->parseBrowser($userAgent),
-            'os' => $this->parseOperatingSystem($userAgent),
-            'date' => date(sprintf('%s %s', $GLOBALS['TYPO3_CONF_VARS']['SYS']['ddmmyy'] ?? 'Y-m-d', $GLOBALS['TYPO3_CONF_VARS']['SYS']['hhmm'] ?? 'H:i')),
-        ];
+        if (($configuration['includeDeviceInfo'] ?? true) === true) {
+            $deviceInfo = DeviceInfoParser::parseFromRequest($request);
+            if (null !== $deviceInfo) {
+                $this->additionalData['deviceInfo'] = $deviceInfo;
+            }
+        }
     }
 
     private function getIpAddress(bool $hashedIpAddress = true): string
@@ -127,54 +117,5 @@ class NewIpDetector extends AbstractDetector
             \FILTER_VALIDATE_IP,
             \FILTER_FLAG_NO_PRIV_RANGE | \FILTER_FLAG_NO_RES_RANGE,
         );
-    }
-
-    private function parseBrowser(string $userAgent): string
-    {
-        $browsers = [
-            '/Edg\/([0-9.]+)/' => 'Edge',
-            '/Chrome\/([0-9.]+)/' => 'Chrome',
-            '/Firefox\/([0-9.]+)/' => 'Firefox',
-            '/Safari\/([0-9.]+)/' => 'Safari',
-            '/Opera\/([0-9.]+)/' => 'Opera',
-        ];
-
-        foreach ($browsers as $pattern => $name) {
-            if (1 === preg_match($pattern, $userAgent, $matches)) {
-                return $name.' '.$matches[1];
-            }
-        }
-
-        return 'Unknown';
-    }
-
-    private function parseOperatingSystem(string $userAgent): string
-    {
-        $operatingSystems = [
-            '/Windows NT 10.0/' => 'Windows 10/11',
-            '/Windows NT 6.3/' => 'Windows 8.1',
-            '/Windows NT 6.2/' => 'Windows 8',
-            '/Windows NT 6.1/' => 'Windows 7',
-            '/Macintosh.*Mac OS X ([0-9._]+)/' => 'macOS',
-            '/Linux/' => 'Linux',
-            '/Android ([0-9.]+)/' => 'Android',
-            '/iPhone OS ([0-9_]+)/' => 'iOS',
-            '/iPad.*OS ([0-9_]+)/' => 'iPadOS',
-        ];
-
-        foreach ($operatingSystems as $pattern => $name) {
-            if (1 === preg_match($pattern, $userAgent, $matches)) {
-                if (str_contains($name, 'OS')) {
-                    $version = $matches[1] ?? '';
-                    $version = str_replace('_', '.', $version);
-
-                    return $name.' '.$version;
-                }
-
-                return $name;
-            }
-        }
-
-        return 'Unknown';
     }
 }
