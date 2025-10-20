@@ -34,6 +34,7 @@ return [
         'codecov.yml',
         'CODEOWNERS',
         'composer.lock',
+        'composer-require-checker.json',
         'CONTRIBUTING.md',
         'crowdin.yaml',
         'dependency-checker.json',
