@@ -16,6 +16,7 @@ namespace MoveElevator\Typo3LoginWarning\Security;
 use MoveElevator\Typo3LoginWarning\Configuration\DetectorConfigurationBuilder;
 use MoveElevator\Typo3LoginWarning\Detector\DetectorInterface;
 use MoveElevator\Typo3LoginWarning\Registry\{DetectorRegistry, NotificationRegistry};
+use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\{LoggerAwareInterface, LoggerAwareTrait};
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Authentication\Event\AfterUserLoggedInEvent;
@@ -97,7 +98,7 @@ final class LoginNotification implements LoggerAwareInterface
      */
     private function sendNotification(
         BackendUserAuthentication $user,
-        mixed $request,
+        ServerRequestInterface $request,
         DetectorInterface $detector,
         array $notificationConfig,
         array $detectorConfig,
