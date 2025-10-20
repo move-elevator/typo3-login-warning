@@ -1,5 +1,5 @@
 {
-    "symbol-whitelist": [
-        "Detection\\MobileDetect"
-    ]
+	"symbol-whitelist": [
+		"Detection\\MobileDetect"
+	]
 }
