@@ -17,8 +17,7 @@ use Doctrine\DBAL\Exception;
 use MoveElevator\Typo3LoginWarning\Configuration;
 use MoveElevator\Typo3LoginWarning\Domain\Repository\IpLogRepository;
 use MoveElevator\Typo3LoginWarning\Service\GeolocationServiceInterface;
-use MoveElevator\Typo3LoginWarning\Utility\IpAddressMatcher;
-use MoveElevator\Typo3LoginWarning\Utility\DeviceInfoParser;
+use MoveElevator\Typo3LoginWarning\Utility\{DeviceInfoParser, IpAddressMatcher};
 use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
