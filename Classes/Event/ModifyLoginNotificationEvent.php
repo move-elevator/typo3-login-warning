@@ -89,8 +89,6 @@ final class ModifyLoginNotificationEvent
     }
 
     /**
-     * Get additional data that will be passed to the notifier.
-     *
      * @return array<string, mixed>
      */
     public function getAdditionalData(): array
