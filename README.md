@@ -135,7 +135,7 @@ Detects logins outside defined working hours, holidays, or vacation periods. Sup
 | Setting | Description | Default                        |
 |---------|-------------|--------------------------------|
 | **Active** | Enable Out Of Office detector | `false`                        |
-| **Working Hours** | JSON configuration for working hours (supports multiple time ranges per day for lunch breaks). Example: `{"monday":[["09:00","12:00"],["13:00","17:00"]],"tuesday":["09:00","17:00"],"friday":["09:00","15:00"]}` | Business hours (06-20) Mon-Fri |
+| **Working Hours** | JSON configuration for working hours. Supports shortcuts: `workday` (Mon-Fri), `weekend` (Sat-Sun). Also supports multiple time ranges per day for lunch breaks. Examples: `{"workday":["09:00","17:00"]}`, `{"workday":["09:00","17:00"],"weekend":["10:00","14:00"]}`, `{"workday":["09:00","17:00"],"friday":["09:00","15:00"]}`, `{"monday":[["09:00","12:00"],["13:00","17:00"]]}` | Business hours (06-20) Mon-Fri |
 | **Timezone** | Timezone for working hours | `UTC`                          |
 | **Blocked Periods** | Comma-separated list of blocked days or periods. Formats: Full date (`2025-12-25`), recurring date (`12-25`), date range (`2025-07-15:2025-07-30`), recurring range (`12-20:01-05`). Example: `12-25,01-01,2025-07-15:2025-07-30` | Empty                          |
 | **Affected Users** | Which users should trigger this detector: `All Users`, `Only Admins`, `Only System Maintainers` | `All Users` |

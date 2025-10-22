@@ -197,11 +197,11 @@ final class DetectorConfigurationBuilderTest extends TestCase
         self::assertSame('all', $result['affectedUsers']);
         self::assertSame('recipients', $result['notificationReceiver']);
         self::assertSame([
-            'monday' => ['06:00', '19:00'],
-            'tuesday' => ['06:00', '19:00'],
-            'wednesday' => ['06:00', '19:00'],
-            'thursday' => ['06:00', '19:00'],
-            'friday' => ['06:00', '19:00'],
+            'monday' => ['06:00', '20:00'],
+            'tuesday' => ['06:00', '20:00'],
+            'wednesday' => ['06:00', '20:00'],
+            'thursday' => ['06:00', '20:00'],
+            'friday' => ['06:00', '20:00'],
         ], $result['workingHours']);
         self::assertSame([], $result['blockedPeriods']);
     }
@@ -362,5 +362,91 @@ final class DetectorConfigurationBuilderTest extends TestCase
 
         // Empty whitelist should return empty array
         self::assertSame([], $result['whitelist']);
+    }
+
+    public function testBuildOutOfOfficeConfigExpandsWorkdayShortcut(): void
+    {
+        $this->extensionConfiguration
+            ->method('get')
+            ->with(Configuration::EXT_KEY)
+            ->willReturn([
+                'outOfOffice' => [
+                    'active' => true,
+                    'workingHours' => '{"workday":["09:00","17:00"]}',
+                ],
+            ]);
+
+        $result = $this->subject->build(OutOfOfficeDetector::class);
+
+        self::assertSame([
+            'monday' => ['09:00', '17:00'],
+            'tuesday' => ['09:00', '17:00'],
+            'wednesday' => ['09:00', '17:00'],
+            'thursday' => ['09:00', '17:00'],
+            'friday' => ['09:00', '17:00'],
+        ], $result['workingHours']);
+    }
+
+    public function testBuildOutOfOfficeConfigExpandsWeekendShortcut(): void
+    {
+        $this->extensionConfiguration
+            ->method('get')
+            ->with(Configuration::EXT_KEY)
+            ->willReturn([
+                'outOfOffice' => [
+                    'active' => true,
+                    'workingHours' => '{"weekend":["10:00","14:00"]}',
+                ],
+            ]);
+
+        $result = $this->subject->build(OutOfOfficeDetector::class);
+
+        self::assertSame([
+            'saturday' => ['10:00', '14:00'],
+            'sunday' => ['10:00', '14:00'],
+        ], $result['workingHours']);
+    }
+
+    public function testBuildOutOfOfficeConfigCombinesShortcutsAndSpecificDays(): void
+    {
+        $this->extensionConfiguration
+            ->method('get')
+            ->with(Configuration::EXT_KEY)
+            ->willReturn([
+                'outOfOffice' => [
+                    'active' => true,
+                    'workingHours' => '{"workday":["09:00","17:00"],"weekend":["10:00","14:00"],"friday":["09:00","15:00"]}',
+                ],
+            ]);
+
+        $result = $this->subject->build(OutOfOfficeDetector::class);
+
+        self::assertSame([
+            'monday' => ['09:00', '17:00'],
+            'tuesday' => ['09:00', '17:00'],
+            'wednesday' => ['09:00', '17:00'],
+            'thursday' => ['09:00', '17:00'],
+            'friday' => ['09:00', '15:00'], // Specific override
+            'saturday' => ['10:00', '14:00'],
+            'sunday' => ['10:00', '14:00'],
+        ], $result['workingHours']);
+    }
+
+    public function testBuildOutOfOfficeConfigDefaultsUse20Hours(): void
+    {
+        $this->extensionConfiguration
+            ->method('get')
+            ->with(Configuration::EXT_KEY)
+            ->willReturn(['outOfOffice' => ['active' => true]]);
+
+        $result = $this->subject->build(OutOfOfficeDetector::class);
+
+        self::assertSame([
+            'monday' => ['06:00', '20:00'],
+            'tuesday' => ['06:00', '20:00'],
+            'wednesday' => ['06:00', '20:00'],
+            'thursday' => ['06:00', '20:00'],
+            'friday' => ['06:00', '20:00'],
+        ], $result['workingHours']);
     }
 }

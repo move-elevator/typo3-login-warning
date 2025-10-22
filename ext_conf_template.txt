@@ -43,8 +43,8 @@ longTimeNoSee.affectedUsers = all
 # cat=longtimenosee/longtimenosee/040; type=options[Email Recipients=recipients,Logged-In User=user,Both=both]; label=Notification Receiver:Who should receive the notification
 longTimeNoSee.notificationReceiver = recipients
 
-# cat=outofoffice/outofoffice/020; type=string; label=Working Hours (JSON):JSON configuration for working hours (e.g. {"monday":["09:00","17:00"],"tuesday":["09:00","17:00"]})
-outOfOffice.workingHours = {"monday":["06:00","20:00"],"tuesday":["06:00","20:00"],"wednesday":["06:00","20:00"],"thursday":["06:00","20:00"],"friday":["06:00","20:00"]}
+# cat=outofoffice/outofoffice/020; type=string; label=Working Hours (JSON):JSON configuration for working hours. Shortcuts: "workday" (Mon-Fri), "weekend" (Sat-Sun). Examples: {"workday":["06:00","20:00"]}, {"workday":["09:00","17:00"],"weekend":["10:00","14:00"]}
+outOfOffice.workingHours = {"workday":["06:00","20:00"]}
 
 # cat=outofoffice/outofoffice/030; type=string; label=Timezone:Timezone for working hours (e.g. Europe/Berlin, America/New_York)
 outOfOffice.timezone = UTC

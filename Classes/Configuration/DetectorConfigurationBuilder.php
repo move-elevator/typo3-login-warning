@@ -187,17 +187,46 @@ class DetectorConfigurationBuilder implements LoggerAwareInterface
         if (isset($config['workingHours']) && is_string($config['workingHours']) && '' !== $config['workingHours']) {
             $workingHours = json_decode($config['workingHours'], true);
             if (is_array($workingHours)) {
-                return $workingHours;
+                return $this->expandWorkingHoursShortcuts($workingHours);
             }
         }
 
         return [
-            'monday' => ['06:00', '19:00'],
-            'tuesday' => ['06:00', '19:00'],
-            'wednesday' => ['06:00', '19:00'],
-            'thursday' => ['06:00', '19:00'],
-            'friday' => ['06:00', '19:00'],
+            'monday' => ['06:00', '20:00'],
+            'tuesday' => ['06:00', '20:00'],
+            'wednesday' => ['06:00', '20:00'],
+            'thursday' => ['06:00', '20:00'],
+            'friday' => ['06:00', '20:00'],
         ];
+    }
+
+    /**
+     * Expand shortcuts like "workday" and "weekend" to actual day names.
+     *
+     * @param array<string, mixed> $workingHours
+     *
+     * @return array<string, array<int, string>>
+     */
+    private function expandWorkingHoursShortcuts(array $workingHours): array
+    {
+        $expanded = [];
+
+        foreach ($workingHours as $key => $value) {
+            if ('workday' === $key) {
+                $expanded['monday'] = $value;
+                $expanded['tuesday'] = $value;
+                $expanded['wednesday'] = $value;
+                $expanded['thursday'] = $value;
+                $expanded['friday'] = $value;
+            } elseif ('weekend' === $key) {
+                $expanded['saturday'] = $value;
+                $expanded['sunday'] = $value;
+            } else {
+                $expanded[$key] = $value;
+            }
+        }
+
+        return $expanded;
     }
 
     /**
