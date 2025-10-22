@@ -585,10 +585,47 @@ final class OutOfOfficeDetectorTest extends TestCase
         $result = $subject->detect($user, $configuration);
         self::assertTrue($result);
 
-        // Test January 1, 2026 (specific date was only for 2025, Thursday)
+        // Test January 2, 2026 (not a blocked date, Friday - should not be detected)
         $subject = new OutOfOfficeDetectorWithMockedTime('2026-01-02 10:00:00');
         $result = $subject->detect($user, $configuration);
         self::assertFalse($result);
+    }
+
+    public function testSingleDatePrecedenceOverRange(): void
+    {
+        $user = $this->createMockUser(['uid' => 123]);
+        $configuration = [
+            'workingHours' => [
+                'monday' => ['09:00', '17:00'],
+                'tuesday' => ['09:00', '17:00'],
+                'wednesday' => ['09:00', '17:00'],
+                'thursday' => ['09:00', '17:00'],
+                'friday' => ['09:00', '17:00'],
+            ],
+            'blockedPeriods' => [
+                ['2025-12-25'], // Single date (Christmas) - should be treated as holiday
+                ['2025-12-20', '2025-12-31'], // Range that overlaps Christmas
+            ],
+            'timezone' => 'UTC',
+        ];
+
+        // Test December 25 - overlaps with both single date and range
+        // Should be detected as 'holiday' (single-date takes precedence)
+        $subject = new OutOfOfficeDetectorWithMockedTime('2025-12-25 10:00:00');
+        $result = $subject->detect($user, $configuration);
+
+        self::assertTrue($result);
+        $additionalData = $subject->getAdditionalData();
+        self::assertSame('holiday', $additionalData['violationDetails']['type']);
+        self::assertSame('2025-12-25', $additionalData['violationDetails']['date']);
+
+        // Test December 24 - only in range, should be 'vacation'
+        $subject = new OutOfOfficeDetectorWithMockedTime('2025-12-24 10:00:00');
+        $result = $subject->detect($user, $configuration);
+
+        self::assertTrue($result);
+        $additionalData = $subject->getAdditionalData();
+        self::assertSame('vacation', $additionalData['violationDetails']['type']);
     }
 
     public function testGetBlockedPeriodTypeHandlesNonArrayBlockedPeriods(): void

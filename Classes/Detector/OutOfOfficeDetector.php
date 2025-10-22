@@ -203,7 +203,7 @@ class OutOfOfficeDetector extends AbstractDetector
 
     private function isDateInRecurringRange(string $date, string $startPattern, string $endPattern): bool
     {
-        [$year, $monthDay] = explode('-', $date, 2);
+        $monthDay = substr($date, 5);
 
         if ($startPattern > $endPattern) {
             return $monthDay >= $startPattern || $monthDay <= $endPattern;
