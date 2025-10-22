@@ -19,7 +19,6 @@ use Exception;
 use Psr\Http\Message\ServerRequestInterface;
 
 use function count;
-use function in_array;
 use function is_array;
 
 /**
@@ -41,20 +40,10 @@ class OutOfOfficeDetector extends AbstractDetector
         $timezone = ($configuration['timezone'] ?? '') !== '' ? $configuration['timezone'] : 'UTC';
         $currentTime = $this->getCurrentTime($timezone);
 
-        if ($this->isHoliday($currentTime, $configuration)) {
+        if ($this->isBlockedPeriod($currentTime, $configuration)) {
+            $blockedType = $this->getBlockedPeriodType($currentTime, $configuration);
             $this->additionalData['violationDetails'] = [
-                'type' => 'holiday',
-                'date' => $currentTime->format('Y-m-d'),
-                'time' => $currentTime->format('H:i:s'),
-                'dayOfWeek' => $currentTime->format('l'),
-            ];
-
-            return true;
-        }
-
-        if ($this->isVacationPeriod($currentTime, $configuration)) {
-            $this->additionalData['violationDetails'] = [
-                'type' => 'vacation',
+                'type' => $blockedType,
                 'date' => $currentTime->format('Y-m-d'),
                 'time' => $currentTime->format('H:i:s'),
                 'dayOfWeek' => $currentTime->format('l'),
@@ -112,37 +101,63 @@ class OutOfOfficeDetector extends AbstractDetector
     /**
      * @param array<string, mixed> $configuration
      */
-    protected function isHoliday(DateTime $time, array $configuration): bool
+    protected function isBlockedPeriod(DateTime $time, array $configuration): bool
     {
         $date = $time->format('Y-m-d');
-        $holidays = $configuration['holidays'] ?? [];
-        if (!is_array($holidays)) {
+        $blockedPeriods = $configuration['blockedPeriods'] ?? [];
+
+        if (!is_array($blockedPeriods)) {
             return false;
         }
 
-        return in_array($date, $holidays, true);
+        foreach ($blockedPeriods as $period) {
+            if (!is_array($period)) {
+                continue;
+            }
+
+            // Single day period
+            if (1 === count($period) && $date === $period[0]) {
+                return true;
+            }
+
+            // Date range period
+            if (2 === count($period) && $date >= $period[0] && $date <= $period[1]) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
      * @param array<string, mixed> $configuration
      */
-    protected function isVacationPeriod(DateTime $time, array $configuration): bool
+    protected function getBlockedPeriodType(DateTime $time, array $configuration): string
     {
         $date = $time->format('Y-m-d');
-        $vacationPeriods = $configuration['vacationPeriods'] ?? [];
-        if (!is_array($vacationPeriods)) {
-            return false;
+        $blockedPeriods = $configuration['blockedPeriods'] ?? [];
+
+        if (!is_array($blockedPeriods)) {
+            return 'holiday';
         }
 
-        foreach ($vacationPeriods as $period) {
-            if (is_array($period) && 2 === count($period)) {
-                if ($date >= $period[0] && $date <= $period[1]) {
-                    return true;
-                }
+        foreach ($blockedPeriods as $period) {
+            if (!is_array($period)) {
+                continue;
+            }
+
+            // Single day period -> holiday
+            if (1 === count($period) && $date === $period[0]) {
+                return 'holiday';
+            }
+
+            // Date range period -> vacation
+            if (2 === count($period) && $date >= $period[0] && $date <= $period[1]) {
+                return 'vacation';
             }
         }
 
-        return false;
+        return 'holiday';
     }
 
     private function checkTimeRanges(string $currentTime, mixed $hours): bool

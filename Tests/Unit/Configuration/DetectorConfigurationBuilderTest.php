@@ -203,8 +203,7 @@ final class DetectorConfigurationBuilderTest extends TestCase
             'thursday' => ['06:00', '19:00'],
             'friday' => ['06:00', '19:00'],
         ], $result['workingHours']);
-        self::assertSame([], $result['holidays']);
-        self::assertSame([], $result['vacationPeriods']);
+        self::assertSame([], $result['blockedPeriods']);
     }
 
     public function testBuildOutOfOfficeConfigWithCustomWorkingHours(): void
@@ -229,7 +228,7 @@ final class DetectorConfigurationBuilderTest extends TestCase
         ], $result['workingHours']);
     }
 
-    public function testBuildOutOfOfficeConfigWithHolidaysAndVacations(): void
+    public function testBuildOutOfOfficeConfigWithBlockedPeriods(): void
     {
         $this->extensionConfiguration
             ->method('get')
@@ -237,18 +236,17 @@ final class DetectorConfigurationBuilderTest extends TestCase
             ->willReturn([
                 'outOfOffice' => [
                     'active' => true,
-                    'holidays' => '2025-01-01, 2025-12-25',
-                    'vacationPeriods' => '2025-07-15:2025-07-30, 2025-12-20:2025-12-31',
+                    'blockedPeriods' => '2025-01-01, 2025-12-25, 2025-07-15:2025-07-30',
                 ],
             ]);
 
         $result = $this->subject->build(OutOfOfficeDetector::class);
 
-        self::assertSame(['2025-01-01', '2025-12-25'], $result['holidays']);
         self::assertSame([
+            ['2025-01-01'],
+            ['2025-12-25'],
             ['2025-07-15', '2025-07-30'],
-            ['2025-12-20', '2025-12-31'],
-        ], $result['vacationPeriods']);
+        ], $result['blockedPeriods']);
     }
 
     public function testBuildNotificationConfigWithDefaults(): void

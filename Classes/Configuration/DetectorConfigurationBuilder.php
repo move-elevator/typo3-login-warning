@@ -172,8 +172,7 @@ class DetectorConfigurationBuilder implements LoggerAwareInterface
         ];
 
         $result['workingHours'] = $this->parseWorkingHours($config);
-        $result['holidays'] = $this->parseHolidays($config);
-        $result['vacationPeriods'] = $this->parseConfigVacationPeriods($config);
+        $result['blockedPeriods'] = $this->parseBlockedPeriods($config);
 
         return $result;
     }
@@ -202,31 +201,38 @@ class DetectorConfigurationBuilder implements LoggerAwareInterface
     }
 
     /**
-     * @param array<string, mixed> $config
+     * Parse blocked periods from configuration.
      *
-     * @return array<int, string>
-     */
-    private function parseHolidays(array $config): array
-    {
-        if (isset($config['holidays']) && is_string($config['holidays']) && '' !== $config['holidays']) {
-            return $this->parseCommaSeparatedList($config['holidays']);
-        }
-
-        return [];
-    }
-
-    /**
+     * Format examples:
+     * - Single day: "2025-12-25"
+     * - Date range: "2025-07-15:2025-07-30"
+     * - Multiple: "2025-12-25,2025-07-15:2025-07-30"
+     *
      * @param array<string, mixed> $config
      *
      * @return array<int, array<int, string>>
      */
-    private function parseConfigVacationPeriods(array $config): array
+    private function parseBlockedPeriods(array $config): array
     {
-        if (isset($config['vacationPeriods']) && is_string($config['vacationPeriods']) && '' !== $config['vacationPeriods']) {
-            return $this->parseVacationPeriods($config['vacationPeriods']);
+        if (!isset($config['blockedPeriods']) || !is_string($config['blockedPeriods']) || '' === $config['blockedPeriods']) {
+            return [];
         }
 
-        return [];
+        $blockedPeriods = [];
+        $periods = explode(',', $config['blockedPeriods']);
+
+        foreach ($periods as $period) {
+            $period = trim($period);
+            if ('' === $period) {
+                continue;
+            }
+
+            $blockedPeriods[] = str_contains($period, ':')
+                ? explode(':', $period, 2)
+                : [$period];
+        }
+
+        return $blockedPeriods;
     }
 
     /**
@@ -239,23 +245,5 @@ class DetectorConfigurationBuilder implements LoggerAwareInterface
         }
 
         return array_map('trim', explode(',', $value));
-    }
-
-    /**
-     * @return array<int, array<int, string>>
-     */
-    private function parseVacationPeriods(string $value): array
-    {
-        $vacationPeriods = [];
-        $periods = explode(',', $value);
-
-        foreach ($periods as $period) {
-            $period = trim($period);
-            if (str_contains($period, ':')) {
-                $vacationPeriods[] = explode(':', $period);
-            }
-        }
-
-        return $vacationPeriods;
     }
 }
