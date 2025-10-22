@@ -630,8 +630,6 @@ final class OutOfOfficeDetectorTest extends TestCase
 
     public function testGetBlockedPeriodTypeHandlesNonArrayBlockedPeriods(): void
     {
-        $user = $this->createMockUser(['uid' => 123]);
-
         // Create a test detector that forces the non-array path
         $subject = new class('2025-12-25 10:00:00') extends OutOfOfficeDetectorWithMockedTime {
             public function testGetBlockedPeriodTypeWithInvalidConfig(): string
