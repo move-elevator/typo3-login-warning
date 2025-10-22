@@ -24,18 +24,20 @@ use TYPO3\CMS\Core\Database\{Connection, ConnectionPool};
  */
 class IpLogRepository
 {
-    public function __construct(private ConnectionPool $connectionPool) {}
+    private const TABLE_NAME = 'tx_typo3loginwarning_iplog';
+
+    public function __construct(private readonly ConnectionPool $connectionPool) {}
 
     /**
      * @throws Exception
      */
     public function findByHash(string $identifierHash): bool
     {
-        $queryBuilder = $this->connectionPool->getQueryBuilderForTable('tx_typo3loginwarning_iplog');
+        $queryBuilder = $this->connectionPool->getQueryBuilderForTable(self::TABLE_NAME);
 
         $result = $queryBuilder
             ->select('*')
-            ->from('tx_typo3loginwarning_iplog')
+            ->from(self::TABLE_NAME)
             ->where(
                 $queryBuilder->expr()->eq('identifier_hash', $queryBuilder->createNamedParameter($identifierHash, Connection::PARAM_STR)),
             )
@@ -52,9 +54,9 @@ class IpLogRepository
 
     public function addHash(string $identifierHash): void
     {
-        $queryBuilder = $this->connectionPool->getQueryBuilderForTable('tx_typo3loginwarning_iplog');
+        $queryBuilder = $this->connectionPool->getQueryBuilderForTable(self::TABLE_NAME);
         $queryBuilder
-            ->insert('tx_typo3loginwarning_iplog')
+            ->insert(self::TABLE_NAME)
             ->values([
                 'identifier_hash' => $identifierHash,
             ])
@@ -63,9 +65,9 @@ class IpLogRepository
 
     private function updateTimestamp(string $identifierHash): void
     {
-        $queryBuilder = $this->connectionPool->getQueryBuilderForTable('tx_typo3loginwarning_iplog');
+        $queryBuilder = $this->connectionPool->getQueryBuilderForTable(self::TABLE_NAME);
         $queryBuilder
-            ->update('tx_typo3loginwarning_iplog')
+            ->update(self::TABLE_NAME)
             ->set('tstamp', time())
             ->where(
                 $queryBuilder->expr()->eq('identifier_hash', $queryBuilder->createNamedParameter($identifierHash, Connection::PARAM_STR)),
