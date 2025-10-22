@@ -180,7 +180,7 @@ class DetectorConfigurationBuilder implements LoggerAwareInterface
     /**
      * @param array<string, mixed> $config
      *
-     * @return array<string, array<int, string>>
+     * @return array<string, array<int, string>|array<int, array<int, string>>>
      */
     private function parseWorkingHours(array $config): array
     {
@@ -203,7 +203,7 @@ class DetectorConfigurationBuilder implements LoggerAwareInterface
     /**
      * @param array<string, mixed> $workingHours
      *
-     * @return array<string, array<int, string>>
+     * @return array<string, array<int, string>|array<int, array<int, string>>>
      */
     private function expandWorkingHoursShortcuts(array $workingHours): array
     {
@@ -219,7 +219,11 @@ class DetectorConfigurationBuilder implements LoggerAwareInterface
             } elseif ('weekend' === $key) {
                 $expanded['saturday'] = $value;
                 $expanded['sunday'] = $value;
-            } else {
+            }
+        }
+
+        foreach ($workingHours as $key => $value) {
+            if ('workday' !== $key && 'weekend' !== $key) {
                 $expanded[$key] = $value;
             }
         }
