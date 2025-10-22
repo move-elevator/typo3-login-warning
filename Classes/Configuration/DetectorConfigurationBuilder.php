@@ -180,34 +180,58 @@ class DetectorConfigurationBuilder implements LoggerAwareInterface
     /**
      * @param array<string, mixed> $config
      *
-     * @return array<string, array<int, string>>
+     * @return array<string, array<int, string>|array<int, array<int, string>>>
      */
     private function parseWorkingHours(array $config): array
     {
         if (isset($config['workingHours']) && is_string($config['workingHours']) && '' !== $config['workingHours']) {
             $workingHours = json_decode($config['workingHours'], true);
             if (is_array($workingHours)) {
-                return $workingHours;
+                return $this->expandWorkingHoursShortcuts($workingHours);
             }
         }
 
         return [
-            'monday' => ['06:00', '19:00'],
-            'tuesday' => ['06:00', '19:00'],
-            'wednesday' => ['06:00', '19:00'],
-            'thursday' => ['06:00', '19:00'],
-            'friday' => ['06:00', '19:00'],
+            'monday' => ['06:00', '20:00'],
+            'tuesday' => ['06:00', '20:00'],
+            'wednesday' => ['06:00', '20:00'],
+            'thursday' => ['06:00', '20:00'],
+            'friday' => ['06:00', '20:00'],
         ];
     }
 
     /**
-     * Parse blocked periods from configuration.
+     * @param array<string, mixed> $workingHours
      *
-     * Format examples:
-     * - Single day: "2025-12-25"
-     * - Date range: "2025-07-15:2025-07-30"
-     * - Multiple: "2025-12-25,2025-07-15:2025-07-30"
-     *
+     * @return array<string, array<int, string>|array<int, array<int, string>>>
+     */
+    private function expandWorkingHoursShortcuts(array $workingHours): array
+    {
+        $expanded = [];
+
+        foreach ($workingHours as $key => $value) {
+            if ('workday' === $key) {
+                $expanded['monday'] = $value;
+                $expanded['tuesday'] = $value;
+                $expanded['wednesday'] = $value;
+                $expanded['thursday'] = $value;
+                $expanded['friday'] = $value;
+            } elseif ('weekend' === $key) {
+                $expanded['saturday'] = $value;
+                $expanded['sunday'] = $value;
+            }
+        }
+
+        foreach ($workingHours as $key => $value) {
+            if ('workday' !== $key && 'weekend' !== $key) {
+                $expanded[$key] = $value;
+            }
+        }
+
+        return $expanded;
+    }
+
+    /**
      * @param array<string, mixed> $config
      *
      * @return array<int, array<int, string>>
