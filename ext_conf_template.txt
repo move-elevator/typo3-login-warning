@@ -44,7 +44,7 @@ longTimeNoSee.affectedUsers = all
 longTimeNoSee.notificationReceiver = recipients
 
 # cat=outofoffice/outofoffice/020; type=string; label=Working Hours (JSON):JSON configuration for working hours (e.g. {"monday":["09:00","17:00"],"tuesday":["09:00","17:00"]})
-outOfOffice.workingHours = {"monday":["06:00","19:00"],"tuesday":["06:00","19:00"],"wednesday":["06:00","19:00"],"thursday":["06:00","19:00"],"friday":["06:00","19:00"]}
+outOfOffice.workingHours = {"monday":["06:00","20:00"],"tuesday":["06:00","20:00"],"wednesday":["06:00","20:00"],"thursday":["06:00","20:00"],"friday":["06:00","20:00"]}
 
 # cat=outofoffice/outofoffice/030; type=string; label=Timezone:Timezone for working hours (e.g. Europe/Berlin, America/New_York)
 outOfOffice.timezone = UTC
