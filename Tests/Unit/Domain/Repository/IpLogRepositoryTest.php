@@ -21,6 +21,8 @@ use TYPO3\CMS\Core\Database\{Connection, ConnectionPool};
 use TYPO3\CMS\Core\Database\Query\Expression\ExpressionBuilder;
 use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 
+use function is_int;
+
 /**
  * IpLogRepositoryTest.
  *
@@ -52,31 +54,35 @@ final class IpLogRepositoryTest extends TestCase
         $this->subject = new IpLogRepository($this->connectionPool);
     }
 
-    public function testFindByHashReturnsTrue(): void
+    public function testFindByHashReturnsTrueAndUpdatesTimestamp(): void
     {
         $identifierHash = 'abc123def456';
 
-        $this->queryBuilder->expects(self::once())
+        // First call for SELECT query
+        $selectQueryBuilder = $this->createMock(QueryBuilder::class);
+        $selectQueryBuilder->expects(self::once())
             ->method('select')
             ->with('*')
             ->willReturnSelf();
 
-        $this->queryBuilder->expects(self::once())
+        $selectQueryBuilder->expects(self::once())
             ->method('from')
             ->with('tx_typo3loginwarning_iplog')
             ->willReturnSelf();
 
-        $this->queryBuilder->expects(self::once())
+        $selectQueryBuilder->expects(self::once())
             ->method('createNamedParameter')
             ->with($identifierHash, Connection::PARAM_STR)
             ->willReturn(':hash');
 
-        $this->expressionBuilder->expects(self::once())
-            ->method('eq')
+        $selectQueryBuilder->method('expr')
+            ->willReturn($this->expressionBuilder);
+
+        $this->expressionBuilder->method('eq')
             ->with('identifier_hash', ':hash')
             ->willReturn('identifier_hash = :hash');
 
-        $this->queryBuilder->expects(self::once())
+        $selectQueryBuilder->expects(self::once())
             ->method('where')
             ->with('identifier_hash = :hash')
             ->willReturnSelf();
@@ -86,11 +92,55 @@ final class IpLogRepositoryTest extends TestCase
             ->method('fetchAssociative')
             ->willReturn(['identifier_hash' => $identifierHash]);
 
-        $this->queryBuilder->expects(self::once())
+        $selectQueryBuilder->expects(self::once())
             ->method('executeQuery')
             ->willReturn($result);
 
-        $found = $this->subject->findByHash($identifierHash);
+        // Second call for UPDATE query
+        $updateQueryBuilder = $this->createMock(QueryBuilder::class);
+        $updateQueryBuilder->expects(self::once())
+            ->method('update')
+            ->with('tx_typo3loginwarning_iplog')
+            ->willReturnSelf();
+
+        $updateQueryBuilder->expects(self::once())
+            ->method('set')
+            ->with('tstamp', self::callback(static fn ($value): bool => is_int($value) && $value > 0))
+            ->willReturnSelf();
+
+        $updateQueryBuilder->expects(self::once())
+            ->method('createNamedParameter')
+            ->with($identifierHash, Connection::PARAM_STR)
+            ->willReturn(':hash');
+
+        $updateQueryBuilder->method('expr')
+            ->willReturn($this->expressionBuilder);
+
+        $updateQueryBuilder->expects(self::once())
+            ->method('where')
+            ->with('identifier_hash = :hash')
+            ->willReturnSelf();
+
+        $updateQueryBuilder->expects(self::once())
+            ->method('executeStatement')
+            ->willReturn(1);
+
+        // Mock ConnectionPool to return different query builders
+        $connectionPool = $this->createMock(ConnectionPool::class);
+        $connectionPool
+            ->expects(self::exactly(2))
+            ->method('getQueryBuilderForTable')
+            ->with('tx_typo3loginwarning_iplog')
+            ->willReturnCallback(static function () use ($selectQueryBuilder, $updateQueryBuilder): QueryBuilder {
+                static $callCount = 0;
+                ++$callCount;
+
+                return 1 === $callCount ? $selectQueryBuilder : $updateQueryBuilder;
+            });
+
+        $subject = new IpLogRepository($connectionPool);
+
+        $found = $subject->findByHash($identifierHash);
 
         self::assertTrue($found);
     }

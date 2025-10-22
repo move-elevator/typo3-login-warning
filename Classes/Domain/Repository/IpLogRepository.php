@@ -33,13 +33,21 @@ class IpLogRepository
     {
         $queryBuilder = $this->connectionPool->getQueryBuilderForTable('tx_typo3loginwarning_iplog');
 
-        return (bool) $queryBuilder
+        $result = $queryBuilder
             ->select('*')
             ->from('tx_typo3loginwarning_iplog')
             ->where(
                 $queryBuilder->expr()->eq('identifier_hash', $queryBuilder->createNamedParameter($identifierHash, Connection::PARAM_STR)),
             )
             ->executeQuery()->fetchAssociative();
+
+        if (false !== $result) {
+            $this->updateTimestamp($identifierHash);
+
+            return true;
+        }
+
+        return false;
     }
 
     public function addHash(string $identifierHash): void
@@ -50,6 +58,18 @@ class IpLogRepository
             ->values([
                 'identifier_hash' => $identifierHash,
             ])
+            ->executeStatement();
+    }
+
+    private function updateTimestamp(string $identifierHash): void
+    {
+        $queryBuilder = $this->connectionPool->getQueryBuilderForTable('tx_typo3loginwarning_iplog');
+        $queryBuilder
+            ->update('tx_typo3loginwarning_iplog')
+            ->set('tstamp', time())
+            ->where(
+                $queryBuilder->expr()->eq('identifier_hash', $queryBuilder->createNamedParameter($identifierHash, Connection::PARAM_STR)),
+            )
             ->executeStatement();
     }
 }
