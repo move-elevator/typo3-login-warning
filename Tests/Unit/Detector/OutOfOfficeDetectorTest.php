@@ -393,6 +393,204 @@ final class OutOfOfficeDetectorTest extends TestCase
         $this->addToAssertionCount(1);
     }
 
+    public function testDetectReturnsTrueForRecurringHoliday(): void
+    {
+        $user = $this->createMockUser(['uid' => 123]);
+        $configuration = [
+            'workingHours' => [
+                'monday' => ['09:00', '17:00'],
+            ],
+            'blockedPeriods' => [
+                ['12-25'], // Christmas without year
+            ],
+            'timezone' => 'UTC',
+        ];
+
+        // Test Christmas 2025
+        $subject = new OutOfOfficeDetectorWithMockedTime('2025-12-25 10:00:00');
+        $result = $subject->detect($user, $configuration);
+
+        self::assertTrue($result);
+        $additionalData = $subject->getAdditionalData();
+        self::assertSame('holiday', $additionalData['violationDetails']['type']);
+        self::assertSame('2025-12-25', $additionalData['violationDetails']['date']);
+
+        // Test Christmas 2026 (same pattern should work)
+        $subject = new OutOfOfficeDetectorWithMockedTime('2026-12-25 10:00:00');
+        $result = $subject->detect($user, $configuration);
+
+        self::assertTrue($result);
+    }
+
+    public function testDetectReturnsFalseForNonMatchingRecurringDate(): void
+    {
+        $user = $this->createMockUser(['uid' => 123]);
+        $configuration = [
+            'workingHours' => [
+                'monday' => ['09:00', '17:00'],
+                'tuesday' => ['09:00', '17:00'],
+                'wednesday' => ['09:00', '17:00'],
+                'thursday' => ['09:00', '17:00'],
+                'friday' => ['09:00', '17:00'],
+            ],
+            'blockedPeriods' => [
+                ['12-25'], // Christmas
+            ],
+            'timezone' => 'UTC',
+        ];
+
+        // Test December 24 (not Christmas, Wednesday)
+        $subject = new OutOfOfficeDetectorWithMockedTime('2025-12-24 10:00:00');
+        $result = $subject->detect($user, $configuration);
+
+        self::assertFalse($result);
+    }
+
+    public function testDetectReturnsTrueForRecurringDateRange(): void
+    {
+        $user = $this->createMockUser(['uid' => 123]);
+        $configuration = [
+            'workingHours' => [
+                'monday' => ['09:00', '17:00'],
+                'tuesday' => ['09:00', '17:00'],
+                'wednesday' => ['09:00', '17:00'],
+                'thursday' => ['09:00', '17:00'],
+                'friday' => ['09:00', '17:00'],
+            ],
+            'blockedPeriods' => [
+                ['07-15', '07-30'], // Summer break without year
+            ],
+            'timezone' => 'UTC',
+        ];
+
+        // Test July 20, 2025 (within range, Sunday)
+        $subject = new OutOfOfficeDetectorWithMockedTime('2025-07-20 10:00:00');
+        $result = $subject->detect($user, $configuration);
+
+        self::assertTrue($result);
+        $additionalData = $subject->getAdditionalData();
+        self::assertSame('vacation', $additionalData['violationDetails']['type']);
+
+        // Test July 20, 2026 (within range, Monday - within working hours)
+        $subject = new OutOfOfficeDetectorWithMockedTime('2026-07-20 10:00:00');
+        $result = $subject->detect($user, $configuration);
+
+        self::assertTrue($result);
+
+        // Test first day of range (Tuesday)
+        $subject = new OutOfOfficeDetectorWithMockedTime('2025-07-15 10:00:00');
+        $result = $subject->detect($user, $configuration);
+        self::assertTrue($result);
+
+        // Test last day of range (Wednesday)
+        $subject = new OutOfOfficeDetectorWithMockedTime('2025-07-30 10:00:00');
+        $result = $subject->detect($user, $configuration);
+        self::assertTrue($result);
+
+        // Test outside range (Monday)
+        $subject = new OutOfOfficeDetectorWithMockedTime('2025-07-14 10:00:00');
+        $result = $subject->detect($user, $configuration);
+        self::assertFalse($result);
+
+        // Test outside range (Thursday)
+        $subject = new OutOfOfficeDetectorWithMockedTime('2025-07-31 10:00:00');
+        $result = $subject->detect($user, $configuration);
+        self::assertFalse($result);
+    }
+
+    public function testDetectHandlesYearSpanningRecurringRange(): void
+    {
+        $user = $this->createMockUser(['uid' => 123]);
+        $configuration = [
+            'workingHours' => [
+                'monday' => ['09:00', '17:00'],
+                'tuesday' => ['09:00', '17:00'],
+                'wednesday' => ['09:00', '17:00'],
+                'thursday' => ['09:00', '17:00'],
+                'friday' => ['09:00', '17:00'],
+            ],
+            'blockedPeriods' => [
+                ['12-20', '01-05'], // Christmas/New Year spanning years
+            ],
+            'timezone' => 'UTC',
+        ];
+
+        // Test December 25 (within range, before year boundary, Thursday)
+        $subject = new OutOfOfficeDetectorWithMockedTime('2025-12-25 10:00:00');
+        $result = $subject->detect($user, $configuration);
+        self::assertTrue($result);
+
+        // Test January 2 (within range, after year boundary, Friday)
+        $subject = new OutOfOfficeDetectorWithMockedTime('2026-01-02 10:00:00');
+        $result = $subject->detect($user, $configuration);
+        self::assertTrue($result);
+
+        // Test first day of range (Saturday)
+        $subject = new OutOfOfficeDetectorWithMockedTime('2025-12-20 10:00:00');
+        $result = $subject->detect($user, $configuration);
+        self::assertTrue($result);
+
+        // Test last day of range (Monday)
+        $subject = new OutOfOfficeDetectorWithMockedTime('2026-01-05 10:00:00');
+        $result = $subject->detect($user, $configuration);
+        self::assertTrue($result);
+
+        // Test outside range (before, Friday)
+        $subject = new OutOfOfficeDetectorWithMockedTime('2025-12-19 10:00:00');
+        $result = $subject->detect($user, $configuration);
+        self::assertFalse($result);
+
+        // Test outside range (after, Tuesday)
+        $subject = new OutOfOfficeDetectorWithMockedTime('2026-01-06 10:00:00');
+        $result = $subject->detect($user, $configuration);
+        self::assertFalse($result);
+
+        // Test middle of year (outside range, Monday)
+        $subject = new OutOfOfficeDetectorWithMockedTime('2025-06-16 10:00:00');
+        $result = $subject->detect($user, $configuration);
+        self::assertFalse($result);
+    }
+
+    public function testDetectHandlesMixedFullAndRecurringDates(): void
+    {
+        $user = $this->createMockUser(['uid' => 123]);
+        $configuration = [
+            'workingHours' => [
+                'monday' => ['09:00', '17:00'],
+                'tuesday' => ['09:00', '17:00'],
+                'wednesday' => ['09:00', '17:00'],
+                'thursday' => ['09:00', '17:00'],
+                'friday' => ['09:00', '17:00'],
+            ],
+            'blockedPeriods' => [
+                ['2025-01-01'], // Specific date with year (Wednesday)
+                ['12-25'],      // Recurring Christmas
+                ['2025-07-04'], // Specific Independence Day (Friday)
+            ],
+            'timezone' => 'UTC',
+        ];
+
+        // Test specific date 2025-01-01 (Wednesday)
+        $subject = new OutOfOfficeDetectorWithMockedTime('2025-01-01 10:00:00');
+        $result = $subject->detect($user, $configuration);
+        self::assertTrue($result);
+
+        // Test recurring Christmas 2025 (Thursday)
+        $subject = new OutOfOfficeDetectorWithMockedTime('2025-12-25 10:00:00');
+        $result = $subject->detect($user, $configuration);
+        self::assertTrue($result);
+
+        // Test recurring Christmas 2026 (Friday)
+        $subject = new OutOfOfficeDetectorWithMockedTime('2026-12-25 10:00:00');
+        $result = $subject->detect($user, $configuration);
+        self::assertTrue($result);
+
+        // Test January 1, 2026 (specific date was only for 2025, Thursday)
+        $subject = new OutOfOfficeDetectorWithMockedTime('2026-01-02 10:00:00');
+        $result = $subject->detect($user, $configuration);
+        self::assertFalse($result);
+    }
+
     /**
      * @param array<string, mixed> $userData
      *

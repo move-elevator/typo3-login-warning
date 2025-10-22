@@ -111,17 +111,7 @@ class OutOfOfficeDetector extends AbstractDetector
         }
 
         foreach ($blockedPeriods as $period) {
-            if (!is_array($period)) {
-                continue;
-            }
-
-            // Single day period
-            if (1 === count($period) && $date === $period[0]) {
-                return true;
-            }
-
-            // Date range period
-            if (2 === count($period) && $date >= $period[0] && $date <= $period[1]) {
+            if ($this->isPeriodBlocked($date, $period)) {
                 return true;
             }
         }
@@ -146,18 +136,80 @@ class OutOfOfficeDetector extends AbstractDetector
                 continue;
             }
 
-            // Single day period -> holiday
-            if (1 === count($period) && $date === $period[0]) {
+            if (1 === count($period) && $this->matchesDate($date, $period[0])) {
                 return 'holiday';
             }
 
-            // Date range period -> vacation
-            if (2 === count($period) && $date >= $period[0] && $date <= $period[1]) {
+            if (2 === count($period) && $this->isDateInRange($date, $period[0], $period[1])) {
                 return 'vacation';
             }
         }
 
         return 'holiday';
+    }
+
+    private function isPeriodBlocked(string $date, mixed $period): bool
+    {
+        if (!is_array($period)) {
+            return false;
+        }
+
+        if (1 === count($period)) {
+            return $this->matchesDate($date, $period[0]);
+        }
+
+        if (2 === count($period)) {
+            return $this->isDateInRange($date, $period[0], $period[1]);
+        }
+
+        return false;
+    }
+
+    private function matchesDate(string $date, string $pattern): bool
+    {
+        if ($date === $pattern) {
+            return true;
+        }
+
+        if ($this->isMonthDayPattern($pattern)) {
+            return str_ends_with($date, '-'.$pattern);
+        }
+
+        return false;
+    }
+
+    private function isDateInRange(string $date, string $startPattern, string $endPattern): bool
+    {
+        if ($this->isFullDate($startPattern) && $this->isFullDate($endPattern)) {
+            return $date >= $startPattern && $date <= $endPattern;
+        }
+
+        if ($this->isMonthDayPattern($startPattern) && $this->isMonthDayPattern($endPattern)) {
+            return $this->isDateInRecurringRange($date, $startPattern, $endPattern);
+        }
+
+        return false;
+    }
+
+    private function isFullDate(string $pattern): bool
+    {
+        return 1 === preg_match('/^\d{4}-\d{2}-\d{2}$/', $pattern);
+    }
+
+    private function isMonthDayPattern(string $pattern): bool
+    {
+        return 1 === preg_match('/^\d{2}-\d{2}$/', $pattern);
+    }
+
+    private function isDateInRecurringRange(string $date, string $startPattern, string $endPattern): bool
+    {
+        [$year, $monthDay] = explode('-', $date, 2);
+
+        if ($startPattern > $endPattern) {
+            return $monthDay >= $startPattern || $monthDay <= $endPattern;
+        }
+
+        return $monthDay >= $startPattern && $monthDay <= $endPattern;
     }
 
     private function checkTimeRanges(string $currentTime, mixed $hours): bool
