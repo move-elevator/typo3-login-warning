@@ -49,11 +49,8 @@ outOfOffice.workingHours = {"monday":["06:00","19:00"],"tuesday":["06:00","19:00
 # cat=outofoffice/outofoffice/030; type=string; label=Timezone:Timezone for working hours (e.g. Europe/Berlin, America/New_York)
 outOfOffice.timezone = UTC
 
-# cat=outofoffice/outofoffice/040; type=string; label=Holidays:Comma-separated list of holidays in Y-m-d format (e.g. 2025-01-01,2025-12-25)
-outOfOffice.holidays =
-
-# cat=outofoffice/outofoffice/050; type=string; label=Vacation Periods:Comma-separated list of vacation periods in Y-m-d format (e.g. 2025-07-15:2025-07-30,2025-12-20:2025-12-31)
-outOfOffice.vacationPeriods =
+# cat=outofoffice/outofoffice/040; type=string; label=Blocked Periods:Comma-separated list of blocked days or periods in Y-m-d format. Single days: 2025-12-25. Date ranges: 2025-07-15:2025-07-30. Example: 2025-01-01,2025-12-25,2025-07-15:2025-07-30
+outOfOffice.blockedPeriods =
 
 # cat=outofoffice/outofoffice/060; type=options[All Users=all,Only Admins=admins,Only System Maintainers=maintainers]; label=Affected Users:Which users should trigger this detector
 outOfOffice.affectedUsers = all

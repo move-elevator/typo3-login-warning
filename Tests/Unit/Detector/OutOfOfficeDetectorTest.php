@@ -119,7 +119,9 @@ final class OutOfOfficeDetectorTest extends TestCase
             'workingHours' => [
                 'monday' => ['09:00', '17:00'],
             ],
-            'holidays' => ['2025-01-06'],
+            'blockedPeriods' => [
+                ['2025-01-06'],
+            ],
             'timezone' => 'UTC',
         ];
 
@@ -141,7 +143,7 @@ final class OutOfOfficeDetectorTest extends TestCase
             'workingHours' => [
                 'monday' => ['09:00', '17:00'],
             ],
-            'vacationPeriods' => [
+            'blockedPeriods' => [
                 ['2025-01-06', '2025-01-10'],
             ],
             'timezone' => 'UTC',
@@ -260,8 +262,7 @@ final class OutOfOfficeDetectorTest extends TestCase
             'workingHours' => [
                 'monday' => 'invalid', // Invalid format
             ],
-            'holidays' => 'not-array', // Invalid format
-            'vacationPeriods' => [
+            'blockedPeriods' => [
                 'invalid-period', // Invalid format
             ],
         ];
@@ -273,21 +274,21 @@ final class OutOfOfficeDetectorTest extends TestCase
         self::assertTrue($result);
     }
 
-    public function testDetectHandlesVacationPeriodsAsNonArray(): void
+    public function testDetectHandlesBlockedPeriodsAsNonArray(): void
     {
         $user = $this->createMockUser(['uid' => 123]);
         $configuration = [
             'workingHours' => [
                 'monday' => ['09:00', '17:00'],
             ],
-            'vacationPeriods' => 'not-an-array',
+            'blockedPeriods' => 'not-an-array',
             'timezone' => 'UTC',
         ];
 
         $subject = new OutOfOfficeDetectorWithMockedTime('2025-01-06 10:00:00');
         $result = $subject->detect($user, $configuration);
 
-        // Should not detect vacation and check working hours instead
+        // Should not detect blocked period and check working hours instead
         self::assertFalse($result); // Monday 10:00 is within working hours
     }
 
@@ -325,18 +326,20 @@ final class OutOfOfficeDetectorTest extends TestCase
         self::assertTrue($result);
     }
 
-    public function testHolidayTakesPrecedenceOverWorkingHours(): void
+    public function testBlockedPeriodTakesPrecedenceOverWorkingHours(): void
     {
         $user = $this->createMockUser(['uid' => 123]);
         $configuration = [
             'workingHours' => [
                 'monday' => ['09:00', '17:00'],
             ],
-            'holidays' => ['2025-01-06'],
+            'blockedPeriods' => [
+                ['2025-01-06'],
+            ],
             'timezone' => 'UTC',
         ];
 
-        // Monday would normally be working time, but it's a holiday
+        // Monday would normally be working time, but it's a blocked period
         $subject = new OutOfOfficeDetectorWithMockedTime('2025-01-06 10:00:00');
         $result = $subject->detect($user, $configuration);
 
@@ -345,20 +348,20 @@ final class OutOfOfficeDetectorTest extends TestCase
         self::assertSame('holiday', $additionalData['violationDetails']['type']);
     }
 
-    public function testVacationTakesPrecedenceOverWorkingHours(): void
+    public function testDateRangeTakesPrecedenceOverWorkingHours(): void
     {
         $user = $this->createMockUser(['uid' => 123]);
         $configuration = [
             'workingHours' => [
                 'monday' => ['09:00', '17:00'],
             ],
-            'vacationPeriods' => [
+            'blockedPeriods' => [
                 ['2025-01-06', '2025-01-10'],
             ],
             'timezone' => 'UTC',
         ];
 
-        // Monday would normally be working time, but it's vacation
+        // Monday would normally be working time, but it's a blocked date range
         $subject = new OutOfOfficeDetectorWithMockedTime('2025-01-06 10:00:00');
         $result = $subject->detect($user, $configuration);
 
