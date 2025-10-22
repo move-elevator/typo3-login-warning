@@ -126,7 +126,7 @@ Detects logins after a long period of inactivity (default: 365 days).
 
 ### [OutOfOfficeDetector](Classes/Detector/OutOfOfficeDetector.php)
 
-Detects logins outside defined working hours, holidays, or vacation periods. Supports flexible working hours with multiple time ranges per day (e.g., lunch breaks), timezone handling, and comprehensive out-of-office period configuration.
+Detects logins outside defined working hours, holidays, or vacation periods. Supports flexible working hours with multiple time ranges per day (e.g., lunch breaks), timezone handling, and comprehensive blocked periods configuration with both full dates and recurring patterns.
 
 > The user "admin" logged in outside office hours at the site "EXT:typo3-login-warning Dev Environment".
 
@@ -135,21 +135,11 @@ Detects logins outside defined working hours, holidays, or vacation periods. Sup
 | Setting | Description | Default                        |
 |---------|-------------|--------------------------------|
 | **Active** | Enable Out Of Office detector | `false`                        |
-| **Working Hours** | JSON configuration for working hours (supports multiple time ranges per day for lunch breaks) | Business hours (06-19) Mon-Fri |
+| **Working Hours** | JSON configuration for working hours (supports multiple time ranges per day for lunch breaks). Example: `{"monday":[["09:00","12:00"],["13:00","17:00"]],"tuesday":["09:00","17:00"],"friday":["09:00","15:00"]}` | Business hours (06-19) Mon-Fri |
 | **Timezone** | Timezone for working hours | `UTC`                          |
-| **Holidays** | Comma-separated list of holidays in Y-m-d format (e.g., `2025-01-01,2025-12-25`) | Empty                          |
-| **Vacation Periods** | Comma-separated vacation periods in start:end format (e.g., `2025-07-15:2025-07-30,2025-12-20:2025-12-31`) | Empty                          |
+| **Blocked Periods** | Comma-separated list of blocked days or periods. Formats: Full date (`2025-12-25`), recurring date (`12-25`), date range (`2025-07-15:2025-07-30`), recurring range (`12-20:01-05`). Example: `12-25,01-01,2025-07-15:2025-07-30` | Empty                          |
 | **Affected Users** | Which users should trigger this detector: `All Users`, `Only Admins`, `Only System Maintainers` | `All Users` |
 | **Notification Receiver** | Who should receive the notification: `Email Recipients`, `Logged-In User`, `Both` | `Email Recipients` |
-
-**Working Hours JSON Example:**
-```json
-{
-  "monday": [["09:00", "12:00"], ["13:00", "17:00"]],
-  "tuesday": ["09:00", "17:00"],
-  "friday": ["09:00", "15:00"]
-}
-```
 
 ### Custom Detectors
 
