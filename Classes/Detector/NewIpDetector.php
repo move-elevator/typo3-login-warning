@@ -19,6 +19,7 @@ use MoveElevator\Typo3LoginWarning\Domain\Repository\IpLogRepository;
 use MoveElevator\Typo3LoginWarning\Service\GeolocationServiceInterface;
 use MoveElevator\Typo3LoginWarning\Utility\{DeviceInfoParser, IpAddressMatcher};
 use Psr\Http\Message\ServerRequestInterface;
+use RuntimeException;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 use function array_key_exists;
@@ -98,7 +99,17 @@ class NewIpDetector extends AbstractDetector
 
     private function getHmacKey(): string
     {
-        return $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['hmacKey'] ?? '';
+        $key = $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['hmacKey'] ?? '';
+
+        if ('' === $key) {
+            $key = $GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey'] ?? '';
+        }
+
+        if ('' === $key) {
+            throw new RuntimeException('No HMAC key configured for login warning extension. Please set $GLOBALS[\'TYPO3_CONF_VARS\'][\'EXTCONF\'][\'typo3_login_warning\'][\'hmacKey\'] or ensure $GLOBALS[\'TYPO3_CONF_VARS\'][\'SYS\'][\'encryptionKey\'] is set.', 8700213462);
+        }
+
+        return $key;
     }
 
     /**

@@ -84,6 +84,7 @@ An IP geolocation lookup and a device information check can be enabled to add mo
 > [!IMPORTANT]
 > Keep in mind, that this detector stores hashed IP addresses in the database table `tx_typo3loginwarning_iplog` to track known IPs.
 
+
 **Configuration Options:**
 
 | Setting | Description | Default     |
@@ -95,6 +96,13 @@ An IP geolocation lookup and a device information check can be enabled to add mo
 | **IP Whitelist** | Comma-separated list of whitelisted IPs/networks (supports CIDR notation like `192.168.1.0/24`) | `127.0.0.1` |
 | **Affected Users** | Which users should trigger this detector: `All Users`, `Only Admins`, `Only System Maintainers` | `All Users` |
 | **Notification Receiver** | Who should receive the notification: `Email Recipients`, `Logged-In User`, `Both` | `Email Recipients` |
+
+> [!NOTE]
+> IP address hashing requires an HMAC key. The extension automatically uses TYPO3's `$GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey']` as fallback. For additional security, you can set a dedicated key.
+
+```php
+$GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['typo3_login_warning']['hmacKey'] = 'your-secure-random-key';
+```
 
 #### Geolocation
 
