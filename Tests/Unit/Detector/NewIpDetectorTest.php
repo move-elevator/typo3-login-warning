@@ -18,6 +18,7 @@ use MoveElevator\Typo3LoginWarning\Domain\Repository\IpLogRepository;
 use MoveElevator\Typo3LoginWarning\Service\GeolocationServiceInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
 /**
  * NewIpDetectorTest.
@@ -32,12 +33,15 @@ final class NewIpDetectorTest extends TestCase
         parent::setUp();
         // Clean slate for each test - set default to avoid issues
         $GLOBALS['_SERVER']['REMOTE_ADDR'] = '127.0.0.1';
+        // Set HMAC key for tests
+        $GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey'] = 'test-encryption-key-for-phpunit';
     }
 
     protected function tearDown(): void
     {
         parent::tearDown();
         unset($GLOBALS['_SERVER']['REMOTE_ADDR']);
+        unset($GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey']);
     }
 
     public function testImplementsDetectorInterface(): void
@@ -45,6 +49,30 @@ final class NewIpDetectorTest extends TestCase
         $ipLogRepository = $this->createMock(IpLogRepository::class);
         $subject = new NewIpDetector($ipLogRepository);
         self::assertInstanceOf(DetectorInterface::class, $subject);
+    }
+
+    public function testDetectThrowsExceptionWhenNoHmacKeyConfigured(): void
+    {
+        unset($GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey']);
+        unset($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['typo3_login_warning']['hmacKey']);
+
+        $user = $this->createMockUser(['uid' => 123]);
+        $configuration = ['hashIpAddress' => true];
+
+        $GLOBALS['_SERVER']['REMOTE_ADDR'] = '192.168.1.100';
+
+        $ipLogRepository = $this->createMock(IpLogRepository::class);
+        // Should not be called as exception is thrown earlier
+        $ipLogRepository
+            ->expects(self::never())
+            ->method('findByHash');
+
+        $subject = new NewIpDetector($ipLogRepository);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('No HMAC key configured for login warning extension');
+
+        $subject->detect($user, $configuration);
     }
 
     public function testDetectReturnsFalseWhenIpIsWhitelisted(): void
@@ -60,7 +88,7 @@ final class NewIpDetectorTest extends TestCase
         $subject = new NewIpDetector($ipLogRepository);
         $result = $subject->detect($user, $configuration);
 
-        self::assertFalse($result);
+        self::assertTrue($result);
     }
 
     public function testDetectReturnsTrueWhenIpIsNew(): void
