@@ -591,6 +591,119 @@ final class OutOfOfficeDetectorTest extends TestCase
         self::assertFalse($result);
     }
 
+    public function testGetBlockedPeriodTypeHandlesNonArrayBlockedPeriods(): void
+    {
+        $user = $this->createMockUser(['uid' => 123]);
+
+        // Create a test detector that forces the non-array path
+        $subject = new class('2025-12-25 10:00:00') extends OutOfOfficeDetectorWithMockedTime {
+            public function testGetBlockedPeriodTypeWithInvalidConfig(): string
+            {
+                $configuration = ['blockedPeriods' => 'not-an-array'];
+                $time = $this->getCurrentTime('UTC');
+
+                return $this->getBlockedPeriodType($time, $configuration);
+            }
+        };
+
+        // This should return 'holiday' (line 131)
+        $result = $subject->testGetBlockedPeriodTypeWithInvalidConfig();
+        self::assertSame('holiday', $result);
+    }
+
+    public function testGetBlockedPeriodTypeHandlesNonArrayPeriodElements(): void
+    {
+        $user = $this->createMockUser(['uid' => 123]);
+        $configuration = [
+            'workingHours' => [
+                'monday' => ['09:00', '17:00'],
+                'tuesday' => ['09:00', '17:00'],
+            ],
+            'blockedPeriods' => [
+                'not-an-array-element', // Invalid: should be array
+                ['12-25'], // Valid recurring date
+            ],
+            'timezone' => 'UTC',
+        ];
+
+        // Test Christmas (should match despite invalid first element) - line 136
+        $subject = new OutOfOfficeDetectorWithMockedTime('2025-12-25 10:00:00');
+        $result = $subject->detect($user, $configuration);
+
+        self::assertTrue($result);
+        $additionalData = $subject->getAdditionalData();
+        self::assertSame('holiday', $additionalData['violationDetails']['type']);
+    }
+
+    public function testGetBlockedPeriodTypeReturnsHolidayFallback(): void
+    {
+        // Create a test detector that forces the fallback path
+        $subject = new class('2025-12-25 10:00:00') extends OutOfOfficeDetectorWithMockedTime {
+            public function testGetBlockedPeriodTypeFallback(): string
+            {
+                // Create a scenario where no period matches in getBlockedPeriodType
+                // but we still need to call the method
+                $configuration = ['blockedPeriods' => [
+                    ['2025-12-26'], // Wrong date, won't match
+                    ['2026-01-01'], // Wrong date, won't match
+                ]];
+                $time = $this->getCurrentTime('UTC');
+
+                return $this->getBlockedPeriodType($time, $configuration);
+            }
+        };
+
+        // This should return 'holiday' fallback (line 148)
+        $result = $subject->testGetBlockedPeriodTypeFallback();
+        self::assertSame('holiday', $result);
+    }
+
+    public function testIsPeriodBlockedHandlesInvalidPeriodCount(): void
+    {
+        $user = $this->createMockUser(['uid' => 123]);
+        $configuration = [
+            'workingHours' => [
+                'monday' => ['09:00', '17:00'],
+                'tuesday' => ['09:00', '17:00'],
+            ],
+            'blockedPeriods' => [
+                ['2025-12-25', '2025-12-26', 'extra-element'], // Invalid: 3 elements
+                ['12-25'], // Valid for fallback
+            ],
+            'timezone' => 'UTC',
+        ];
+
+        // Test Christmas with valid recurring date (invalid period is ignored) - line 165
+        $subject = new OutOfOfficeDetectorWithMockedTime('2025-12-25 10:00:00');
+        $result = $subject->detect($user, $configuration);
+
+        self::assertTrue($result);
+        $additionalData = $subject->getAdditionalData();
+        self::assertSame('holiday', $additionalData['violationDetails']['type']);
+    }
+
+    public function testIsDateInRangeHandlesMixedFormats(): void
+    {
+        $user = $this->createMockUser(['uid' => 123]);
+        $configuration = [
+            'workingHours' => [
+                'monday' => ['09:00', '17:00'],
+                'tuesday' => ['09:00', '17:00'],
+            ],
+            'blockedPeriods' => [
+                ['2025-12-25', '01-05'], // Mixed: full date and month-day (invalid)
+                ['12-24'], // Valid fallback
+            ],
+            'timezone' => 'UTC',
+        ];
+
+        // Test December 24 (valid single date) - line 191 coverage
+        $subject = new OutOfOfficeDetectorWithMockedTime('2025-12-24 10:00:00');
+        $result = $subject->detect($user, $configuration);
+
+        self::assertTrue($result);
+    }
+
     /**
      * @param array<string, mixed> $userData
      *
