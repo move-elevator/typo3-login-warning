@@ -201,8 +201,6 @@ class DetectorConfigurationBuilder implements LoggerAwareInterface
     }
 
     /**
-     * Expand shortcuts like "workday" and "weekend" to actual day names.
-     *
      * @param array<string, mixed> $workingHours
      *
      * @return array<string, array<int, string>>
@@ -230,13 +228,6 @@ class DetectorConfigurationBuilder implements LoggerAwareInterface
     }
 
     /**
-     * Parse blocked periods from configuration.
-     *
-     * Format examples:
-     * - Single day: "2025-12-25"
-     * - Date range: "2025-07-15:2025-07-30"
-     * - Multiple: "2025-12-25,2025-07-15:2025-07-30"
-     *
      * @param array<string, mixed> $config
      *
      * @return array<int, array<int, string>>
