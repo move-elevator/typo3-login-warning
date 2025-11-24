@@ -102,7 +102,7 @@ class EmailNotification implements NotifierInterface, LoggerAwareInterface
                 break;
         }
 
-        return array_unique(array_filter(array_map('trim', $recipientsList), static fn (string $email): bool => '' !== $email));
+        return array_unique(array_filter(array_map(trim(...), $recipientsList), static fn (string $email): bool => '' !== $email));
     }
 
     /**

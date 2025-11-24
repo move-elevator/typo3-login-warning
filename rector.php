@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 use Rector\Config\RectorConfig;
 use Rector\PostRector\Rector\NameImportingPostRector;
+use Rector\Set\ValueObject\LevelSetList;
 use Rector\TypeDeclaration\Rector\ClassMethod\AddVoidReturnTypeWhereNoReturnRector;
 use Rector\ValueObject\PhpVersion;
 use Ssch\TYPO3Rector\CodeQuality\General\{ConvertImplicitVariablesToExplicitGlobalsRector, ExtEmConfRector};
@@ -34,6 +35,7 @@ return RectorConfig::configure()
         Typo3SetList::CODE_QUALITY,
         Typo3SetList::GENERAL,
         Typo3LevelSetList::UP_TO_TYPO3_13,
+        LevelSetList::UP_TO_PHP_82,
     ])
     // To have a better analysis from PHPStan, we teach it here some more things
     ->withPHPStanConfigs([

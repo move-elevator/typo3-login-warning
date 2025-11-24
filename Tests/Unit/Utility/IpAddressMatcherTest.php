@@ -226,7 +226,6 @@ final class IpAddressMatcherTest extends TestCase
         // This tests the private method indirectly by using reflection
         $reflection = new ReflectionClass(IpAddressMatcher::class);
         $method = $reflection->getMethod('parseCidr');
-        $method->setAccessible(true);
 
         // String without slash
         self::assertNull($method->invoke(null, '192.168.1.0'));
@@ -253,7 +252,6 @@ final class IpAddressMatcherTest extends TestCase
 
         $reflection = new ReflectionClass(IpAddressMatcher::class);
         $matchesCidr = $reflection->getMethod('matchesCidr');
-        $matchesCidr->setAccessible(true);
 
         // Test that mixed IP versions are rejected (caught by validateBinaryIps, not line 76)
         self::assertFalse($matchesCidr->invoke(null, '192.168.1.1', '2001:db8::/64'));

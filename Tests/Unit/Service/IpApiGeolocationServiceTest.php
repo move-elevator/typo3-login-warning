@@ -205,10 +205,8 @@ class IpApiGeolocationServiceTest extends TestCase
             ->method('warning')
             ->with(
                 'Failed to fetch IP geolocation data',
-                self::callback(function (array $context): bool {
-                    return 'Network error' === $context['exception']
-                        && '8.8.8.8' === $context['ipAddress'];
-                }),
+                self::callback(fn (array $context): bool => 'Network error' === $context['exception']
+                    && '8.8.8.8' === $context['ipAddress']),
             );
 
         $result = $this->subject->getLocationData('8.8.8.8');
@@ -236,10 +234,8 @@ class IpApiGeolocationServiceTest extends TestCase
             ->method('warning')
             ->with(
                 'Failed to decode IP geolocation response',
-                self::callback(function (array $context): bool {
-                    return 'Invalid JSON' === $context['exception']
-                        && '8.8.8.8' === $context['ipAddress'];
-                }),
+                self::callback(fn (array $context): bool => 'Invalid JSON' === $context['exception']
+                    && '8.8.8.8' === $context['ipAddress']),
             );
 
         $result = $this->subject->getLocationData('8.8.8.8');
@@ -260,10 +256,8 @@ class IpApiGeolocationServiceTest extends TestCase
             ->method('error')
             ->with(
                 'Unexpected error during IP geolocation lookup',
-                self::callback(function (array $context): bool {
-                    return 'Unexpected error' === $context['exception']
-                        && '8.8.8.8' === $context['ipAddress'];
-                }),
+                self::callback(fn (array $context): bool => 'Unexpected error' === $context['exception']
+                    && '8.8.8.8' === $context['ipAddress']),
             );
 
         $result = $this->subject->getLocationData('8.8.8.8');
