@@ -324,7 +324,6 @@ final class DeviceInfoParserTest extends TestCase
         // Test the parseWithMobileDetect method directly via Reflection
         $reflection = new ReflectionClass(DeviceInfoParser::class);
         $method = $reflection->getMethod('parseWithMobileDetect');
-        $method->setAccessible(true);
 
         $userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
         $result = $method->invoke(null, $userAgent);
@@ -342,7 +341,6 @@ final class DeviceInfoParserTest extends TestCase
     {
         $reflection = new ReflectionClass(DeviceInfoParser::class);
         $method = $reflection->getMethod('parseWithMobileDetect');
-        $method->setAccessible(true);
 
         $userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0';
         $result = $method->invoke(null, $userAgent);
@@ -359,7 +357,6 @@ final class DeviceInfoParserTest extends TestCase
     {
         $reflection = new ReflectionClass(DeviceInfoParser::class);
         $method = $reflection->getMethod('parseWithMobileDetect');
-        $method->setAccessible(true);
 
         $userAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_1 like Mac OS X) AppleWebKit/605.1.15';
         $result = $method->invoke(null, $userAgent);
@@ -376,7 +373,6 @@ final class DeviceInfoParserTest extends TestCase
     {
         $reflection = new ReflectionClass(DeviceInfoParser::class);
         $method = $reflection->getMethod('parseWithMobileDetect');
-        $method->setAccessible(true);
 
         $userAgent = 'CustomBot/1.0';
         $result = $method->invoke(null, $userAgent);
@@ -417,7 +413,6 @@ final class DeviceInfoParserTest extends TestCase
         // Test that browser version is appended when MobileDetect returns one (line 127-128)
         $reflection = new ReflectionClass(DeviceInfoParser::class);
         $method = $reflection->getMethod('parseWithMobileDetect');
-        $method->setAccessible(true);
 
         // Mobile Safari typically includes version information
         $userAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Mobile/15E148 Safari/604.1';
@@ -436,7 +431,6 @@ final class DeviceInfoParserTest extends TestCase
         // Test that OS version is appended when MobileDetect returns one (line 140-141)
         $reflection = new ReflectionClass(DeviceInfoParser::class);
         $method = $reflection->getMethod('parseWithMobileDetect');
-        $method->setAccessible(true);
 
         // iOS user agent - MobileDetect should detect iOS with version
         $userAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_1 like Mac OS X) AppleWebKit/605.1.15';
@@ -456,7 +450,6 @@ final class DeviceInfoParserTest extends TestCase
         // This tests the false branch of the ternary operators (lines 127-128, 140-141)
         $reflection = new ReflectionClass(DeviceInfoParser::class);
         $method = $reflection->getMethod('parseWithMobileDetect');
-        $method->setAccessible(true);
 
         // Android Chrome - sometimes version() returns empty string
         $userAgent = 'Mozilla/5.0 (Linux; Android 14; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36';

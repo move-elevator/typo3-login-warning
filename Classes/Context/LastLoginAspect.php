@@ -25,12 +25,7 @@ use TYPO3\CMS\Core\Context\Exception\AspectPropertyNotFoundException;
  */
 class LastLoginAspect implements AspectInterface
 {
-    protected ?DateTime $lastLogin = null;
-
-    public function __construct(DateTime $lastLogin)
-    {
-        $this->lastLogin = $lastLogin;
-    }
+    public function __construct(protected ?DateTime $lastLogin) {}
 
     public function get(string $name): mixed
     {
@@ -38,6 +33,6 @@ class LastLoginAspect implements AspectInterface
             return $this->lastLogin;
         }
 
-        throw new AspectPropertyNotFoundException('Property "'.$name.'" not found in Aspect "'.__CLASS__.'".', 1735135381);
+        throw new AspectPropertyNotFoundException('Property "'.$name.'" not found in Aspect "'.self::class.'".', 1735135381);
     }
 }

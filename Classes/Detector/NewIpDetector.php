@@ -34,8 +34,8 @@ use function is_array;
 class NewIpDetector extends AbstractDetector
 {
     public function __construct(
-        private IpLogRepository $ipLogRepository,
-        private ?GeolocationServiceInterface $geolocationService = null,
+        private readonly IpLogRepository $ipLogRepository,
+        private readonly ?GeolocationServiceInterface $geolocationService = null,
     ) {}
 
     /**

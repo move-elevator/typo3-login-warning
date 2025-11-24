@@ -425,10 +425,8 @@ final class LastLoginMiddlewareTest extends TestCase
             ->method('setAspect')
             ->with(
                 Configuration::EXT_KEY,
-                self::callback(function ($aspect) use ($lastLogin) {
-                    return $aspect instanceof LastLoginAspect
-                        && $aspect->get('last_login') === $lastLogin;
-                }),
+                self::callback(fn ($aspect) => $aspect instanceof LastLoginAspect
+                    && $aspect->get('last_login') === $lastLogin),
             );
 
         $result = $this->subject->process($request, $handler);

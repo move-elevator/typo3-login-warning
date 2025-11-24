@@ -758,7 +758,7 @@ final class OutOfOfficeDetectorTest extends TestCase
  */
 class OutOfOfficeDetectorWithMockedTime extends OutOfOfficeDetector
 {
-    public function __construct(private string $mockedTime) {}
+    public function __construct(private readonly string $mockedTime) {}
 
     /**
      * @throws Exception
