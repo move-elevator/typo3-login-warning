@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "043de8edacff2d158fe0409d987adf3a",
+    "content-hash": "7f0bdccd902550e22f01948b659a6c8c",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -6460,16 +6460,16 @@
         },
         {
             "name": "helhum/typo3-console",
-            "version": "v8.2.3",
+            "version": "dev-support-typo3-v14",
             "source": {
                 "type": "git",
-                "url": "https://github.com/TYPO3-Console/TYPO3-Console.git",
-                "reference": "c5aa3570d7d0e0c1e3332e13dbcf29a9474897ff"
+                "url": "https://github.com/jackd248/TYPO3-Console.git",
+                "reference": "25463482724fdec94ad9f31c33300382bc7cc3dd"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/TYPO3-Console/TYPO3-Console/zipball/c5aa3570d7d0e0c1e3332e13dbcf29a9474897ff",
-                "reference": "c5aa3570d7d0e0c1e3332e13dbcf29a9474897ff",
+                "url": "https://api.github.com/repos/jackd248/TYPO3-Console/zipball/25463482724fdec94ad9f31c33300382bc7cc3dd",
+                "reference": "25463482724fdec94ad9f31c33300382bc7cc3dd",
                 "shasum": ""
             },
             "require": {
@@ -6479,13 +6479,13 @@
                 "php": ">=8.1",
                 "symfony/console": "^5.4 || ^6.4 || ^7.0",
                 "symfony/process": "^5.4 || ^6.4 || ^7.0",
-                "typo3/cms-backend": "^11.5.26 || ^12.4.18 || ^13.1",
+                "typo3/cms-backend": "^11.5.26 || ^12.4.18 || ^13.1 || ^14.0",
                 "typo3/cms-composer-installers": "^4.0@rc || >=5.0",
-                "typo3/cms-core": "^11.5.26 || ^12.4.18 || ^13.1",
-                "typo3/cms-extbase": "^11.5.26 || ^12.4.18 || ^13.1",
-                "typo3/cms-fluid": "^11.5.26 || ^12.4.18 || ^13.1",
-                "typo3/cms-frontend": "^11.5.26 || ^12.4.18 || ^13.1",
-                "typo3/cms-install": "^11.5.26 || ^12.4.18 || ^13.1"
+                "typo3/cms-core": "^11.5.26 || ^12.4.18 || ^13.1 || ^14.0",
+                "typo3/cms-extbase": "^11.5.26 || ^12.4.18 || ^13.1 || ^14.0",
+                "typo3/cms-fluid": "^11.5.26 || ^12.4.18 || ^13.1 || ^14.0",
+                "typo3/cms-frontend": "^11.5.26 || ^12.4.18 || ^13.1 || ^14.0",
+                "typo3/cms-install": "^11.5.26 || ^12.4.18 || ^13.1 || ^14.0"
             },
             "replace": {
                 "typo3-ter/typo3-console": "self.version"
@@ -6499,24 +6499,24 @@
                 "symfony/filesystem": "^5.4 || ^6.4 || ^7.0",
                 "typo3-console/create-reference-command": "^1.0",
                 "typo3-console/sql-command": "^1.0",
-                "typo3/cms-extensionmanager": "^11.5.26 || ^12.4.18 || ^13.1",
-                "typo3/cms-filemetadata": "^11.5.26 || ^12.4.18 || ^13.1",
-                "typo3/cms-recordlist": "^11.5.26 || ^12.4.18 || ^13.1",
-                "typo3/cms-reports": "^11.5.26 || ^12.4.18 || ^13.1"
+                "typo3/cms-extensionmanager": "^11.5.26 || ^12.4.18 || ^13.1 || ^14.0",
+                "typo3/cms-filemetadata": "^11.5.26 || ^12.4.18 || ^13.1 || ^14.0",
+                "typo3/cms-recordlist": "^11.5.26 || ^12.4.18 || ^13.1 || ^14.0",
+                "typo3/cms-reports": "^11.5.26 || ^12.4.18 || ^13.1 || ^14.0"
             },
             "type": "typo3-cms-extension",
             "extra": {
+                "branch-alias": {
+                    "dev-main": "8.2.x-dev"
+                },
                 "typo3/cms": {
                     "Package": {
-                        "protected": true,
                         "serviceProvider": "Helhum\\Typo3Console\\ServiceProvider",
+                        "protected": true,
                         "partOfMinimalUsableSystem": true
                     },
                     "extension-key": "typo3_console",
                     "ignore-as-root": false
-                },
-                "branch-alias": {
-                    "dev-main": "8.2.x-dev"
                 }
             },
             "autoload": {
@@ -6527,7 +6527,40 @@
                     ]
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "autoload-dev": {
+                "psr-4": {
+                    "Helhum\\Typo3Console\\Tests\\": "Tests/Console/"
+                }
+            },
+            "scripts": {
+                "set-version": [
+                    "Helhum\\Typo3Console\\Composer\\ScriptHelper::setVersion"
+                ],
+                "extension-copy": [
+                    "@extension-clean",
+                    "mkdir -p ../extension",
+                    "rsync -r  --times --perms --links --delete --verbose --exclude /config --exclude /public --exclude /var --exclude /vendor --exclude .git --exclude /Tests --exclude /.ddev --exclude /.github --exclude '/.*' --exclude '/phpunit*' --exclude '/sonar*' --exclude '/render*' ./ ../extension/",
+                    "mv ../extension/Resources/Private/ExtensionArtifacts/ext_emconf.php ../extension",
+                    "mv ../extension/Resources/Private/ExtensionArtifacts/activate ../extension"
+                ],
+                "extension-build": [
+                    "@extension-copy",
+                    "@composer install -d ../extension/Resources/Private/ExtensionArtifacts/"
+                ],
+                "extension-release": [
+                    "@extension-build",
+                    "rm ../extension/Resources/Private/ExtensionArtifacts/composer.*"
+                ],
+                "extension-clean": [
+                    "rm -rf ../extension/*"
+                ],
+                "docs:test-render": [
+                    "docker run --rm --pull always -v $(pwd):/project ghcr.io/typo3-documentation/render-guides:latest --config=Documentation --no-progress --fail-on-log"
+                ],
+                "docs:render": [
+                    "docker run --rm --pull always -v $(pwd):/project ghcr.io/typo3-documentation/render-guides:latest --config=Documentation"
+                ]
+            },
             "license": [
                 "GPL-2.0-or-later"
             ],
@@ -6535,35 +6568,35 @@
                 {
                     "name": "Helmut Hummel",
                     "email": "info@helhum.io",
-                    "homepage": "https://helhum.io",
-                    "role": "Developer"
+                    "role": "Developer",
+                    "homepage": "https://helhum.io"
                 }
             ],
             "description": "A reliable and powerful command line interface for TYPO3 CMS",
             "homepage": "https://insight.helhum.io/post/104528981610/about-the-beauty-and-power-of-typo3-console",
             "keywords": [
+                "TYPO3",
                 "cli",
                 "command",
                 "commandline",
-                "console",
-                "typo3"
+                "console"
             ],
             "support": {
-                "docs": "https://docs.typo3.org/p/helhum/typo3-console/main/en-us/",
                 "issues": "https://github.com/TYPO3-Console/TYPO3-Console/issues",
-                "source": "https://github.com/TYPO3-Console/TYPO3-Console"
+                "source": "https://github.com/TYPO3-Console/TYPO3-Console",
+                "docs": "https://docs.typo3.org/p/helhum/typo3-console/main/en-us/"
             },
             "funding": [
                 {
-                    "url": "https://www.paypal.me/helhum/19.99",
-                    "type": "custom"
+                    "type": "custom",
+                    "url": "https://www.paypal.me/helhum/19.99"
                 },
                 {
-                    "url": "https://github.com/helhum",
-                    "type": "github"
+                    "type": "github",
+                    "url": "https://github.com/helhum"
                 }
             ],
-            "time": "2025-10-23T12:57:07+00:00"
+            "time": "2025-11-25T16:24:20+00:00"
         },
         {
             "name": "idiosyncratic/editorconfig",
@@ -7736,16 +7769,16 @@
         },
         {
             "name": "phpdocumentor/type-resolver",
-            "version": "1.11.1",
+            "version": "1.12.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpDocumentor/TypeResolver.git",
-                "reference": "f626740b38009078de0dc8b2b9dc4e7f749c6eba"
+                "reference": "92a98ada2b93d9b201a613cb5a33584dde25f195"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpDocumentor/TypeResolver/zipball/f626740b38009078de0dc8b2b9dc4e7f749c6eba",
-                "reference": "f626740b38009078de0dc8b2b9dc4e7f749c6eba",
+                "url": "https://api.github.com/repos/phpDocumentor/TypeResolver/zipball/92a98ada2b93d9b201a613cb5a33584dde25f195",
+                "reference": "92a98ada2b93d9b201a613cb5a33584dde25f195",
                 "shasum": ""
             },
             "require": {
@@ -7788,9 +7821,9 @@
             "description": "A PSR-5 based resolver of Class names, Types and Structural Element Names",
             "support": {
                 "issues": "https://github.com/phpDocumentor/TypeResolver/issues",
-                "source": "https://github.com/phpDocumentor/TypeResolver/tree/1.11.1"
+                "source": "https://github.com/phpDocumentor/TypeResolver/tree/1.12.0"
             },
-            "time": "2025-11-21T11:31:57+00:00"
+            "time": "2025-11-21T15:09:14+00:00"
         },
         {
             "name": "phpoption/phpoption",
@@ -13121,7 +13154,9 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": {
+        "helhum/typo3-console": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
