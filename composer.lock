@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7f0bdccd902550e22f01948b659a6c8c",
+    "content-hash": "ef6569137baafd13403e4b02817661d6",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -6460,16 +6460,16 @@
         },
         {
             "name": "helhum/typo3-console",
-            "version": "dev-support-typo3-v14",
+            "version": "dev-main",
             "source": {
                 "type": "git",
                 "url": "https://github.com/jackd248/TYPO3-Console.git",
-                "reference": "25463482724fdec94ad9f31c33300382bc7cc3dd"
+                "reference": "feb310541ae34fa7ba096ba582562633cc6282fe"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/jackd248/TYPO3-Console/zipball/25463482724fdec94ad9f31c33300382bc7cc3dd",
-                "reference": "25463482724fdec94ad9f31c33300382bc7cc3dd",
+                "url": "https://api.github.com/repos/jackd248/TYPO3-Console/zipball/feb310541ae34fa7ba096ba582562633cc6282fe",
+                "reference": "feb310541ae34fa7ba096ba582562633cc6282fe",
                 "shasum": ""
             },
             "require": {
@@ -6479,13 +6479,13 @@
                 "php": ">=8.1",
                 "symfony/console": "^5.4 || ^6.4 || ^7.0",
                 "symfony/process": "^5.4 || ^6.4 || ^7.0",
-                "typo3/cms-backend": "^11.5.26 || ^12.4.18 || ^13.1 || ^14.0",
+                "typo3/cms-backend": "^11.5.26 || ^12.4.18 || ^13.1",
                 "typo3/cms-composer-installers": "^4.0@rc || >=5.0",
-                "typo3/cms-core": "^11.5.26 || ^12.4.18 || ^13.1 || ^14.0",
-                "typo3/cms-extbase": "^11.5.26 || ^12.4.18 || ^13.1 || ^14.0",
-                "typo3/cms-fluid": "^11.5.26 || ^12.4.18 || ^13.1 || ^14.0",
-                "typo3/cms-frontend": "^11.5.26 || ^12.4.18 || ^13.1 || ^14.0",
-                "typo3/cms-install": "^11.5.26 || ^12.4.18 || ^13.1 || ^14.0"
+                "typo3/cms-core": "^11.5.26 || ^12.4.18 || ^13.1",
+                "typo3/cms-extbase": "^11.5.26 || ^12.4.18 || ^13.1",
+                "typo3/cms-fluid": "^11.5.26 || ^12.4.18 || ^13.1",
+                "typo3/cms-frontend": "^11.5.26 || ^12.4.18 || ^13.1",
+                "typo3/cms-install": "^11.5.26 || ^12.4.18 || ^13.1"
             },
             "replace": {
                 "typo3-ter/typo3-console": "self.version"
@@ -6499,11 +6499,12 @@
                 "symfony/filesystem": "^5.4 || ^6.4 || ^7.0",
                 "typo3-console/create-reference-command": "^1.0",
                 "typo3-console/sql-command": "^1.0",
-                "typo3/cms-extensionmanager": "^11.5.26 || ^12.4.18 || ^13.1 || ^14.0",
-                "typo3/cms-filemetadata": "^11.5.26 || ^12.4.18 || ^13.1 || ^14.0",
-                "typo3/cms-recordlist": "^11.5.26 || ^12.4.18 || ^13.1 || ^14.0",
-                "typo3/cms-reports": "^11.5.26 || ^12.4.18 || ^13.1 || ^14.0"
+                "typo3/cms-extensionmanager": "^11.5.26 || ^12.4.18 || ^13.1",
+                "typo3/cms-filemetadata": "^11.5.26 || ^12.4.18 || ^13.1",
+                "typo3/cms-recordlist": "^11.5.26 || ^12.4.18 || ^13.1",
+                "typo3/cms-reports": "^11.5.26 || ^12.4.18 || ^13.1"
             },
+            "default-branch": true,
             "type": "typo3-cms-extension",
             "extra": {
                 "branch-alias": {
@@ -6596,7 +6597,7 @@
                     "url": "https://github.com/helhum"
                 }
             ],
-            "time": "2025-11-25T16:24:20+00:00"
+            "time": "2025-10-06T08:10:36+00:00"
         },
         {
             "name": "idiosyncratic/editorconfig",
