@@ -34,8 +34,6 @@ final class ModifyLoginNotificationEventTest extends TestCase
 
     protected function setUp(): void
     {
-        parent::setUp();
-
         $this->user = $this->createMock(BackendUserAuthentication::class);
         $this->request = $this->createMock(ServerRequestInterface::class);
         $this->detector = $this->createMock(DetectorInterface::class);

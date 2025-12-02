@@ -26,7 +26,6 @@ final class ConfigurationTest extends TestCase
 {
     protected function tearDown(): void
     {
-        parent::tearDown();
         // Clean up global state
         unset($GLOBALS['TYPO3_CONF_VARS']['MAIL']['templateRootPaths'][500]);
         unset($GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]);

@@ -29,14 +29,12 @@ final class OutOfOfficeDetectorTest extends TestCase
 {
     protected function setUp(): void
     {
-        parent::setUp();
         // Set a fixed timezone for consistent testing
         date_default_timezone_set('UTC');
     }
 
     protected function tearDown(): void
     {
-        parent::tearDown();
         // Reset timezone
         date_default_timezone_set('UTC');
     }
