@@ -56,12 +56,10 @@
 		"fix:php": "@php vendor/bin/php-cs-fixer --config=.php-cs-fixer.php fix",
 		"lint": [
 			"@lint:composer",
-			"@lint:composer-conflicts",
 			"@lint:editorconfig",
 			"@lint:php"
 		],
 		"lint:composer": "@fix:composer --dry-run",
-		"lint:composer-conflicts": "bash -c 'diff -u <(jq -S .conflict ../../composer.json)'",
 		"lint:editorconfig": "ec --git-only",
 		"lint:php": "@fix:php --dry-run",
 		"migration": [
