@@ -43,7 +43,6 @@ final class LastLoginMiddlewareTest extends TestCase
 
     protected function setUp(): void
     {
-        parent::setUp();
         $this->context = $this->createMock(Context::class);
         $this->configBuilder = $this->createMock(DetectorConfigurationBuilder::class);
         $this->configBuilder->method('isActive')->willReturn(true);

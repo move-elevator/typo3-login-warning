@@ -12,18 +12,26 @@ declare(strict_types=1);
  */
 
 use KonradMichalik\PhpCsFixerPreset\Config;
+use KonradMichalik\PhpCsFixerPreset\Package\{Author, CopyrightRange, Type};
 use KonradMichalik\PhpCsFixerPreset\Rules\Header;
 use KonradMichalik\PhpCsFixerPreset\Rules\Set\Set;
 use KonradMichalik\PhpDocBlockHeaderFixer\Generators\DocBlockHeader;
 use KonradMichalik\PhpDocBlockHeaderFixer\Rules\DocBlockHeaderFixer;
 use Symfony\Component\Finder\Finder;
 
+$rootPath = dirname(__DIR__, 2);
+
 return Config::create()
     ->registerCustomFixers([
         new DocBlockHeaderFixer(),
     ])
     ->withRule(
-        Header::fromComposer(),
+        Header::create(
+            'typo3_login_warning',
+            Type::TYPO3Extension,
+            Author::create('Konrad Michalik', 'km@move-elevator.de'),
+            CopyrightRange::from(2025),
+        ),
     )
     ->withRule(
         Set::fromArray(
@@ -32,7 +40,7 @@ return Config::create()
     )
     ->withFinder(
         static fn (Finder $finder) => $finder
-            ->in(__DIR__)
+            ->in($rootPath)
             ->notPath(['ext_emconf.php']),
     )
 ;

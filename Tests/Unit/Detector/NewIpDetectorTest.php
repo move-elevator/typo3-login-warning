@@ -30,7 +30,6 @@ final class NewIpDetectorTest extends TestCase
 {
     protected function setUp(): void
     {
-        parent::setUp();
         // Clean slate for each test - set default to avoid issues
         $GLOBALS['_SERVER']['REMOTE_ADDR'] = '127.0.0.1';
         // Set HMAC key for tests
@@ -39,7 +38,6 @@ final class NewIpDetectorTest extends TestCase
 
     protected function tearDown(): void
     {
-        parent::tearDown();
         unset($GLOBALS['_SERVER']['REMOTE_ADDR']);
         unset($GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey']);
     }
