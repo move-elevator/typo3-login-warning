@@ -1,6 +1,6 @@
 {
 	"name": "move-elevator/typo3-login-warning",
-	"description": "Extends the TYPO3 backend login warning_mode functionality to inform about suspicious logins with several features.",
+	"description": "Login Warning - Extends the TYPO3 backend login warning_mode functionality to inform about suspicious logins with several features.",
 	"license": [
 		"GPL-2.0-or-later"
 	],
