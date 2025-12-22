@@ -5400,12 +5400,12 @@
             "version": "dev-support-typo3-v14",
             "source": {
                 "type": "git",
-                "url": "https://github.com/jackd248/TYPO3-Console.git",
+                "url": "https://github.com/konradmichalik/TYPO3-Console.git",
                 "reference": "25463482724fdec94ad9f31c33300382bc7cc3dd"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/jackd248/TYPO3-Console/zipball/25463482724fdec94ad9f31c33300382bc7cc3dd",
+                "url": "https://api.github.com/repos/konradmichalik/TYPO3-Console/zipball/25463482724fdec94ad9f31c33300382bc7cc3dd",
                 "reference": "25463482724fdec94ad9f31c33300382bc7cc3dd",
                 "shasum": ""
             },

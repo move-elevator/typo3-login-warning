@@ -43,7 +43,7 @@
 	"repositories": [
 		{
 			"type": "vcs",
-			"url": "git@github.com:jackd248/TYPO3-Console.git",
+			"url": "git@github.com:konradmichalik/TYPO3-Console.git",
 			"name": "typo3-console"
 		}
 	],
