@@ -10,7 +10,7 @@
 		}
 	],
 	"require": {
-		"move-elevator/typo3-login-warning": "*"
+		"move-elevator/typo3-login-warning": "0.7.0"
 	},
 	"suggest": {},
 	"conflict": {},
