@@ -2,6 +2,8 @@
 
 Thank you for considering contributing to this project! Every contribution is welcome and helps improve the quality of the project. To ensure a smooth process and maintain high code quality, please follow the steps below.
 
+Please note that this project adheres to the [TYPO3 Code of Conduct](https://typo3.org/community/values/code-of-conduct). By participating, you are expected to uphold this code.
+
 ## Requirements
 
 - [DDEV](https://ddev.readthedocs.io/en/stable/)
@@ -52,6 +54,7 @@ ddev cgl sca
 # Specific static code analyzers
 ddev cgl sca:php
 ```
+
 ## Run tests
 
 ```bash
@@ -81,6 +84,12 @@ ddev 13 typo3 cache:flush
 ddev 13 composer install
 ddev all typo3 database:updateschema
 ```
+
+## Workflow
+
+1. Fork the repository and create a feature branch from `main`.
+2. Make your changes and ensure all linters and tests pass.
+3. Use descriptive commit messages following the conventional commits format: `<type>: <description>` (e.g. `feat: add Slack notification`, `fix: handle empty IP address`).
 
 ## Submit a pull request
 
