@@ -11,7 +11,7 @@ body:
     attributes:
       label: TYPO3 version
       description: What TYPO3 version are you using?
-      placeholder: 'e.g. 11.5.23'
+      placeholder: 'e.g. 13.4.0'
     validations:
       required: true
   - type: input
