@@ -5,7 +5,7 @@ declare(strict_types=1);
 /*
  * This file is part of the "typo3_login_warning" TYPO3 CMS extension.
  *
- * (c) 2025 Konrad Michalik <km@move-elevator.de>
+ * (c) 2025-2026 Konrad Michalik <km@move-elevator.de>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -27,7 +27,6 @@ use TYPO3\CMS\Backend\Routing\RouteResult;
 use TYPO3\CMS\Beuser\Domain\Model\BackendUser;
 use TYPO3\CMS\Beuser\Domain\Repository\BackendUserRepository;
 use TYPO3\CMS\Core\Context\Context;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
  * LastLoginMiddlewareTest.
@@ -39,6 +38,7 @@ final class LastLoginMiddlewareTest extends TestCase
 {
     private Context&MockObject $context;
     private DetectorConfigurationBuilder&MockObject $configBuilder;
+    private BackendUserRepository&MockObject $backendUserRepository;
     private LastLoginMiddleware $subject;
 
     protected function setUp(): void
@@ -46,7 +46,8 @@ final class LastLoginMiddlewareTest extends TestCase
         $this->context = $this->createMock(Context::class);
         $this->configBuilder = $this->createMock(DetectorConfigurationBuilder::class);
         $this->configBuilder->method('isActive')->willReturn(true);
-        $this->subject = new LastLoginMiddleware($this->context, $this->configBuilder);
+        $this->backendUserRepository = $this->createMock(BackendUserRepository::class);
+        $this->subject = new LastLoginMiddleware($this->context, $this->configBuilder, $this->backendUserRepository);
     }
 
     public function testImplementsMiddlewareInterface(): void
@@ -62,7 +63,7 @@ final class LastLoginMiddlewareTest extends TestCase
             ->with(LongTimeNoSeeDetector::class)
             ->willReturn(false);
 
-        $subject = new LastLoginMiddleware($this->context, $configBuilder);
+        $subject = new LastLoginMiddleware($this->context, $configBuilder, $this->backendUserRepository);
 
         $routing = $this->createMock(RouteResult::class);
         $routing->expects(self::once())
@@ -217,7 +218,7 @@ final class LastLoginMiddlewareTest extends TestCase
             ->willReturn($routing);
         $request->expects(self::once())
             ->method('getParsedBody')
-            ->willReturn(['username' => '']); // Empty username - tests line 63
+            ->willReturn(['username' => '']);
 
         $handler = $this->createMock(RequestHandlerInterface::class);
         $response = $this->createMock(ResponseInterface::class);
@@ -248,7 +249,7 @@ final class LastLoginMiddlewareTest extends TestCase
             ->willReturn($routing);
         $request->expects(self::once())
             ->method('getParsedBody')
-            ->willReturn(['username' => '   ']); // Whitespace only - also tests line 63
+            ->willReturn(['username' => '   ']);
 
         $handler = $this->createMock(RequestHandlerInterface::class);
         $response = $this->createMock(ResponseInterface::class);
@@ -279,7 +280,7 @@ final class LastLoginMiddlewareTest extends TestCase
             ->willReturn($routing);
         $request->expects(self::once())
             ->method('getParsedBody')
-            ->willReturn(['username' => 123]); // Not a string - tests line 63
+            ->willReturn(['username' => 123]);
 
         $handler = $this->createMock(RequestHandlerInterface::class);
         $response = $this->createMock(ResponseInterface::class);
@@ -312,13 +313,10 @@ final class LastLoginMiddlewareTest extends TestCase
             ->method('getParsedBody')
             ->willReturn(['username' => 'nonexistent']);
 
-        $repository = $this->createMock(BackendUserRepository::class);
-        $repository->expects(self::once())
+        $this->backendUserRepository->expects(self::once())
             ->method('findOneBy')
             ->with(['userName' => 'nonexistent'])
             ->willReturn(null);
-
-        GeneralUtility::setSingletonInstance(BackendUserRepository::class, $repository);
 
         $handler = $this->createMock(RequestHandlerInterface::class);
         $response = $this->createMock(ResponseInterface::class);
@@ -333,8 +331,6 @@ final class LastLoginMiddlewareTest extends TestCase
         $result = $this->subject->process($request, $handler);
 
         self::assertSame($response, $result);
-
-        GeneralUtility::resetSingletonInstances([]);
     }
 
     public function testProcessReturnsEarlyWhenLastLoginIsNull(): void
@@ -358,13 +354,10 @@ final class LastLoginMiddlewareTest extends TestCase
             ->method('getLastLoginDateAndTime')
             ->willReturn(null);
 
-        $repository = $this->createMock(BackendUserRepository::class);
-        $repository->expects(self::once())
+        $this->backendUserRepository->expects(self::once())
             ->method('findOneBy')
             ->with(['userName' => 'admin'])
             ->willReturn($backendUser);
-
-        GeneralUtility::setSingletonInstance(BackendUserRepository::class, $repository);
 
         $handler = $this->createMock(RequestHandlerInterface::class);
         $response = $this->createMock(ResponseInterface::class);
@@ -379,8 +372,6 @@ final class LastLoginMiddlewareTest extends TestCase
         $result = $this->subject->process($request, $handler);
 
         self::assertSame($response, $result);
-
-        GeneralUtility::resetSingletonInstances([]);
     }
 
     public function testProcessSetsAspectWhenUserAndLastLoginAreAvailable(): void
@@ -405,13 +396,10 @@ final class LastLoginMiddlewareTest extends TestCase
             ->method('getLastLoginDateAndTime')
             ->willReturn($lastLogin);
 
-        $repository = $this->createMock(BackendUserRepository::class);
-        $repository->expects(self::once())
+        $this->backendUserRepository->expects(self::once())
             ->method('findOneBy')
             ->with(['userName' => 'admin'])
             ->willReturn($backendUser);
-
-        GeneralUtility::setSingletonInstance(BackendUserRepository::class, $repository);
 
         $handler = $this->createMock(RequestHandlerInterface::class);
         $response = $this->createMock(ResponseInterface::class);
@@ -424,14 +412,12 @@ final class LastLoginMiddlewareTest extends TestCase
             ->method('setAspect')
             ->with(
                 Configuration::EXT_KEY,
-                self::callback(fn ($aspect) => $aspect instanceof LastLoginAspect
+                self::callback(static fn ($aspect) => $aspect instanceof LastLoginAspect
                     && $aspect->get('last_login') === $lastLogin),
             );
 
         $result = $this->subject->process($request, $handler);
 
         self::assertSame($response, $result);
-
-        GeneralUtility::resetSingletonInstances([]);
     }
 }

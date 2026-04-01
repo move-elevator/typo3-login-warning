@@ -7,7 +7,7 @@ If you believe you have found a vulnerability in this project, please follow the
 
 ## Reporting a Vulnerability
 
-Please contact [km@move-elevator.de](mailto:km@move-elevator.de) insted.
+Please contact [km@move-elevator.de](mailto:km@move-elevator.de) instead.
 Your report should include the following information:
 
 - The exact version or version range you analyzed.

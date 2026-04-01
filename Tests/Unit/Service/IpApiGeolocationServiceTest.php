@@ -5,7 +5,7 @@ declare(strict_types=1);
 /*
  * This file is part of the "typo3_login_warning" TYPO3 CMS extension.
  *
- * (c) 2025 Konrad Michalik <km@move-elevator.de>
+ * (c) 2025-2026 Konrad Michalik <km@move-elevator.de>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -205,7 +205,7 @@ class IpApiGeolocationServiceTest extends TestCase
             ->method('warning')
             ->with(
                 'Failed to fetch IP geolocation data',
-                self::callback(fn (array $context): bool => 'Network error' === $context['exception']
+                self::callback(static fn (array $context): bool => 'Network error' === $context['exception']
                     && '8.8.8.8' === $context['ipAddress']),
             );
 
@@ -234,7 +234,7 @@ class IpApiGeolocationServiceTest extends TestCase
             ->method('warning')
             ->with(
                 'Failed to decode IP geolocation response',
-                self::callback(fn (array $context): bool => 'Invalid JSON' === $context['exception']
+                self::callback(static fn (array $context): bool => 'Invalid JSON' === $context['exception']
                     && '8.8.8.8' === $context['ipAddress']),
             );
 
@@ -256,7 +256,7 @@ class IpApiGeolocationServiceTest extends TestCase
             ->method('error')
             ->with(
                 'Unexpected error during IP geolocation lookup',
-                self::callback(fn (array $context): bool => 'Unexpected error' === $context['exception']
+                self::callback(static fn (array $context): bool => 'Unexpected error' === $context['exception']
                     && '8.8.8.8' === $context['ipAddress']),
             );
 

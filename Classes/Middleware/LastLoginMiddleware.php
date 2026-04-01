@@ -5,7 +5,7 @@ declare(strict_types=1);
 /*
  * This file is part of the "typo3_login_warning" TYPO3 CMS extension.
  *
- * (c) 2025 Konrad Michalik <km@move-elevator.de>
+ * (c) 2025-2026 Konrad Michalik <km@move-elevator.de>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -23,7 +23,6 @@ use TYPO3\CMS\Backend\Routing\RouteResult;
 use TYPO3\CMS\Beuser\Domain\Model\BackendUser;
 use TYPO3\CMS\Beuser\Domain\Repository\BackendUserRepository;
 use TYPO3\CMS\Core\Context\Context;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 use function array_key_exists;
 use function is_array;
@@ -40,6 +39,7 @@ class LastLoginMiddleware implements MiddlewareInterface
     public function __construct(
         protected readonly Context $context,
         protected readonly DetectorConfigurationBuilder $configBuilder,
+        private readonly BackendUserRepository $backendUserRepository,
     ) {}
 
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
@@ -63,9 +63,7 @@ class LastLoginMiddleware implements MiddlewareInterface
             return $handler->handle($request);
         }
 
-        $repository = GeneralUtility::makeInstance(BackendUserRepository::class);
-
-        $user = $repository->findOneBy(['userName' => $username]);
+        $user = $this->backendUserRepository->findOneBy(['userName' => $username]);
         if (!$user instanceof BackendUser) {
             return $handler->handle($request);
         }

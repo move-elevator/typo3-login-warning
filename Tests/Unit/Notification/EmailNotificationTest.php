@@ -5,7 +5,7 @@ declare(strict_types=1);
 /*
  * This file is part of the "typo3_login_warning" TYPO3 CMS extension.
  *
- * (c) 2025 Konrad Michalik <km@move-elevator.de>
+ * (c) 2025-2026 Konrad Michalik <km@move-elevator.de>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -92,7 +92,7 @@ final class EmailNotificationTest extends TestCase
         $fluidEmail->expects(self::once())->method('to')->with('admin@example.com')->willReturnSelf();
         $fluidEmail->expects(self::once())->method('setRequest')->with($this->request)->willReturnSelf();
         $fluidEmail->expects(self::once())->method('setTemplate')->with('LoginNotification/TestTrigger')->willReturnSelf();
-        $fluidEmail->expects(self::once())->method('assignMultiple')->with(self::callback(fn (array $variables) => isset($variables['user'], $variables['prefix'], $variables['language'], $variables['headline'])))->willReturnSelf();
+        $fluidEmail->expects(self::once())->method('assignMultiple')->with(self::callback(static fn (array $variables) => isset($variables['user'], $variables['prefix'], $variables['language'], $variables['headline'])))->willReturnSelf();
 
         GeneralUtility::addInstance(FluidEmail::class, $fluidEmail);
 
@@ -158,7 +158,7 @@ final class EmailNotificationTest extends TestCase
         $fluidEmail->expects(self::once())->method('setRequest')->willReturnSelf();
         $fluidEmail->expects(self::once())->method('setTemplate')->willReturnSelf();
         $fluidEmail->expects(self::once())->method('assignMultiple')->with(
-            self::callback(fn (array $vars) => '[AdminLoginWarning]' === $vars['prefix']),
+            self::callback(static fn (array $vars) => '[AdminLoginWarning]' === $vars['prefix']),
         )->willReturnSelf();
 
         GeneralUtility::addInstance(FluidEmail::class, $fluidEmail);
@@ -182,7 +182,7 @@ final class EmailNotificationTest extends TestCase
         $adminEmail->expects(self::once())->method('setRequest')->willReturnSelf();
         $adminEmail->expects(self::once())->method('setTemplate')->willReturnSelf();
         $adminEmail->expects(self::once())->method('assignMultiple')->with(
-            self::callback(fn (array $vars) => false === $vars['isUserNotification']),
+            self::callback(static fn (array $vars) => false === $vars['isUserNotification']),
         )->willReturnSelf();
 
         $userEmail = $this->createMock(FluidEmail::class);
@@ -190,7 +190,7 @@ final class EmailNotificationTest extends TestCase
         $userEmail->expects(self::once())->method('setRequest')->willReturnSelf();
         $userEmail->expects(self::once())->method('setTemplate')->willReturnSelf();
         $userEmail->expects(self::once())->method('assignMultiple')->with(
-            self::callback(fn (array $vars) => true === $vars['isUserNotification']),
+            self::callback(static fn (array $vars) => true === $vars['isUserNotification']),
         )->willReturnSelf();
 
         GeneralUtility::addInstance(FluidEmail::class, $adminEmail);
@@ -214,7 +214,7 @@ final class EmailNotificationTest extends TestCase
         $fluidEmail->expects(self::once())->method('setRequest')->willReturnSelf();
         $fluidEmail->expects(self::once())->method('setTemplate')->willReturnSelf();
         $fluidEmail->expects(self::once())->method('assignMultiple')->with(
-            self::callback(fn (array $vars) => true === $vars['isUserNotification']),
+            self::callback(static fn (array $vars) => true === $vars['isUserNotification']),
         )->willReturnSelf();
 
         GeneralUtility::addInstance(FluidEmail::class, $fluidEmail);
@@ -256,7 +256,7 @@ final class EmailNotificationTest extends TestCase
         $fluidEmail->expects(self::once())->method('setRequest')->willReturnSelf();
         $fluidEmail->expects(self::once())->method('setTemplate')->willReturnSelf();
         $fluidEmail->expects(self::once())->method('assignMultiple')->with(
-            self::callback(fn (array $vars) => isset($vars['locationData'])
+            self::callback(static fn (array $vars) => isset($vars['locationData'])
                 && $vars['locationData'] === $additionalValues['locationData']
                 && $vars['daysSinceLastLogin'] === $additionalValues['daysSinceLastLogin']),
         )->willReturnSelf();
@@ -292,7 +292,7 @@ final class EmailNotificationTest extends TestCase
             ->with(
                 self::stringContains('mailer settings error'),
                 self::callback(
-                    fn (array $context) => 'admin@example.com' === $context['recipient']
+                    static fn (array $context) => 'admin@example.com' === $context['recipient']
                     && 123 === $context['userId'],
                 ),
             );
@@ -324,7 +324,7 @@ final class EmailNotificationTest extends TestCase
             ->with(
                 self::stringContains('invalid email address'),
                 self::callback(
-                    fn (array $context) => 'invalid-email' === $context['recipient'],
+                    static fn (array $context) => 'invalid-email' === $context['recipient'],
                 ),
             );
 
@@ -355,7 +355,7 @@ final class EmailNotificationTest extends TestCase
             ->with(
                 self::stringContains('PHP exception'),
                 self::callback(
-                    fn (array $context) => isset($context['exception']) && $context['exception'] instanceof RuntimeException,
+                    static fn (array $context) => isset($context['exception']) && $context['exception'] instanceof RuntimeException,
                 ),
             );
 
