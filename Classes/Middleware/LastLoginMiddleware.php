@@ -23,7 +23,6 @@ use TYPO3\CMS\Backend\Routing\RouteResult;
 use TYPO3\CMS\Beuser\Domain\Model\BackendUser;
 use TYPO3\CMS\Beuser\Domain\Repository\BackendUserRepository;
 use TYPO3\CMS\Core\Context\Context;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 use function array_key_exists;
 use function is_array;
@@ -40,6 +39,7 @@ class LastLoginMiddleware implements MiddlewareInterface
     public function __construct(
         protected readonly Context $context,
         protected readonly DetectorConfigurationBuilder $configBuilder,
+        private readonly BackendUserRepository $backendUserRepository,
     ) {}
 
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
@@ -63,9 +63,7 @@ class LastLoginMiddleware implements MiddlewareInterface
             return $handler->handle($request);
         }
 
-        $repository = GeneralUtility::makeInstance(BackendUserRepository::class);
-
-        $user = $repository->findOneBy(['userName' => $username]);
+        $user = $this->backendUserRepository->findOneBy(['userName' => $username]);
         if (!$user instanceof BackendUser) {
             return $handler->handle($request);
         }
