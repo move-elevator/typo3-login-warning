@@ -205,7 +205,7 @@ final class LoginNotificationTest extends TestCase
         $eventDispatcher = $this->createMock(EventDispatcherInterface::class);
         $eventDispatcher->expects(self::once())
             ->method('dispatch')
-            ->willReturnCallback(function ($event) {
+            ->willReturnCallback(static function ($event) {
                 $event->preventNotification();
 
                 return $event;

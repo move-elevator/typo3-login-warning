@@ -424,7 +424,7 @@ final class LastLoginMiddlewareTest extends TestCase
             ->method('setAspect')
             ->with(
                 Configuration::EXT_KEY,
-                self::callback(fn ($aspect) => $aspect instanceof LastLoginAspect
+                self::callback(static fn ($aspect) => $aspect instanceof LastLoginAspect
                     && $aspect->get('last_login') === $lastLogin),
             );
 
