@@ -36,6 +36,12 @@ class IpApiGeolocationServiceTest extends TestCase
 
     protected function setUp(): void
     {
+        if ((new \ReflectionClass(RequestFactory::class))->isReadOnly()
+            && version_compare(\PHPUnit\Runner\Version::id(), '11.5.0', '<')
+        ) {
+            self::markTestSkipped('Mocking readonly TYPO3 classes requires PHPUnit >= 11.5');
+        }
+
         $this->requestFactory = $this->createMock(RequestFactory::class);
         $this->subject = new IpApiGeolocationService($this->requestFactory);
         $this->subject->setLogger(new NullLogger());
