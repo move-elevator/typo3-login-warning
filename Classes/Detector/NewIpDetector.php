@@ -92,12 +92,18 @@ class NewIpDetector extends AbstractDetector
 
     private function resolveRemoteAddress(?ServerRequestInterface $request): string
     {
-        $normalizedParams = $request?->getAttribute('normalizedParams');
+        if (null === $request) {
+            return '';
+        }
+
+        $normalizedParams = $request->getAttribute('normalizedParams');
         if ($normalizedParams instanceof NormalizedParams) {
             return $normalizedParams->getRemoteAddress();
         }
 
-        return (string) ($_SERVER['REMOTE_ADDR'] ?? '');
+        $serverParams = $request->getServerParams();
+
+        return (string) ($serverParams['REMOTE_ADDR'] ?? '');
     }
 
     private function generateIdentifierHash(int $userId, string $ipAddress): string
