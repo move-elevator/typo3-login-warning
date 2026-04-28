@@ -83,10 +83,13 @@ final class NewIpDetectorTest extends TestCase
         $GLOBALS['_SERVER']['REMOTE_ADDR'] = '192.168.1.1';
 
         $ipLogRepository = $this->createMock(IpLogRepository::class);
+        $ipLogRepository->expects(self::never())->method('findByHash');
+        $ipLogRepository->expects(self::never())->method('addHash');
+
         $subject = new NewIpDetector($ipLogRepository);
         $result = $subject->detect($user, $configuration);
 
-        self::assertTrue($result);
+        self::assertFalse($result);
     }
 
     public function testDetectReturnsTrueWhenIpIsNew(): void

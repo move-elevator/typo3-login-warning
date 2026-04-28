@@ -20,7 +20,7 @@ use MoveElevator\Typo3LoginWarning\Service\GeolocationServiceInterface;
 use MoveElevator\Typo3LoginWarning\Utility\{DeviceInfoParser, IpAddressMatcher};
 use Psr\Http\Message\ServerRequestInterface;
 use RuntimeException;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Core\Http\NormalizedParams;
 
 use function array_key_exists;
 use function is_array;
@@ -46,7 +46,7 @@ class NewIpDetector extends AbstractDetector
      */
     public function detect(array $userArray, array $configuration = [], ?ServerRequestInterface $request = null): bool
     {
-        $rawIpAddress = GeneralUtility::getIndpEnv('REMOTE_ADDR');
+        $rawIpAddress = $this->resolveRemoteAddress($request);
 
         if (
             array_key_exists('whitelist', $configuration)
@@ -88,6 +88,16 @@ class NewIpDetector extends AbstractDetector
                 $this->additionalData['deviceInfo'] = $deviceInfo;
             }
         }
+    }
+
+    private function resolveRemoteAddress(?ServerRequestInterface $request): string
+    {
+        $normalizedParams = $request?->getAttribute('normalizedParams');
+        if ($normalizedParams instanceof NormalizedParams) {
+            return $normalizedParams->getRemoteAddress();
+        }
+
+        return (string) ($_SERVER['REMOTE_ADDR'] ?? '');
     }
 
     private function generateIdentifierHash(int $userId, string $ipAddress): string
