@@ -59,6 +59,9 @@
 		"konradmichalik/php-cs-fixer-preset": {
 			"copyright": 2025
 		},
+		"platform": {
+			"php": "8.2"
+		},
 		"typo3/cms": {
 			"cms-package-dir": "{$vendor-dir}/typo3/cms",
 			"extension-key": "typo3_login_warning",
