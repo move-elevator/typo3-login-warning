@@ -510,11 +510,9 @@ final class NewIpDetectorTest extends TestCase
         $request = $this->createMock(\Psr\Http\Message\ServerRequestInterface::class);
         $request->method('getServerParams')->willReturn(['REMOTE_ADDR' => $ip]);
         $request->method('getAttribute')->willReturn(null);
-        if (null !== $userAgent) {
-            $request->method('getHeaderLine')
-                ->with('User-Agent')
-                ->willReturn($userAgent);
-        }
+        $request->method('getHeaderLine')
+            ->with('User-Agent')
+            ->willReturn($userAgent ?? '');
 
         return $request;
     }
