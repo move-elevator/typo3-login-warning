@@ -46,21 +46,22 @@ class LongTimeNoSeeDetector extends AbstractDetector
         }
         $lastLogin = $this->context->getPropertyFromAspect(Configuration::EXT_KEY, 'last_login');
 
-        if (null === $lastLogin) {
+        if (!$lastLogin instanceof DateTime) {
             return false;
         }
 
         $currentDate = new DateTime();
 
         $interval = $lastLogin->diff($currentDate);
+        $days = false === $interval->days ? 0 : $interval->days;
         $thresholdDays = (int) ($configuration['thresholdDays'] ?? self::DEFAULT_THRESHOLD_DAYS);
 
-        if ($interval->days <= $thresholdDays) {
+        if ($days <= $thresholdDays) {
             return false;
         }
 
         $this->additionalData = [
-            'daysSinceLastLogin' => $interval->days,
+            'daysSinceLastLogin' => $days,
         ];
 
         return true;

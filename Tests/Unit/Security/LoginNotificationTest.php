@@ -15,6 +15,7 @@ namespace MoveElevator\Typo3LoginWarning\Tests\Unit\Security;
 
 use MoveElevator\Typo3LoginWarning\Configuration;
 use MoveElevator\Typo3LoginWarning\Configuration\DetectorConfigurationBuilder;
+use MoveElevator\Typo3LoginWarning\Event\ModifyLoginNotificationEvent;
 use MoveElevator\Typo3LoginWarning\Registry\{DetectorRegistry, NotificationRegistry};
 use MoveElevator\Typo3LoginWarning\Security\LoginNotification;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -205,7 +206,7 @@ final class LoginNotificationTest extends TestCase
         $eventDispatcher = $this->createMock(EventDispatcherInterface::class);
         $eventDispatcher->expects(self::once())
             ->method('dispatch')
-            ->willReturnCallback(static function ($event) {
+            ->willReturnCallback(static function (ModifyLoginNotificationEvent $event) {
                 $event->preventNotification();
 
                 return $event;
