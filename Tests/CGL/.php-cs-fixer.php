@@ -14,7 +14,7 @@ declare(strict_types=1);
 use KonradMichalik\PhpCsFixerPreset\Config;
 use KonradMichalik\PhpCsFixerPreset\Package\{Author, CopyrightRange, Type};
 use KonradMichalik\PhpCsFixerPreset\Rules\Header;
-use KonradMichalik\PhpCsFixerPreset\Rules\Set\Set;
+use KonradMichalik\PhpCsFixerPreset\Rules\Set\RuleSet;
 use KonradMichalik\PhpDocBlockHeaderFixer\Generators\DocBlockHeader;
 use KonradMichalik\PhpDocBlockHeaderFixer\Rules\DocBlockHeaderFixer;
 use Symfony\Component\Finder\Finder;
@@ -34,7 +34,7 @@ return Config::create()
         ),
     )
     ->withRule(
-        Set::fromArray(
+        RuleSet::fromArray(
             DocBlockHeader::fromComposer()->__toArray(),
         ),
     )
