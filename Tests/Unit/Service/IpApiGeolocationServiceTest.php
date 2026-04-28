@@ -20,6 +20,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Message\{ResponseInterface, StreamInterface};
 use Psr\Log\{LoggerInterface, NullLogger};
+use ReflectionClass;
 use RuntimeException;
 use TYPO3\CMS\Core\Http\RequestFactory;
 
@@ -36,7 +37,7 @@ class IpApiGeolocationServiceTest extends TestCase
 
     protected function setUp(): void
     {
-        if ((new \ReflectionClass(RequestFactory::class))->isReadOnly()
+        if ((new ReflectionClass(RequestFactory::class))->isReadOnly()
             && version_compare(\PHPUnit\Runner\Version::id(), '11.5.0', '<')
         ) {
             self::markTestSkipped('Mocking readonly TYPO3 classes requires PHPUnit >= 11.5');
