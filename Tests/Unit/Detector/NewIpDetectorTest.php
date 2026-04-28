@@ -57,7 +57,7 @@ final class NewIpDetectorTest extends TestCase
         $user = $this->createMockUser(['uid' => 123]);
         $configuration = ['hashIpAddress' => true];
 
-        $GLOBALS['_SERVER']['REMOTE_ADDR'] = '192.168.1.100';
+        $request = $this->createMockRequest(ip: '192.168.1.100');
 
         $ipLogRepository = $this->createMock(IpLogRepository::class);
         // Should not be called as exception is thrown earlier
@@ -70,7 +70,7 @@ final class NewIpDetectorTest extends TestCase
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('No HMAC key configured for login warning extension');
 
-        $subject->detect($user, $configuration);
+        $subject->detect($user, $configuration, $request);
     }
 
     public function testDetectReturnsFalseWhenIpIsWhitelisted(): void
@@ -80,13 +80,16 @@ final class NewIpDetectorTest extends TestCase
             'whitelist' => ['192.168.1.1'],
         ];
 
-        $GLOBALS['_SERVER']['REMOTE_ADDR'] = '192.168.1.1';
+        $request = $this->createMockRequest(ip: '192.168.1.1');
 
         $ipLogRepository = $this->createMock(IpLogRepository::class);
-        $subject = new NewIpDetector($ipLogRepository);
-        $result = $subject->detect($user, $configuration);
+        $ipLogRepository->expects(self::never())->method('findByHash');
+        $ipLogRepository->expects(self::never())->method('addHash');
 
-        self::assertTrue($result);
+        $subject = new NewIpDetector($ipLogRepository);
+        $result = $subject->detect($user, $configuration, $request);
+
+        self::assertFalse($result);
     }
 
     public function testDetectReturnsTrueWhenIpIsNew(): void
@@ -94,7 +97,7 @@ final class NewIpDetectorTest extends TestCase
         $user = $this->createMockUser(['uid' => 123]);
         $configuration = ['hashIpAddress' => true];
 
-        $GLOBALS['_SERVER']['REMOTE_ADDR'] = '192.168.1.100';
+        $request = $this->createMockRequest(ip: '192.168.1.100');
 
         $ipLogRepository = $this->createMock(IpLogRepository::class);
         $ipLogRepository
@@ -109,7 +112,7 @@ final class NewIpDetectorTest extends TestCase
             ->with(self::matchesRegularExpression('/^[a-f0-9]{64}$/'));
 
         $subject = new NewIpDetector($ipLogRepository);
-        $result = $subject->detect($user, $configuration);
+        $result = $subject->detect($user, $configuration, $request);
 
         self::assertTrue($result);
     }
@@ -119,7 +122,7 @@ final class NewIpDetectorTest extends TestCase
         $user = $this->createMockUser(['uid' => 123]);
         $configuration = ['hashIpAddress' => true];
 
-        $GLOBALS['_SERVER']['REMOTE_ADDR'] = '192.168.1.100';
+        $request = $this->createMockRequest(ip: '192.168.1.100');
 
         $ipLogRepository = $this->createMock(IpLogRepository::class);
         $ipLogRepository
@@ -133,7 +136,7 @@ final class NewIpDetectorTest extends TestCase
             ->method('addHash');
 
         $subject = new NewIpDetector($ipLogRepository);
-        $result = $subject->detect($user, $configuration);
+        $result = $subject->detect($user, $configuration, $request);
 
         self::assertFalse($result);
     }
@@ -143,7 +146,7 @@ final class NewIpDetectorTest extends TestCase
         $user = $this->createMockUser(['uid' => 123]);
         $configuration = ['hashIpAddress' => false];
 
-        $GLOBALS['_SERVER']['REMOTE_ADDR'] = '192.168.1.100';
+        $request = $this->createMockRequest(ip: '192.168.1.100');
 
         $ipLogRepository = $this->createMock(IpLogRepository::class);
         $ipLogRepository
@@ -158,7 +161,7 @@ final class NewIpDetectorTest extends TestCase
             ->with(self::matchesRegularExpression('/^[a-f0-9]{64}$/'));
 
         $subject = new NewIpDetector($ipLogRepository);
-        $result = $subject->detect($user, $configuration);
+        $result = $subject->detect($user, $configuration, $request);
 
         self::assertTrue($result);
     }
@@ -168,7 +171,7 @@ final class NewIpDetectorTest extends TestCase
         $user = $this->createMockUser(['uid' => 123]);
         $configuration = [];
 
-        $GLOBALS['_SERVER']['REMOTE_ADDR'] = '192.168.1.100';
+        $request = $this->createMockRequest(ip: '192.168.1.100');
 
         $ipLogRepository = $this->createMock(IpLogRepository::class);
         $ipLogRepository
@@ -183,7 +186,7 @@ final class NewIpDetectorTest extends TestCase
             ->with(self::matchesRegularExpression('/^[a-f0-9]{64}$/'));
 
         $subject = new NewIpDetector($ipLogRepository);
-        $result = $subject->detect($user, $configuration);
+        $result = $subject->detect($user, $configuration, $request);
 
         self::assertTrue($result);
     }
@@ -196,7 +199,7 @@ final class NewIpDetectorTest extends TestCase
             'fetchGeolocation' => false,
         ];
 
-        $GLOBALS['_SERVER']['REMOTE_ADDR'] = '192.168.1.1';
+        $request = $this->createMockRequest(ip: '192.168.1.1');
 
         $ipLogRepository = $this->createMock(IpLogRepository::class);
         $geolocationService = $this->createMock(GeolocationServiceInterface::class);
@@ -215,7 +218,7 @@ final class NewIpDetectorTest extends TestCase
             ->method('addHash');
 
         $subject = new NewIpDetector($ipLogRepository, $geolocationService);
-        $result = $subject->detect($user, $configuration);
+        $result = $subject->detect($user, $configuration, $request);
 
         self::assertTrue($result);
         self::assertSame([], $subject->getAdditionalData());
@@ -236,7 +239,7 @@ final class NewIpDetectorTest extends TestCase
             'fetchGeolocation' => true,
         ];
 
-        $GLOBALS['_SERVER']['REMOTE_ADDR'] = '192.168.1.1';
+        $request = $this->createMockRequest(ip: '192.168.1.1');
 
         $ipLogRepository = $this->createMock(IpLogRepository::class);
         $geolocationService = $this->createMock(GeolocationServiceInterface::class);
@@ -255,7 +258,7 @@ final class NewIpDetectorTest extends TestCase
             ->method('addHash');
 
         $subject = new NewIpDetector($ipLogRepository, $geolocationService);
-        $result = $subject->detect($user, $configuration);
+        $result = $subject->detect($user, $configuration, $request);
 
         self::assertTrue($result);
         self::assertSame([], $subject->getAdditionalData());
@@ -319,9 +322,9 @@ final class NewIpDetectorTest extends TestCase
 
     public function testDetectAddsDeviceInfoWhenEnabled(): void
     {
-        $GLOBALS['_SERVER']['REMOTE_ADDR'] = '203.0.113.42';
         $request = $this->createMockRequest(
-            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            ip: '203.0.113.42',
         );
 
         $user = $this->createMockUser(['uid' => 123]);
@@ -351,8 +354,7 @@ final class NewIpDetectorTest extends TestCase
 
     public function testDetectDoesNotAddDeviceInfoWhenDisabled(): void
     {
-        $GLOBALS['_SERVER']['REMOTE_ADDR'] = '203.0.113.42';
-        $request = $this->createMockRequest('Mozilla/5.0');
+        $request = $this->createMockRequest(userAgent: 'Mozilla/5.0', ip: '203.0.113.42');
 
         $user = $this->createMockUser(['uid' => 123]);
         $configuration = ['includeDeviceInfo' => false];
@@ -375,9 +377,9 @@ final class NewIpDetectorTest extends TestCase
 
     public function testDetectAddsDeviceInfoByDefaultWhenNotConfigured(): void
     {
-        $GLOBALS['_SERVER']['REMOTE_ADDR'] = '203.0.113.42';
         $request = $this->createMockRequest(
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:120.0) Gecko/20100101 Firefox/120.0',
+            userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:120.0) Gecko/20100101 Firefox/120.0',
+            ip: '203.0.113.42',
         );
 
         $user = $this->createMockUser(['uid' => 123]);
@@ -403,8 +405,6 @@ final class NewIpDetectorTest extends TestCase
 
     public function testDetectDoesNotAddDeviceInfoWhenRequestIsNull(): void
     {
-        $GLOBALS['_SERVER']['REMOTE_ADDR'] = '203.0.113.42';
-
         $user = $this->createMockUser(['uid' => 123]);
         $configuration = ['includeDeviceInfo' => true];
 
@@ -426,8 +426,7 @@ final class NewIpDetectorTest extends TestCase
 
     public function testDetectDoesNotAddDeviceInfoWhenUserAgentIsEmpty(): void
     {
-        $GLOBALS['_SERVER']['REMOTE_ADDR'] = '203.0.113.42';
-        $request = $this->createMockRequest('');
+        $request = $this->createMockRequest(userAgent: '', ip: '203.0.113.42');
 
         $user = $this->createMockUser(['uid' => 123]);
         $configuration = ['includeDeviceInfo' => true];
@@ -450,8 +449,7 @@ final class NewIpDetectorTest extends TestCase
 
     public function testDetectParsesUnknownBrowser(): void
     {
-        $GLOBALS['_SERVER']['REMOTE_ADDR'] = '203.0.113.42';
-        $request = $this->createMockRequest('UnknownBot/1.0');
+        $request = $this->createMockRequest(userAgent: 'UnknownBot/1.0', ip: '203.0.113.42');
 
         $user = $this->createMockUser(['uid' => 123]);
         $configuration = ['includeDeviceInfo' => true];
@@ -475,8 +473,7 @@ final class NewIpDetectorTest extends TestCase
 
     public function testDetectParsesUnknownOperatingSystem(): void
     {
-        $GLOBALS['_SERVER']['REMOTE_ADDR'] = '203.0.113.42';
-        $request = $this->createMockRequest('UnknownOS/1.0');
+        $request = $this->createMockRequest(userAgent: 'UnknownOS/1.0', ip: '203.0.113.42');
 
         $user = $this->createMockUser(['uid' => 123]);
         $configuration = ['includeDeviceInfo' => true];
@@ -508,12 +505,14 @@ final class NewIpDetectorTest extends TestCase
         return $userData;
     }
 
-    private function createMockRequest(string $userAgent): \Psr\Http\Message\ServerRequestInterface&MockObject
+    private function createMockRequest(?string $userAgent = null, string $ip = '127.0.0.1'): \Psr\Http\Message\ServerRequestInterface&MockObject
     {
         $request = $this->createMock(\Psr\Http\Message\ServerRequestInterface::class);
+        $request->method('getServerParams')->willReturn(['REMOTE_ADDR' => $ip]);
+        $request->method('getAttribute')->willReturn(null);
         $request->method('getHeaderLine')
             ->with('User-Agent')
-            ->willReturn($userAgent);
+            ->willReturn($userAgent ?? '');
 
         return $request;
     }

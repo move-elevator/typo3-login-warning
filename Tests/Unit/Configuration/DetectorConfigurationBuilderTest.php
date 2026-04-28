@@ -20,6 +20,7 @@ use MoveElevator\Typo3LoginWarning\Detector\{LongTimeNoSeeDetector, NewIpDetecto
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use ReflectionClass;
 use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
 
 /**
@@ -35,6 +36,12 @@ final class DetectorConfigurationBuilderTest extends TestCase
 
     protected function setUp(): void
     {
+        if ((new ReflectionClass(ExtensionConfiguration::class))->isReadOnly()
+            && version_compare(\PHPUnit\Runner\Version::id(), '11.5.0', '<')
+        ) {
+            self::markTestSkipped('Mocking readonly TYPO3 classes requires PHPUnit >= 11.5');
+        }
+
         $this->extensionConfiguration = $this->createMock(ExtensionConfiguration::class);
         $this->subject = new DetectorConfigurationBuilder($this->extensionConfiguration);
         $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS'][Configuration::EXT_KEY] = [];
