@@ -52,8 +52,7 @@ class LongTimeNoSeeDetector extends AbstractDetector
 
         $currentDate = new DateTime();
 
-        $interval = $lastLogin->diff($currentDate);
-        $days = false === $interval->days ? 0 : $interval->days;
+        $days = $lastLogin->diff($currentDate)->days;
         $thresholdDays = (int) ($configuration['thresholdDays'] ?? self::DEFAULT_THRESHOLD_DAYS);
 
         if ($days <= $thresholdDays) {
