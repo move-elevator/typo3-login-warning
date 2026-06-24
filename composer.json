@@ -55,16 +55,7 @@
 		"platform": {
 			"php": "8.2"
 		},
-		"sort-packages": true,
-		"policy": {
-			"advisories": {
-				"ignore": [
-					"typo3/cms-backend",
-					"typo3/cms-beuser",
-					"typo3/cms-core"
-				]
-			}
-		}
+		"sort-packages": true
 	},
 	"extra": {
 		"konradmichalik/php-cs-fixer-preset": {
