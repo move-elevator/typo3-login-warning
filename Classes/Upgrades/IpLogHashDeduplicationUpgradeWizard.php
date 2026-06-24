@@ -13,22 +13,21 @@ declare(strict_types=1);
 
 namespace MoveElevator\Typo3LoginWarning\Upgrades;
 
-use TYPO3\CMS\Core\Database\Connection;
-use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Database\{Connection, ConnectionPool};
 use TYPO3\CMS\Install\Attribute\UpgradeWizard;
 use TYPO3\CMS\Install\Updates\UpgradeWizardInterface;
 
 /**
- * Removes duplicate empty-hash rows from the IP log table so that the
- * UNIQUE KEY on identifier_hash can be applied via database:updateschema.
- * Must run before the schema update step in the deployment pipeline.
+ * IpLogHashDeduplicationUpgradeWizard.
+ *
+ * @author Konrad Michalik <km@move-elevator.de>
  */
 #[UpgradeWizard('typo3LoginWarning_ipLogHashDeduplication')]
-final class IpLogHashDeduplicationUpgradeWizard implements UpgradeWizardInterface
+final readonly class IpLogHashDeduplicationUpgradeWizard implements UpgradeWizardInterface
 {
     private const TABLE_NAME = 'tx_typo3loginwarning_iplog';
 
-    public function __construct(private readonly ConnectionPool $connectionPool) {}
+    public function __construct(private ConnectionPool $connectionPool) {}
 
     public function getTitle(): string
     {
@@ -38,7 +37,7 @@ final class IpLogHashDeduplicationUpgradeWizard implements UpgradeWizardInterfac
     public function getDescription(): string
     {
         return 'Removes invalid entries with an empty identifier_hash from the IP log table '
-            . 'to allow the UNIQUE KEY migration to be applied via database:updateschema.';
+            .'to allow the UNIQUE KEY migration to be applied via database:updateschema.';
     }
 
     public function updateNecessary(): bool
@@ -68,7 +67,7 @@ final class IpLogHashDeduplicationUpgradeWizard implements UpgradeWizardInterfac
     {
         $queryBuilder = $this->connectionPool->getQueryBuilderForTable(self::TABLE_NAME);
 
-        return (bool)$queryBuilder
+        return (bool) $queryBuilder
             ->count('uid')
             ->from(self::TABLE_NAME)
             ->where(
