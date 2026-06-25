@@ -55,7 +55,10 @@
 		"platform": {
 			"php": "8.2"
 		},
-		"sort-packages": true
+		"sort-packages": true,
+		"audit": {
+			"block-insecure": false
+		}
 	},
 	"extra": {
 		"konradmichalik/php-cs-fixer-preset": {
