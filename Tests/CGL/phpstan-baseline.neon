@@ -1,2 +1,12 @@
 parameters:
-	ignoreErrors: []
+	ignoreErrors:
+		-
+			identifier: attribute.deprecated
+			path: ../../Classes/Upgrades/IpLogHashDeduplicationUpgradeWizard.php
+			message: '#TYPO3\\CMS\\Install\\Attribute\\UpgradeWizard#'
+			count: 1
+		-
+			identifier: class.implementsDeprecatedInterface
+			path: ../../Classes/Upgrades/IpLogHashDeduplicationUpgradeWizard.php
+			message: '#TYPO3\\CMS\\Install\\Updates\\UpgradeWizardInterface#'
+			count: 1

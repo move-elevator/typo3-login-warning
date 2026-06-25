@@ -52,6 +52,9 @@
 			"typo3/class-alias-loader": true,
 			"typo3/cms-composer-installers": true
 		},
+		"audit": {
+			"block-insecure": false
+		},
 		"platform": {
 			"php": "8.2"
 		},
