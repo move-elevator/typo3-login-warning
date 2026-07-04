@@ -23,6 +23,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Authentication\Event\AfterUserLoggedInEvent;
 
@@ -170,6 +171,129 @@ final class LoginNotificationTest extends TestCase
             ->method('build')
             ->with($mockDetector::class)
             ->willReturn(['notificationReceiver' => 'recipients']);
+
+        ($this->subject)($event);
+    }
+
+    public function testDetectorExceptionDoesNotBreakLoginAndNextDetectorRuns(): void
+    {
+        $user = $this->createMock(BackendUserAuthentication::class);
+        $user->user = ['uid' => 123, 'username' => 'testuser'];
+        $request = $this->createMock(ServerRequestInterface::class);
+        $event = new AfterUserLoggedInEvent($user, $request);
+
+        $throwingDetector = $this->createMock(\MoveElevator\Typo3LoginWarning\Detector\DetectorInterface::class);
+        $throwingDetector->method('shouldDetectForUser')->willReturn(true);
+        $throwingDetector->expects(self::once())
+            ->method('detect')
+            ->willThrowException(new RuntimeException('Detector failure'));
+
+        $matchingDetector = $this->createMock(\MoveElevator\Typo3LoginWarning\Detector\DetectorInterface::class);
+        $matchingDetector->method('shouldDetectForUser')->willReturn(true);
+        $matchingDetector->expects(self::once())->method('detect')->willReturn(true);
+        $matchingDetector->method('getAdditionalData')->willReturn([]);
+
+        $mockNotifier = $this->createMock(\MoveElevator\Typo3LoginWarning\Notification\NotifierInterface::class);
+        $mockNotifier->expects(self::once())->method('notify');
+
+        $this->subject = new LoginNotification(
+            new DetectorRegistry([$throwingDetector, $matchingDetector]),
+            $this->configBuilder,
+            new NotificationRegistry([$mockNotifier]),
+            $this->eventDispatcher,
+        );
+        $this->subject->setLogger($this->logger);
+
+        $this->configBuilder->method('buildNotificationConfig')->willReturn([]);
+        $this->configBuilder->method('isActive')->willReturn(true);
+        $this->configBuilder->method('build')->willReturn([]);
+
+        $this->logger->expects(self::once())
+            ->method('error')
+            ->with('Login warning detector "{detector}" failed', self::callback(
+                static fn (array $context): bool => $context['exception'] instanceof RuntimeException,
+            ));
+
+        ($this->subject)($event);
+    }
+
+    public function testNotifierExceptionDoesNotBreakLoginAndOtherNotifiersRun(): void
+    {
+        $user = $this->createMock(BackendUserAuthentication::class);
+        $user->user = ['uid' => 123, 'username' => 'testuser'];
+        $request = $this->createMock(ServerRequestInterface::class);
+        $event = new AfterUserLoggedInEvent($user, $request);
+
+        $mockDetector = $this->createMock(\MoveElevator\Typo3LoginWarning\Detector\DetectorInterface::class);
+        $mockDetector->method('shouldDetectForUser')->willReturn(true);
+        $mockDetector->method('detect')->willReturn(true);
+        $mockDetector->method('getAdditionalData')->willReturn([]);
+
+        $throwingNotifier = $this->createMock(\MoveElevator\Typo3LoginWarning\Notification\NotifierInterface::class);
+        $throwingNotifier->expects(self::once())
+            ->method('notify')
+            ->willThrowException(new RuntimeException('Notifier failure'));
+
+        $workingNotifier = $this->createMock(\MoveElevator\Typo3LoginWarning\Notification\NotifierInterface::class);
+        $workingNotifier->expects(self::once())->method('notify');
+
+        $this->subject = new LoginNotification(
+            new DetectorRegistry([$mockDetector]),
+            $this->configBuilder,
+            new NotificationRegistry([$throwingNotifier, $workingNotifier]),
+            $this->eventDispatcher,
+        );
+        $this->subject->setLogger($this->logger);
+
+        $this->configBuilder->method('buildNotificationConfig')->willReturn([]);
+        $this->configBuilder->method('isActive')->willReturn(true);
+        $this->configBuilder->method('build')->willReturn([]);
+
+        $this->logger->expects(self::once())
+            ->method('error')
+            ->with('Login warning notifier "{notifier}" failed', self::callback(
+                static fn (array $context): bool => $context['exception'] instanceof RuntimeException,
+            ));
+
+        ($this->subject)($event);
+    }
+
+    public function testEventListenerExceptionDoesNotBreakLogin(): void
+    {
+        $user = $this->createMock(BackendUserAuthentication::class);
+        $user->user = ['uid' => 123, 'username' => 'testuser'];
+        $request = $this->createMock(ServerRequestInterface::class);
+        $event = new AfterUserLoggedInEvent($user, $request);
+
+        $mockDetector = $this->createMock(\MoveElevator\Typo3LoginWarning\Detector\DetectorInterface::class);
+        $mockDetector->method('shouldDetectForUser')->willReturn(true);
+        $mockDetector->method('detect')->willReturn(true);
+        $mockDetector->method('getAdditionalData')->willReturn([]);
+
+        $mockNotifier = $this->createMock(\MoveElevator\Typo3LoginWarning\Notification\NotifierInterface::class);
+        $mockNotifier->expects(self::never())->method('notify');
+
+        $eventDispatcher = $this->createMock(EventDispatcherInterface::class);
+        $eventDispatcher->method('dispatch')
+            ->willThrowException(new RuntimeException('Listener failure'));
+
+        $this->subject = new LoginNotification(
+            new DetectorRegistry([$mockDetector]),
+            $this->configBuilder,
+            new NotificationRegistry([$mockNotifier]),
+            $eventDispatcher,
+        );
+        $this->subject->setLogger($this->logger);
+
+        $this->configBuilder->method('buildNotificationConfig')->willReturn([]);
+        $this->configBuilder->method('isActive')->willReturn(true);
+        $this->configBuilder->method('build')->willReturn([]);
+
+        $this->logger->expects(self::once())
+            ->method('error')
+            ->with('Login warning notification failed', self::callback(
+                static fn (array $context): bool => $context['exception'] instanceof RuntimeException,
+            ));
 
         ($this->subject)($event);
     }
