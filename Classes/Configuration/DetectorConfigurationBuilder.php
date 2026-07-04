@@ -137,7 +137,7 @@ class DetectorConfigurationBuilder implements LoggerAwareInterface
     {
         return [
             'hashIpAddress' => (bool) ($config['hashIpAddress'] ?? true),
-            'fetchGeolocation' => (bool) ($config['fetchGeolocation'] ?? true),
+            'fetchGeolocation' => (bool) ($config['fetchGeolocation'] ?? false),
             'affectedUsers' => $config['affectedUsers'] ?? 'all',
             'notificationReceiver' => $config['notificationReceiver'] ?? 'recipients',
             'whitelist' => $this->parseCommaSeparatedList($config['whitelist'] ?? '127.0.0.1'),
