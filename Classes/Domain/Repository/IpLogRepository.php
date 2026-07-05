@@ -63,6 +63,34 @@ class IpLogRepository
             ->executeStatement();
     }
 
+    /**
+     * @throws Exception
+     */
+    public function countEntriesLastSeenBefore(int $timestamp): int
+    {
+        $queryBuilder = $this->connectionPool->getQueryBuilderForTable(self::TABLE_NAME);
+
+        return (int) $queryBuilder
+            ->count('uid')
+            ->from(self::TABLE_NAME)
+            ->where(
+                $queryBuilder->expr()->lt('tstamp', $queryBuilder->createNamedParameter($timestamp, Connection::PARAM_INT)),
+            )
+            ->executeQuery()->fetchOne();
+    }
+
+    public function deleteEntriesLastSeenBefore(int $timestamp): int
+    {
+        $queryBuilder = $this->connectionPool->getQueryBuilderForTable(self::TABLE_NAME);
+
+        return $queryBuilder
+            ->delete(self::TABLE_NAME)
+            ->where(
+                $queryBuilder->expr()->lt('tstamp', $queryBuilder->createNamedParameter($timestamp, Connection::PARAM_INT)),
+            )
+            ->executeStatement();
+    }
+
     private function updateTimestamp(string $identifierHash): void
     {
         $queryBuilder = $this->connectionPool->getQueryBuilderForTable(self::TABLE_NAME);

@@ -191,4 +191,54 @@ final class IpLogRepositoryTest extends TestCase
 
         $this->subject->addHash($identifierHash);
     }
+
+    public function testCountEntriesLastSeenBefore(): void
+    {
+        $this->queryBuilder->expects(self::once())
+            ->method('count')
+            ->with('uid')
+            ->willReturnSelf();
+        $this->queryBuilder->method('from')->willReturnSelf();
+        $this->queryBuilder->expects(self::once())
+            ->method('createNamedParameter')
+            ->with(12345, Connection::PARAM_INT)
+            ->willReturn(':tstamp');
+        $this->expressionBuilder->method('lt')
+            ->with('tstamp', ':tstamp')
+            ->willReturn('tstamp < :tstamp');
+        $this->queryBuilder->method('where')->willReturnSelf();
+
+        $result = $this->createMock(Result::class);
+        $result->expects(self::once())
+            ->method('fetchOne')
+            ->willReturn('3');
+
+        $this->queryBuilder->expects(self::once())
+            ->method('executeQuery')
+            ->willReturn($result);
+
+        self::assertSame(3, $this->subject->countEntriesLastSeenBefore(12345));
+    }
+
+    public function testDeleteEntriesLastSeenBefore(): void
+    {
+        $this->queryBuilder->expects(self::once())
+            ->method('delete')
+            ->with('tx_typo3loginwarning_iplog')
+            ->willReturnSelf();
+        $this->queryBuilder->expects(self::once())
+            ->method('createNamedParameter')
+            ->with(12345, Connection::PARAM_INT)
+            ->willReturn(':tstamp');
+        $this->expressionBuilder->method('lt')
+            ->with('tstamp', ':tstamp')
+            ->willReturn('tstamp < :tstamp');
+        $this->queryBuilder->method('where')->willReturnSelf();
+
+        $this->queryBuilder->expects(self::once())
+            ->method('executeStatement')
+            ->willReturn(7);
+
+        self::assertSame(7, $this->subject->deleteEntriesLastSeenBefore(12345));
+    }
 }
