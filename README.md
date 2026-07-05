@@ -104,6 +104,19 @@ An IP geolocation lookup and a device information check can be enabled to add mo
 $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['typo3_login_warning']['hmacKey'] = 'your-secure-random-key';
 ```
 
+#### IP log cleanup
+
+The IP log table grows with every new (user, IP) combination — especially when clients use IPv6 privacy extensions with rotating addresses. To enforce a retention period, delete entries that have not been seen for a given number of days:
+
+``` bash
+vendor/bin/typo3 typo3loginwarning:iplog:cleanup --days 365
+```
+
+Use `--dry-run` to only report how many entries would be deleted. The command is schedulable, e.g. via the TYPO3 scheduler "Execute console commands" task.
+
+> [!NOTE]
+> After an entry has been deleted, the next login from that IP address triggers a new-IP notification again — that is the intended effect of a retention period.
+
 #### Geolocation
 
 If `Fetch Geolocation` is enabled, the extension will use the [ip-api.com](https://ip-api.com/) service to fetch geolocation information for the IP address. Only public IP addresses will be looked up to respect privacy.
