@@ -33,6 +33,13 @@ services:
     tags:
       - { name: typo3_login_warning.notifier }
 
+  MoveElevator\Typo3LoginWarning\Command\CleanupIpLogCommand:
+    tags:
+      - name: console.command
+        command: 'typo3loginwarning:iplog:cleanup'
+        description: 'Delete IP log entries that have not been seen for a given number of days'
+        schedulable: true
+
   MoveElevator\Typo3LoginWarning\Security\LoginNotification:
     tags:
       - name: event.listener

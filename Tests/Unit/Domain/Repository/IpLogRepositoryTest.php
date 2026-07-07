@@ -14,10 +14,13 @@ declare(strict_types=1);
 namespace MoveElevator\Typo3LoginWarning\Tests\Unit\Domain\Repository;
 
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
+use Doctrine\DBAL\Result;
 use MoveElevator\Typo3LoginWarning\Domain\Repository\IpLogRepository;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TYPO3\CMS\Core\Database\{Connection, ConnectionPool};
+use TYPO3\CMS\Core\Database\Query\Expression\ExpressionBuilder;
+use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 
 use function is_int;
 
@@ -30,17 +33,29 @@ use function is_int;
 final class IpLogRepositoryTest extends TestCase
 {
     private Connection&MockObject $connection;
+    private QueryBuilder&MockObject $queryBuilder;
+    private ExpressionBuilder&MockObject $expressionBuilder;
     private IpLogRepository $subject;
 
     protected function setUp(): void
     {
         $this->connection = $this->createMock(Connection::class);
+        $this->queryBuilder = $this->createMock(QueryBuilder::class);
+        $this->expressionBuilder = $this->createMock(ExpressionBuilder::class);
 
         $connectionPool = $this->createMock(ConnectionPool::class);
         $connectionPool
             ->method('getConnectionForTable')
             ->with('tx_typo3loginwarning_iplog')
             ->willReturn($this->connection);
+        $connectionPool
+            ->method('getQueryBuilderForTable')
+            ->with('tx_typo3loginwarning_iplog')
+            ->willReturn($this->queryBuilder);
+
+        $this->queryBuilder
+            ->method('expr')
+            ->willReturn($this->expressionBuilder);
 
         $this->subject = new IpLogRepository($connectionPool);
     }
@@ -97,5 +112,55 @@ final class IpLogRepositoryTest extends TestCase
             ->willThrowException($this->createMock(UniqueConstraintViolationException::class));
 
         self::assertFalse($this->subject->registerIdentifier($identifierHash));
+    }
+
+    public function testCountEntriesLastSeenBefore(): void
+    {
+        $this->queryBuilder->expects(self::once())
+            ->method('count')
+            ->with('uid')
+            ->willReturnSelf();
+        $this->queryBuilder->method('from')->willReturnSelf();
+        $this->queryBuilder->expects(self::once())
+            ->method('createNamedParameter')
+            ->with(12345, Connection::PARAM_INT)
+            ->willReturn(':tstamp');
+        $this->expressionBuilder->method('lt')
+            ->with('tstamp', ':tstamp')
+            ->willReturn('tstamp < :tstamp');
+        $this->queryBuilder->method('where')->willReturnSelf();
+
+        $result = $this->createMock(Result::class);
+        $result->expects(self::once())
+            ->method('fetchOne')
+            ->willReturn('3');
+
+        $this->queryBuilder->expects(self::once())
+            ->method('executeQuery')
+            ->willReturn($result);
+
+        self::assertSame(3, $this->subject->countEntriesLastSeenBefore(12345));
+    }
+
+    public function testDeleteEntriesLastSeenBefore(): void
+    {
+        $this->queryBuilder->expects(self::once())
+            ->method('delete')
+            ->with('tx_typo3loginwarning_iplog')
+            ->willReturnSelf();
+        $this->queryBuilder->expects(self::once())
+            ->method('createNamedParameter')
+            ->with(12345, Connection::PARAM_INT)
+            ->willReturn(':tstamp');
+        $this->expressionBuilder->method('lt')
+            ->with('tstamp', ':tstamp')
+            ->willReturn('tstamp < :tstamp');
+        $this->queryBuilder->method('where')->willReturnSelf();
+
+        $this->queryBuilder->expects(self::once())
+            ->method('executeStatement')
+            ->willReturn(7);
+
+        self::assertSame(7, $this->subject->deleteEntriesLastSeenBefore(12345));
     }
 }

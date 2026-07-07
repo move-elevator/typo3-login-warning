@@ -15,7 +15,7 @@ namespace MoveElevator\Typo3LoginWarning\Domain\Repository;
 
 use Doctrine\DBAL\Exception;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
-use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Database\{Connection, ConnectionPool};
 
 /**
  * IpLogRepository.
@@ -62,5 +62,33 @@ class IpLogRepository
         }
 
         return true;
+    }
+
+    /**
+     * @throws Exception
+     */
+    public function countEntriesLastSeenBefore(int $timestamp): int
+    {
+        $queryBuilder = $this->connectionPool->getQueryBuilderForTable(self::TABLE_NAME);
+
+        return (int) $queryBuilder
+            ->count('uid')
+            ->from(self::TABLE_NAME)
+            ->where(
+                $queryBuilder->expr()->lt('tstamp', $queryBuilder->createNamedParameter($timestamp, Connection::PARAM_INT)),
+            )
+            ->executeQuery()->fetchOne();
+    }
+
+    public function deleteEntriesLastSeenBefore(int $timestamp): int
+    {
+        $queryBuilder = $this->connectionPool->getQueryBuilderForTable(self::TABLE_NAME);
+
+        return $queryBuilder
+            ->delete(self::TABLE_NAME)
+            ->where(
+                $queryBuilder->expr()->lt('tstamp', $queryBuilder->createNamedParameter($timestamp, Connection::PARAM_INT)),
+            )
+            ->executeStatement();
     }
 }
