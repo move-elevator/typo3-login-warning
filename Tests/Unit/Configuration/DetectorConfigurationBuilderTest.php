@@ -115,7 +115,6 @@ final class DetectorConfigurationBuilderTest extends TestCase
         $result = $this->subject->build(NewIpDetector::class);
 
         self::assertSame([
-            'hashIpAddress' => true,
             'fetchGeolocation' => false,
             'affectedUsers' => 'all',
             'notificationReceiver' => 'recipients',
@@ -131,7 +130,6 @@ final class DetectorConfigurationBuilderTest extends TestCase
             ->willReturn([
                 'newIp' => [
                     'active' => true,
-                    'hashIpAddress' => false,
                     'fetchGeolocation' => true,
                     'affectedUsers' => 'admins',
                     'notificationReceiver' => 'both',
@@ -142,7 +140,6 @@ final class DetectorConfigurationBuilderTest extends TestCase
         $result = $this->subject->build(NewIpDetector::class);
 
         self::assertSame([
-            'hashIpAddress' => false,
             'fetchGeolocation' => true,
             'affectedUsers' => 'admins',
             'notificationReceiver' => 'both',
@@ -326,7 +323,6 @@ final class DetectorConfigurationBuilderTest extends TestCase
 
         // Should get defaults from buildNewIpConfig
         self::assertSame([
-            'hashIpAddress' => true,
             'fetchGeolocation' => false,
             'affectedUsers' => 'all',
             'notificationReceiver' => 'recipients',
@@ -345,7 +341,6 @@ final class DetectorConfigurationBuilderTest extends TestCase
         $result = $this->subject->build(NewIpDetector::class);
 
         self::assertSame([
-            'hashIpAddress' => true,
             'fetchGeolocation' => false,
             'affectedUsers' => 'all',
             'notificationReceiver' => 'recipients',

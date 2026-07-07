@@ -78,7 +78,7 @@ Detects logins from new IP addresses and triggers a warning email.
 
 > The user "admin" logged in from a new IP address 192.168.97.5 at the site "EXT:typo3-login-warning Dev Environment".
 
-The IP address will be stored and can be hashed for privacy reasons. You can also define a whitelist of IP addresses that will not trigger a warning. 
+Only an HMAC-SHA-256 hash of the user/IP combination is stored — never the raw IP address. You can also define a whitelist of IP addresses that will not trigger a warning. 
 An IP geolocation lookup and a device information check can be enabled to add more information to the notification email.
 
 > [!IMPORTANT]
@@ -90,7 +90,6 @@ An IP geolocation lookup and a device information check can be enabled to add mo
 | Setting | Description | Default     |
 |---------|-------------|-------------|
 | **Active** | Enable New IP detector | `true`      |
-| **Hash IP Addresses** | Hash IP addresses for privacy (HMAC‑SHA‑256) | `true`      |
 | **Fetch Geolocation** | Enable IP geolocation lookup (opt-in, see [Geolocation](#geolocation)) | `false`     |
 | **Include Device Information** | Include browser and OS information in notification emails | `true`      |
 | **IP Whitelist** | Comma-separated list of whitelisted IPs/networks (supports CIDR notation like `192.168.1.0/24`) | `127.0.0.1` |
@@ -98,7 +97,7 @@ An IP geolocation lookup and a device information check can be enabled to add mo
 | **Notification Receiver** | Who should receive the notification: `Email Recipients`, `Logged-In User`, `Both` | `Email Recipients` |
 
 > [!NOTE]
-> IP address hashing requires an HMAC key. The extension automatically uses TYPO3's `$GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey']` as fallback. For additional security, you can set a dedicated key.
+> IP address hashing requires an HMAC key. The extension automatically uses TYPO3's `$GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey']` as fallback. Setting a dedicated random key is recommended so the stored hashes are not tied to the global encryption key. Note that changing the key invalidates all stored hashes — every known IP will trigger one new-IP notification again.
 
 ```php
 $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['typo3_login_warning']['hmacKey'] = 'your-secure-random-key';

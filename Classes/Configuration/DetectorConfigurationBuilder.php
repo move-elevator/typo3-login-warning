@@ -136,7 +136,6 @@ class DetectorConfigurationBuilder implements LoggerAwareInterface
     private function buildNewIpConfig(array $config): array
     {
         return [
-            'hashIpAddress' => (bool) ($config['hashIpAddress'] ?? true),
             'fetchGeolocation' => (bool) ($config['fetchGeolocation'] ?? false),
             'affectedUsers' => $config['affectedUsers'] ?? 'all',
             'notificationReceiver' => $config['notificationReceiver'] ?? 'recipients',
