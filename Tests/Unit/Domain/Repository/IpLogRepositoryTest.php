@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace MoveElevator\Typo3LoginWarning\Tests\Unit\Domain\Repository;
 
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\DBAL\Result;
 use MoveElevator\Typo3LoginWarning\Domain\Repository\IpLogRepository;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -31,18 +32,23 @@ use function is_int;
  */
 final class IpLogRepositoryTest extends TestCase
 {
-    private ConnectionPool&MockObject $connectionPool;
+    private Connection&MockObject $connection;
     private QueryBuilder&MockObject $queryBuilder;
     private ExpressionBuilder&MockObject $expressionBuilder;
     private IpLogRepository $subject;
 
     protected function setUp(): void
     {
-        $this->connectionPool = $this->createMock(ConnectionPool::class);
+        $this->connection = $this->createMock(Connection::class);
         $this->queryBuilder = $this->createMock(QueryBuilder::class);
         $this->expressionBuilder = $this->createMock(ExpressionBuilder::class);
 
-        $this->connectionPool
+        $connectionPool = $this->createMock(ConnectionPool::class);
+        $connectionPool
+            ->method('getConnectionForTable')
+            ->with('tx_typo3loginwarning_iplog')
+            ->willReturn($this->connection);
+        $connectionPool
             ->method('getQueryBuilderForTable')
             ->with('tx_typo3loginwarning_iplog')
             ->willReturn($this->queryBuilder);
@@ -51,144 +57,110 @@ final class IpLogRepositoryTest extends TestCase
             ->method('expr')
             ->willReturn($this->expressionBuilder);
 
-        $this->subject = new IpLogRepository($this->connectionPool);
+        $this->subject = new IpLogRepository($connectionPool);
     }
 
-    public function testFindByHashReturnsTrueAndUpdatesTimestamp(): void
+    public function testRegisterIdentifierReturnsFalseAndUpdatesTimestampForKnownIdentifier(): void
     {
         $identifierHash = 'abc123def456';
 
-        // First call for SELECT query
-        $selectQueryBuilder = $this->createMock(QueryBuilder::class);
-        $selectQueryBuilder->expects(self::once())
-            ->method('select')
-            ->with('*')
-            ->willReturnSelf();
-
-        $selectQueryBuilder->expects(self::once())
-            ->method('from')
-            ->with('tx_typo3loginwarning_iplog')
-            ->willReturnSelf();
-
-        $selectQueryBuilder->expects(self::once())
-            ->method('createNamedParameter')
-            ->with($identifierHash, Connection::PARAM_STR)
-            ->willReturn(':hash');
-
-        $selectQueryBuilder->method('expr')
-            ->willReturn($this->expressionBuilder);
-
-        $this->expressionBuilder->method('eq')
-            ->with('identifier_hash', ':hash')
-            ->willReturn('identifier_hash = :hash');
-
-        $selectQueryBuilder->expects(self::once())
-            ->method('where')
-            ->with('identifier_hash = :hash')
-            ->willReturnSelf();
-
-        $result = $this->createMock(Result::class);
-        $result->expects(self::once())
-            ->method('fetchAssociative')
-            ->willReturn(['identifier_hash' => $identifierHash]);
-
-        $selectQueryBuilder->expects(self::once())
-            ->method('executeQuery')
-            ->willReturn($result);
-
-        // Second call for UPDATE query
-        $updateQueryBuilder = $this->createMock(QueryBuilder::class);
-        $updateQueryBuilder->expects(self::once())
+        $this->connection->expects(self::once())
             ->method('update')
-            ->with('tx_typo3loginwarning_iplog')
-            ->willReturnSelf();
-
-        $updateQueryBuilder->expects(self::once())
-            ->method('set')
-            ->with('tstamp', self::callback(static fn ($value): bool => is_int($value) && $value > 0))
-            ->willReturnSelf();
-
-        $updateQueryBuilder->expects(self::once())
-            ->method('createNamedParameter')
-            ->with($identifierHash, Connection::PARAM_STR)
-            ->willReturn(':hash');
-
-        $updateQueryBuilder->method('expr')
-            ->willReturn($this->expressionBuilder);
-
-        $updateQueryBuilder->expects(self::once())
-            ->method('where')
-            ->with('identifier_hash = :hash')
-            ->willReturnSelf();
-
-        $updateQueryBuilder->expects(self::once())
-            ->method('executeStatement')
+            ->with(
+                'tx_typo3loginwarning_iplog',
+                self::callback(static fn (array $data): bool => is_int($data['tstamp']) && $data['tstamp'] > 0),
+                ['identifier_hash' => $identifierHash],
+            )
             ->willReturn(1);
 
-        // Mock ConnectionPool to return different query builders
-        $connectionPool = $this->createMock(ConnectionPool::class);
-        $connectionPool
-            ->expects(self::exactly(2))
-            ->method('getQueryBuilderForTable')
-            ->with('tx_typo3loginwarning_iplog')
-            ->willReturnCallback(static function () use ($selectQueryBuilder, $updateQueryBuilder): QueryBuilder {
-                static $callCount = 0;
-                ++$callCount;
+        $this->connection->expects(self::never())->method('insert');
 
-                return 1 === $callCount ? $selectQueryBuilder : $updateQueryBuilder;
-            });
-
-        $subject = new IpLogRepository($connectionPool);
-
-        $found = $subject->findByHash($identifierHash);
-
-        self::assertTrue($found);
+        self::assertFalse($this->subject->registerIdentifier($identifierHash));
     }
 
-    public function testFindByHashReturnsFalse(): void
+    public function testRegisterIdentifierInsertsAndReturnsTrueForNewIdentifier(): void
     {
         $identifierHash = 'abc123def456';
 
-        $this->queryBuilder->method('select')->willReturnSelf();
+        $this->connection->expects(self::once())
+            ->method('update')
+            ->willReturn(0);
+
+        $this->connection->expects(self::once())
+            ->method('insert')
+            ->with(
+                'tx_typo3loginwarning_iplog',
+                self::callback(static fn (array $data): bool => $data['identifier_hash'] === $identifierHash
+                    && is_int($data['tstamp'])
+                    && $data['tstamp'] > 0),
+            )
+            ->willReturn(1);
+
+        self::assertTrue($this->subject->registerIdentifier($identifierHash));
+    }
+
+    public function testRegisterIdentifierReturnsFalseWhenConcurrentLoginInsertedFirst(): void
+    {
+        $identifierHash = 'abc123def456';
+
+        $this->connection->expects(self::once())
+            ->method('update')
+            ->willReturn(0);
+
+        $this->connection->expects(self::once())
+            ->method('insert')
+            ->willThrowException($this->createMock(UniqueConstraintViolationException::class));
+
+        self::assertFalse($this->subject->registerIdentifier($identifierHash));
+    }
+
+    public function testCountEntriesLastSeenBefore(): void
+    {
+        $this->queryBuilder->expects(self::once())
+            ->method('count')
+            ->with('uid')
+            ->willReturnSelf();
         $this->queryBuilder->method('from')->willReturnSelf();
-        $this->queryBuilder->method('createNamedParameter')->willReturn(':param');
-        $this->expressionBuilder->method('eq')->willReturn('field = :param');
+        $this->queryBuilder->expects(self::once())
+            ->method('createNamedParameter')
+            ->with(12345, Connection::PARAM_INT)
+            ->willReturn(':tstamp');
+        $this->expressionBuilder->method('lt')
+            ->with('tstamp', ':tstamp')
+            ->willReturn('tstamp < :tstamp');
         $this->queryBuilder->method('where')->willReturnSelf();
 
         $result = $this->createMock(Result::class);
         $result->expects(self::once())
-            ->method('fetchAssociative')
-            ->willReturn(false);
+            ->method('fetchOne')
+            ->willReturn('3');
 
         $this->queryBuilder->expects(self::once())
             ->method('executeQuery')
             ->willReturn($result);
 
-        $found = $this->subject->findByHash($identifierHash);
-
-        self::assertFalse($found);
+        self::assertSame(3, $this->subject->countEntriesLastSeenBefore(12345));
     }
 
-    public function testAddHash(): void
+    public function testDeleteEntriesLastSeenBefore(): void
     {
-        $identifierHash = 'abc123def456';
-
         $this->queryBuilder->expects(self::once())
-            ->method('insert')
+            ->method('delete')
             ->with('tx_typo3loginwarning_iplog')
             ->willReturnSelf();
-
         $this->queryBuilder->expects(self::once())
-            ->method('values')
-            ->with([
-                'identifier_hash' => $identifierHash,
-            ])
-            ->willReturnSelf();
+            ->method('createNamedParameter')
+            ->with(12345, Connection::PARAM_INT)
+            ->willReturn(':tstamp');
+        $this->expressionBuilder->method('lt')
+            ->with('tstamp', ':tstamp')
+            ->willReturn('tstamp < :tstamp');
+        $this->queryBuilder->method('where')->willReturnSelf();
 
         $this->queryBuilder->expects(self::once())
             ->method('executeStatement')
-            ->willReturn(1);
+            ->willReturn(7);
 
-        $this->subject->addHash($identifierHash);
+        self::assertSame(7, $this->subject->deleteEntriesLastSeenBefore(12345));
     }
 }

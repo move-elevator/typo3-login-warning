@@ -20,6 +20,7 @@ use MoveElevator\Typo3LoginWarning\Registry\{DetectorRegistry, NotificationRegis
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\{LoggerAwareInterface, LoggerAwareTrait};
+use Throwable;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Authentication\Event\AfterUserLoggedInEvent;
 use TYPO3\CMS\Core\Core\SystemEnvironmentBuilder;
@@ -76,7 +77,7 @@ final class LoginNotification implements LoggerAwareInterface
                 continue;
             }
 
-            if ($detector->detect($currentUserArray, $currentDetectorConfiguration, $event->getRequest())) {
+            if ($this->detectSafely($detector, $currentUserArray, $currentDetectorConfiguration, $event->getRequest())) {
                 $currentDetector = $detector;
                 break;
             }
@@ -86,13 +87,49 @@ final class LoginNotification implements LoggerAwareInterface
             return;
         }
 
-        $this->sendNotification(
-            $currentUser,
-            $event->getRequest() ?? $GLOBALS['TYPO3_REQUEST'] ?? ServerRequestFactory::fromGlobals()->withAttribute('applicationType', SystemEnvironmentBuilder::REQUESTTYPE_BE),
-            $currentDetector,
-            $globalNotificationConfig,
-            $currentDetectorConfiguration,
-        );
+        try {
+            $this->sendNotification(
+                $currentUser,
+                $this->resolveRequest($event->getRequest()),
+                $currentDetector,
+                $globalNotificationConfig,
+                $currentDetectorConfiguration,
+            );
+        } catch (Throwable $exception) {
+            // Event listeners or notification setup must never break the backend login itself.
+            $this->logger?->error('Login warning notification failed', [
+                'detector' => $currentDetector::class,
+                'userId' => $currentUserArray['uid'] ?? 0,
+                'exception' => $exception,
+            ]);
+        }
+    }
+
+    /**
+     * @param array<string, mixed> $userArray
+     * @param array<string, mixed> $configuration
+     */
+    private function detectSafely(DetectorInterface $detector, array $userArray, array $configuration, ?ServerRequestInterface $request): bool
+    {
+        try {
+            return $detector->detect($userArray, $configuration, $request);
+        } catch (Throwable $exception) {
+            // A failing detector must never break the backend login itself.
+            $this->logger?->error('Login warning detector "{detector}" failed', [
+                'detector' => $detector::class,
+                'userId' => $userArray['uid'] ?? 0,
+                'exception' => $exception,
+            ]);
+
+            return false;
+        }
+    }
+
+    private function resolveRequest(?ServerRequestInterface $request): ServerRequestInterface
+    {
+        return $request
+            ?? $GLOBALS['TYPO3_REQUEST']
+            ?? ServerRequestFactory::fromGlobals()->withAttribute('applicationType', SystemEnvironmentBuilder::REQUESTTYPE_BE);
     }
 
     /**
@@ -134,13 +171,22 @@ final class LoginNotification implements LoggerAwareInterface
         }
 
         foreach ($this->notificationRegistry->getNotifiers() as $notifier) {
-            $notifier->notify(
-                $user,
-                $request,
-                $detector::class,
-                $event->getNotificationConfig(),
-                $event->getAdditionalData(),
-            );
+            try {
+                $notifier->notify(
+                    $user,
+                    $request,
+                    $detector::class,
+                    $event->getNotificationConfig(),
+                    $event->getAdditionalData(),
+                );
+            } catch (Throwable $exception) {
+                // A failing notifier must neither break the login nor prevent other notifiers.
+                $this->logger?->error('Login warning notifier "{notifier}" failed', [
+                    'notifier' => $notifier::class,
+                    'userId' => $user->user['uid'] ?? 0,
+                    'exception' => $exception,
+                ]);
+            }
         }
     }
 }

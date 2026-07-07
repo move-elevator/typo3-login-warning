@@ -16,8 +16,8 @@ outOfOffice.active = 0
 # cat=notification/notification/010; type=string; label=Email Recipients:Email addresses for notifications (comma-separated, default is `warning_email_addr`)
 notificationRecipients =
 
-# cat=newip/newip/030; type=boolean; label=Fetch Geolocation:Enable IP geolocation lookup for new IPs
-newIp.fetchGeolocation = 1
+# cat=newip/newip/030; type=boolean; label=Fetch Geolocation:Enable IP geolocation lookup for new IPs. Transfers the login IP address to the external ip-api.com service - check your privacy requirements before enabling.
+newIp.fetchGeolocation = 0
 
 # cat=newip/newip/040; type=boolean; label=Include Device Information:Include browser and OS information in notification emails
 newIp.includeDeviceInfo = 1

@@ -59,9 +59,8 @@ class NewIpDetector extends AbstractDetector
         $userId = (int) ($userArray['uid'] ?? 0);
         $identifierHash = $this->generateIdentifierHash($userId, $rawIpAddress);
 
-        if (!$this->ipLogRepository->findByHash($identifierHash)) {
+        if ($this->ipLogRepository->registerIdentifier($identifierHash)) {
             $this->collectAdditionalData($configuration, $rawIpAddress, $request);
-            $this->ipLogRepository->addHash($identifierHash);
 
             return true;
         }

@@ -362,6 +362,44 @@ final class EmailNotificationTest extends TestCase
         $this->subject->notify($user, $this->request, 'TestTrigger', $configuration);
     }
 
+    public function testNotifyExposesOnlyWhitelistedUserFieldsToTemplate(): void
+    {
+        $user = $this->createMockBackendUser([
+            'uid' => 123,
+            'username' => 'testuser',
+            'realName' => 'Test User',
+            'email' => 'user@example.com',
+            'admin' => 1,
+            'lang' => 'en',
+            'password' => '$argon2i$v=19$m=65536,t=16,p=1$secret-hash',
+            'mfa' => '{"totp":{"secret":"secret-totp-seed"}}',
+            'uc' => 'a:1:{s:3:"foo";s:3:"bar";}',
+            'TSconfig' => 'options.foo = 1',
+        ]);
+        $configuration = ['recipient' => 'admin@example.com'];
+
+        $fluidEmail = $this->createMock(FluidEmail::class);
+        $fluidEmail->method('to')->willReturnSelf();
+        $fluidEmail->method('setRequest')->willReturnSelf();
+        $fluidEmail->method('setTemplate')->willReturnSelf();
+        $fluidEmail->expects(self::once())->method('assignMultiple')->with(
+            self::callback(static fn (array $vars): bool => [
+                'uid' => 123,
+                'username' => 'testuser',
+                'realName' => 'Test User',
+                'email' => 'user@example.com',
+                'admin' => 1,
+                'lang' => 'en',
+            ] === $vars['user']),
+        )->willReturnSelf();
+
+        GeneralUtility::addInstance(FluidEmail::class, $fluidEmail);
+
+        $this->mailer->expects(self::once())->method('send');
+
+        $this->subject->notify($user, $this->request, 'TestTrigger', $configuration);
+    }
+
     /**
      * @param array<string, mixed> $userData
      */
