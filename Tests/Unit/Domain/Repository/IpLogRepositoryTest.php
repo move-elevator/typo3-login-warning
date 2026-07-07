@@ -14,10 +14,13 @@ declare(strict_types=1);
 namespace MoveElevator\Typo3LoginWarning\Tests\Unit\Domain\Repository;
 
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
+use Doctrine\DBAL\Result;
 use MoveElevator\Typo3LoginWarning\Domain\Repository\IpLogRepository;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TYPO3\CMS\Core\Database\{Connection, ConnectionPool};
+use TYPO3\CMS\Core\Database\Query\Expression\ExpressionBuilder;
+use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 
 use function is_int;
 
@@ -30,17 +33,29 @@ use function is_int;
 final class IpLogRepositoryTest extends TestCase
 {
     private Connection&MockObject $connection;
+    private QueryBuilder&MockObject $queryBuilder;
+    private ExpressionBuilder&MockObject $expressionBuilder;
     private IpLogRepository $subject;
 
     protected function setUp(): void
     {
         $this->connection = $this->createMock(Connection::class);
+        $this->queryBuilder = $this->createMock(QueryBuilder::class);
+        $this->expressionBuilder = $this->createMock(ExpressionBuilder::class);
 
         $connectionPool = $this->createMock(ConnectionPool::class);
         $connectionPool
             ->method('getConnectionForTable')
             ->with('tx_typo3loginwarning_iplog')
             ->willReturn($this->connection);
+        $connectionPool
+            ->method('getQueryBuilderForTable')
+            ->with('tx_typo3loginwarning_iplog')
+            ->willReturn($this->queryBuilder);
+
+        $this->queryBuilder
+            ->method('expr')
+            ->willReturn($this->expressionBuilder);
 
         $this->subject = new IpLogRepository($connectionPool);
     }
