@@ -91,7 +91,7 @@ An IP geolocation lookup and a device information check can be enabled to add mo
 |---------|-------------|-------------|
 | **Active** | Enable New IP detector | `true`      |
 | **Hash IP Addresses** | Hash IP addresses for privacy (HMAC‑SHA‑256) | `true`      |
-| **Fetch Geolocation** | Enable IP geolocation lookup | `true`      |
+| **Fetch Geolocation** | Enable IP geolocation lookup (opt-in, see [Geolocation](#geolocation)) | `false`     |
 | **Include Device Information** | Include browser and OS information in notification emails | `true`      |
 | **IP Whitelist** | Comma-separated list of whitelisted IPs/networks (supports CIDR notation like `192.168.1.0/24`) | `127.0.0.1` |
 | **Affected Users** | Which users should trigger this detector: `All Users`, `Only Admins`, `Only System Maintainers` | `All Users` |
@@ -120,6 +120,9 @@ Use `--dry-run` to only report how many entries would be deleted. The command is
 #### Geolocation
 
 If `Fetch Geolocation` is enabled, the extension will use the [ip-api.com](https://ip-api.com/) service to fetch geolocation information for the IP address. Only public IP addresses will be looked up to respect privacy.
+
+> [!WARNING]
+> Geolocation lookup is **disabled by default** and is an explicit opt-in: it transfers the login IP address (personal data under GDPR) to the external ip-api.com service, using unencrypted HTTP on the free tier. Before enabling it, check your data protection requirements (third-country transfer, privacy policy, data processing agreement) and note that the free ip-api.com endpoint is limited to non-commercial use. Consider providing your own `GeolocationServiceInterface` implementation (see below) if you need an EU-hosted or TLS-secured provider.
 
 > [!TIP]
 > You can implement your own geolocation service by implementing the `GeolocationServiceInterface` and registering it in the DI container.

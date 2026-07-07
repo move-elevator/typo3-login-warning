@@ -14,7 +14,9 @@ declare(strict_types=1);
 namespace MoveElevator\Typo3LoginWarning\Domain\Repository;
 
 use Doctrine\DBAL\Exception;
-use TYPO3\CMS\Core\Database\{Connection, ConnectionPool};
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
+use TYPO3\CMS\Core\Database\Connection;
+use TYPO3\CMS\Core\Database\ConnectionPool;
 
 /**
  * IpLogRepository.
@@ -29,38 +31,38 @@ class IpLogRepository
     public function __construct(private readonly ConnectionPool $connectionPool) {}
 
     /**
+     * Registers a sighting of the given identifier and returns whether it was seen
+     * for the first time. Updates the timestamp first and only inserts when no row
+     * was touched, so concurrent logins racing on the same identifier cannot fail
+     * on the unique identifier_hash constraint.
+     *
      * @throws Exception
      */
-    public function findByHash(string $identifierHash): bool
+    public function registerIdentifier(string $identifierHash): bool
     {
-        $queryBuilder = $this->connectionPool->getQueryBuilderForTable(self::TABLE_NAME);
+        $connection = $this->connectionPool->getConnectionForTable(self::TABLE_NAME);
 
-        $result = $queryBuilder
-            ->select('*')
-            ->from(self::TABLE_NAME)
-            ->where(
-                $queryBuilder->expr()->eq('identifier_hash', $queryBuilder->createNamedParameter($identifierHash, Connection::PARAM_STR)),
-            )
-            ->executeQuery()->fetchAssociative();
+        $affectedRows = $connection->update(
+            self::TABLE_NAME,
+            ['tstamp' => time()],
+            ['identifier_hash' => $identifierHash],
+        );
 
-        if (false !== $result) {
-            $this->updateTimestamp($identifierHash);
-
-            return true;
+        if ($affectedRows > 0) {
+            return false;
         }
 
-        return false;
-    }
-
-    public function addHash(string $identifierHash): void
-    {
-        $queryBuilder = $this->connectionPool->getQueryBuilderForTable(self::TABLE_NAME);
-        $queryBuilder
-            ->insert(self::TABLE_NAME)
-            ->values([
+        try {
+            $connection->insert(self::TABLE_NAME, [
                 'identifier_hash' => $identifierHash,
-            ])
-            ->executeStatement();
+                'tstamp' => time(),
+            ]);
+        } catch (UniqueConstraintViolationException) {
+            // A concurrent login registered the identifier in the meantime.
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -87,18 +89,6 @@ class IpLogRepository
             ->delete(self::TABLE_NAME)
             ->where(
                 $queryBuilder->expr()->lt('tstamp', $queryBuilder->createNamedParameter($timestamp, Connection::PARAM_INT)),
-            )
-            ->executeStatement();
-    }
-
-    private function updateTimestamp(string $identifierHash): void
-    {
-        $queryBuilder = $this->connectionPool->getQueryBuilderForTable(self::TABLE_NAME);
-        $queryBuilder
-            ->update(self::TABLE_NAME)
-            ->set('tstamp', time())
-            ->where(
-                $queryBuilder->expr()->eq('identifier_hash', $queryBuilder->createNamedParameter($identifierHash, Connection::PARAM_STR)),
             )
             ->executeStatement();
     }
