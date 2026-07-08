@@ -65,6 +65,10 @@ class IpLogRepository
     }
 
     /**
+     * Entries with tstamp = 0 stem from extension versions that did not track the
+     * last sighting. Their real age is unknown, so they are excluded here and must
+     * be initialized via initializeMissingTimestamps() before any cleanup.
+     *
      * @throws Exception
      */
     public function countEntriesLastSeenBefore(int $timestamp): int
@@ -76,6 +80,7 @@ class IpLogRepository
             ->from(self::TABLE_NAME)
             ->where(
                 $queryBuilder->expr()->lt('tstamp', $queryBuilder->createNamedParameter($timestamp, Connection::PARAM_INT)),
+                $queryBuilder->expr()->gt('tstamp', $queryBuilder->createNamedParameter(0, Connection::PARAM_INT)),
             )
             ->executeQuery()->fetchOne();
     }
@@ -88,7 +93,41 @@ class IpLogRepository
             ->delete(self::TABLE_NAME)
             ->where(
                 $queryBuilder->expr()->lt('tstamp', $queryBuilder->createNamedParameter($timestamp, Connection::PARAM_INT)),
+                $queryBuilder->expr()->gt('tstamp', $queryBuilder->createNamedParameter(0, Connection::PARAM_INT)),
             )
             ->executeStatement();
+    }
+
+    /**
+     * @throws Exception
+     */
+    public function countEntriesWithMissingTimestamp(): int
+    {
+        $queryBuilder = $this->connectionPool->getQueryBuilderForTable(self::TABLE_NAME);
+
+        return (int) $queryBuilder
+            ->count('uid')
+            ->from(self::TABLE_NAME)
+            ->where(
+                $queryBuilder->expr()->eq('tstamp', $queryBuilder->createNamedParameter(0, Connection::PARAM_INT)),
+            )
+            ->executeQuery()->fetchOne();
+    }
+
+    /**
+     * Backfills the last-seen timestamp of legacy entries with the current time,
+     * granting them a full retention period before they become cleanup candidates.
+     *
+     * @throws Exception
+     */
+    public function initializeMissingTimestamps(): int
+    {
+        $connection = $this->connectionPool->getConnectionForTable(self::TABLE_NAME);
+
+        return $connection->update(
+            self::TABLE_NAME,
+            ['tstamp' => time()],
+            ['tstamp' => 0],
+        );
     }
 }
