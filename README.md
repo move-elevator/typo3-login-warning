@@ -116,6 +116,8 @@ Use `--dry-run` to only report how many entries would be deleted. The command is
 > [!NOTE]
 > After an entry has been deleted, the next login from that IP address triggers a new-IP notification again — that is the intended effect of a retention period.
 
+Entries created by older extension versions (1.0.3 and below) may lack a last-seen timestamp. The cleanup command initializes such legacy entries with the current time instead of deleting them, so they are granted a full retention period before becoming cleanup candidates — otherwise every already-known IP would be reported as new again after the first cleanup run.
+
 #### Geolocation
 
 If `Fetch Geolocation` is enabled, the extension will use the [ip-api.com](https://ip-api.com/) service to fetch geolocation information for the IP address. Only public IP addresses will be looked up to respect privacy.
