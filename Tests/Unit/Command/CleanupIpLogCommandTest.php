@@ -90,6 +90,84 @@ final class CleanupIpLogCommandTest extends TestCase
         self::assertStringContainsString('7 IP log entries would be deleted', $this->commandTester->getDisplay());
     }
 
+    public function testInitializesLegacyEntriesBeforeDeleting(): void
+    {
+        $this->ipLogRepository
+            ->expects(self::once())
+            ->method('initializeMissingTimestamps')
+            ->willReturn(3);
+
+        $this->ipLogRepository
+            ->expects(self::once())
+            ->method('deleteEntriesLastSeenBefore')
+            ->willReturn(5);
+
+        $exitCode = $this->commandTester->execute([]);
+
+        self::assertSame(Command::SUCCESS, $exitCode);
+        $display = $this->commandTester->getDisplay();
+        self::assertStringContainsString('Initialized 3 legacy IP log entries', $display);
+        self::assertStringContainsString('Deleted 5 IP log entries', $display);
+    }
+
+    public function testDoesNotReportInitializationWhenNoLegacyEntriesExist(): void
+    {
+        $this->ipLogRepository
+            ->method('initializeMissingTimestamps')
+            ->willReturn(0);
+
+        $this->ipLogRepository
+            ->method('deleteEntriesLastSeenBefore')
+            ->willReturn(5);
+
+        $this->commandTester->execute([]);
+
+        self::assertStringNotContainsString('Initialized', $this->commandTester->getDisplay());
+    }
+
+    public function testDryRunReportsLegacyEntriesWithoutModifying(): void
+    {
+        $this->ipLogRepository
+            ->expects(self::once())
+            ->method('countEntriesWithMissingTimestamp')
+            ->willReturn(4);
+
+        $this->ipLogRepository
+            ->expects(self::once())
+            ->method('countEntriesLastSeenBefore')
+            ->willReturn(7);
+
+        $this->ipLogRepository
+            ->expects(self::never())
+            ->method('initializeMissingTimestamps');
+
+        $this->ipLogRepository
+            ->expects(self::never())
+            ->method('deleteEntriesLastSeenBefore');
+
+        $exitCode = $this->commandTester->execute(['--dry-run' => true]);
+
+        self::assertSame(Command::SUCCESS, $exitCode);
+        $display = $this->commandTester->getDisplay();
+        self::assertStringContainsString('4 legacy IP log entries without a last-seen timestamp would be initialized', $display);
+        self::assertStringContainsString('7 IP log entries would be deleted', $display);
+    }
+
+    public function testDryRunDoesNotReportInitializationWhenNoLegacyEntriesExist(): void
+    {
+        $this->ipLogRepository
+            ->method('countEntriesWithMissingTimestamp')
+            ->willReturn(0);
+
+        $this->ipLogRepository
+            ->method('countEntriesLastSeenBefore')
+            ->willReturn(7);
+
+        $this->commandTester->execute(['--dry-run' => true]);
+
+        self::assertStringNotContainsString('would be initialized', $this->commandTester->getDisplay());
+    }
+
     public function testFailsForNonPositiveDays(): void
     {
         $this->ipLogRepository

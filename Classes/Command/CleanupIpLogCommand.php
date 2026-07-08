@@ -59,10 +59,20 @@ final class CleanupIpLogCommand extends Command
         $threshold = time() - $days * self::SECONDS_PER_DAY;
 
         if (true === $input->getOption('dry-run')) {
+            $missing = $this->ipLogRepository->countEntriesWithMissingTimestamp();
+            if ($missing > 0) {
+                $io->writeln(sprintf('%d legacy IP log entries without a last-seen timestamp would be initialized.', $missing));
+            }
+
             $count = $this->ipLogRepository->countEntriesLastSeenBefore($threshold);
             $io->writeln(sprintf('%d IP log entries would be deleted (not seen for more than %d days).', $count, $days));
 
             return Command::SUCCESS;
+        }
+
+        $initialized = $this->ipLogRepository->initializeMissingTimestamps();
+        if ($initialized > 0) {
+            $io->writeln(sprintf('Initialized %d legacy IP log entries without a last-seen timestamp.', $initialized));
         }
 
         $deleted = $this->ipLogRepository->deleteEntriesLastSeenBefore($threshold);

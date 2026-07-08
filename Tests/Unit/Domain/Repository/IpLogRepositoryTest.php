@@ -114,20 +114,23 @@ final class IpLogRepositoryTest extends TestCase
         self::assertFalse($this->subject->registerIdentifier($identifierHash));
     }
 
-    public function testCountEntriesLastSeenBefore(): void
+    public function testCountEntriesLastSeenBeforeExcludesEntriesWithoutTimestamp(): void
     {
         $this->queryBuilder->expects(self::once())
             ->method('count')
             ->with('uid')
             ->willReturnSelf();
         $this->queryBuilder->method('from')->willReturnSelf();
-        $this->queryBuilder->expects(self::once())
-            ->method('createNamedParameter')
-            ->with(12345, Connection::PARAM_INT)
-            ->willReturn(':tstamp');
-        $this->expressionBuilder->method('lt')
-            ->with('tstamp', ':tstamp')
-            ->willReturn('tstamp < :tstamp');
+        $this->queryBuilder->method('createNamedParameter')
+            ->willReturnCallback(static fn (int $value): string => ':param'.$value);
+        $this->expressionBuilder->expects(self::once())
+            ->method('lt')
+            ->with('tstamp', ':param12345')
+            ->willReturn('tstamp < :param12345');
+        $this->expressionBuilder->expects(self::once())
+            ->method('gt')
+            ->with('tstamp', ':param0')
+            ->willReturn('tstamp > :param0');
         $this->queryBuilder->method('where')->willReturnSelf();
 
         $result = $this->createMock(Result::class);
@@ -142,19 +145,22 @@ final class IpLogRepositoryTest extends TestCase
         self::assertSame(3, $this->subject->countEntriesLastSeenBefore(12345));
     }
 
-    public function testDeleteEntriesLastSeenBefore(): void
+    public function testDeleteEntriesLastSeenBeforeExcludesEntriesWithoutTimestamp(): void
     {
         $this->queryBuilder->expects(self::once())
             ->method('delete')
             ->with('tx_typo3loginwarning_iplog')
             ->willReturnSelf();
-        $this->queryBuilder->expects(self::once())
-            ->method('createNamedParameter')
-            ->with(12345, Connection::PARAM_INT)
-            ->willReturn(':tstamp');
-        $this->expressionBuilder->method('lt')
-            ->with('tstamp', ':tstamp')
-            ->willReturn('tstamp < :tstamp');
+        $this->queryBuilder->method('createNamedParameter')
+            ->willReturnCallback(static fn (int $value): string => ':param'.$value);
+        $this->expressionBuilder->expects(self::once())
+            ->method('lt')
+            ->with('tstamp', ':param12345')
+            ->willReturn('tstamp < :param12345');
+        $this->expressionBuilder->expects(self::once())
+            ->method('gt')
+            ->with('tstamp', ':param0')
+            ->willReturn('tstamp > :param0');
         $this->queryBuilder->method('where')->willReturnSelf();
 
         $this->queryBuilder->expects(self::once())
@@ -162,5 +168,47 @@ final class IpLogRepositoryTest extends TestCase
             ->willReturn(7);
 
         self::assertSame(7, $this->subject->deleteEntriesLastSeenBefore(12345));
+    }
+
+    public function testCountEntriesWithMissingTimestamp(): void
+    {
+        $this->queryBuilder->expects(self::once())
+            ->method('count')
+            ->with('uid')
+            ->willReturnSelf();
+        $this->queryBuilder->method('from')->willReturnSelf();
+        $this->queryBuilder->expects(self::once())
+            ->method('createNamedParameter')
+            ->with(0, Connection::PARAM_INT)
+            ->willReturn(':zero');
+        $this->expressionBuilder->method('eq')
+            ->with('tstamp', ':zero')
+            ->willReturn('tstamp = :zero');
+        $this->queryBuilder->method('where')->willReturnSelf();
+
+        $result = $this->createMock(Result::class);
+        $result->expects(self::once())
+            ->method('fetchOne')
+            ->willReturn('4');
+
+        $this->queryBuilder->expects(self::once())
+            ->method('executeQuery')
+            ->willReturn($result);
+
+        self::assertSame(4, $this->subject->countEntriesWithMissingTimestamp());
+    }
+
+    public function testInitializeMissingTimestampsSetsCurrentTimeAndReturnsAffectedRows(): void
+    {
+        $this->connection->expects(self::once())
+            ->method('update')
+            ->with(
+                'tx_typo3loginwarning_iplog',
+                self::callback(static fn (array $data): bool => is_int($data['tstamp']) && $data['tstamp'] > 0),
+                ['tstamp' => 0],
+            )
+            ->willReturn(4);
+
+        self::assertSame(4, $this->subject->initializeMissingTimestamps());
     }
 }
