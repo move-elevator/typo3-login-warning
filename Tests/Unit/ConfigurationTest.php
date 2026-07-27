@@ -53,7 +53,7 @@ final class ConfigurationTest extends TestCase
         );
     }
 
-    #[WithTypo3ConfVars(['SYS' => ['encryptionKey' => 'test-encryption-key-12345']])]
+    #[WithTypo3ConfVars(['SYS' => ['encryptionKey' => 'test-encryption-key-12345']])] // gitleaks:allow
     public function testRegisterHmacKeyUsesEncryptionKeyWhenNotSet(): void
     {
         unset($GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['hmacKey']);
@@ -67,7 +67,7 @@ final class ConfigurationTest extends TestCase
     }
 
     #[WithTypo3ConfVars([
-        'SYS' => ['encryptionKey' => 'test-encryption-key-12345'],
+        'SYS' => ['encryptionKey' => 'test-encryption-key-12345'], // gitleaks:allow
         'EXTCONF' => [Configuration::EXT_KEY => ['hmacKey' => 'existing-hmac-key']],
     ])]
     public function testRegisterHmacKeyDoesNotOverwriteExistingKey(): void
