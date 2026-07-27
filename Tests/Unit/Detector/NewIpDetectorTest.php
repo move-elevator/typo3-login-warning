@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace MoveElevator\Typo3LoginWarning\Tests\Unit\Detector;
 
+use KonradMichalik\Ttt\Attribute\WithTypo3ConfVars;
 use MoveElevator\Typo3LoginWarning\Detector\{DetectorInterface, NewIpDetector};
 use MoveElevator\Typo3LoginWarning\Domain\Repository\IpLogRepository;
 use MoveElevator\Typo3LoginWarning\Service\GeolocationServiceInterface;
@@ -26,20 +27,18 @@ use RuntimeException;
  * @author Konrad Michalik <km@move-elevator.de>
  * @license GPL-2.0-or-later
  */
+#[WithTypo3ConfVars(['SYS' => ['encryptionKey' => 'test-encryption-key-for-phpunit']])]
 final class NewIpDetectorTest extends TestCase
 {
     protected function setUp(): void
     {
         // Clean slate for each test - set default to avoid issues
         $GLOBALS['_SERVER']['REMOTE_ADDR'] = '127.0.0.1';
-        // Set HMAC key for tests
-        $GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey'] = 'test-encryption-key-for-phpunit';
     }
 
     protected function tearDown(): void
     {
         unset($GLOBALS['_SERVER']['REMOTE_ADDR']);
-        unset($GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey']);
     }
 
     public function testImplementsDetectorInterface(): void
@@ -288,10 +287,9 @@ final class NewIpDetectorTest extends TestCase
         self::assertTrue($result);
     }
 
+    #[WithTypo3ConfVars(['SYS' => ['systemMaintainers' => [2, 3]]])]
     public function testShouldDetectForUserReturnsFalseForNonMaintainer(): void
     {
-        $GLOBALS['TYPO3_CONF_VARS']['SYS']['systemMaintainers'] = [2, 3];
-
         $user = $this->createMockUser(['uid' => 123]);
         $configuration = ['affectedUsers' => 'maintainers'];
 
@@ -300,14 +298,11 @@ final class NewIpDetectorTest extends TestCase
         $result = $subject->shouldDetectForUser($user, $configuration);
 
         self::assertFalse($result);
-
-        unset($GLOBALS['TYPO3_CONF_VARS']['SYS']['systemMaintainers']);
     }
 
+    #[WithTypo3ConfVars(['SYS' => ['systemMaintainers' => [123, 456]]])]
     public function testShouldDetectForUserReturnsTrueForMaintainer(): void
     {
-        $GLOBALS['TYPO3_CONF_VARS']['SYS']['systemMaintainers'] = [123, 456];
-
         $user = $this->createMockUser(['uid' => 123]);
         $configuration = ['affectedUsers' => 'maintainers'];
 
@@ -316,8 +311,6 @@ final class NewIpDetectorTest extends TestCase
         $result = $subject->shouldDetectForUser($user, $configuration);
 
         self::assertTrue($result);
-
-        unset($GLOBALS['TYPO3_CONF_VARS']['SYS']['systemMaintainers']);
     }
 
     public function testDetectAddsDeviceInfoWhenEnabled(): void

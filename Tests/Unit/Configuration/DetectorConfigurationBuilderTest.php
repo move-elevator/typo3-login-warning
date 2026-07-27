@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace MoveElevator\Typo3LoginWarning\Tests\Unit\Configuration;
 
 use Exception;
+use KonradMichalik\Ttt\Attribute\WithTypo3ConfVars;
 use MoveElevator\Typo3LoginWarning\Configuration;
 use MoveElevator\Typo3LoginWarning\Configuration\DetectorConfigurationBuilder;
 use MoveElevator\Typo3LoginWarning\Detector\{LongTimeNoSeeDetector, NewIpDetector, OutOfOfficeDetector};
@@ -29,6 +30,7 @@ use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
  * @author Konrad Michalik <km@move-elevator.de>
  * @license GPL-2.0-or-later
  */
+#[WithTypo3ConfVars(['EXTENSIONS' => [Configuration::EXT_KEY => []]])]
 final class DetectorConfigurationBuilderTest extends TestCase
 {
     private ExtensionConfiguration&MockObject $extensionConfiguration;
@@ -44,12 +46,6 @@ final class DetectorConfigurationBuilderTest extends TestCase
 
         $this->extensionConfiguration = $this->createMock(ExtensionConfiguration::class);
         $this->subject = new DetectorConfigurationBuilder($this->extensionConfiguration);
-        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS'][Configuration::EXT_KEY] = [];
-    }
-
-    protected function tearDown(): void
-    {
-        unset($GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS'][Configuration::EXT_KEY]);
     }
 
     public function testIsActiveReturnsTrueWhenDetectorIsActive(): void
@@ -189,14 +185,13 @@ final class DetectorConfigurationBuilderTest extends TestCase
         ], $result);
     }
 
+    #[WithTypo3ConfVars(['SYS' => ['phpTimeZone' => 'Europe/Berlin']])]
     public function testBuildOutOfOfficeConfigWithDefaults(): void
     {
         $this->extensionConfiguration
             ->method('get')
             ->with(Configuration::EXT_KEY)
             ->willReturn(['outOfOffice' => ['active' => true]]);
-
-        $GLOBALS['TYPO3_CONF_VARS']['SYS']['phpTimeZone'] = 'Europe/Berlin';
 
         $result = $this->subject->build(OutOfOfficeDetector::class);
 
@@ -256,14 +251,13 @@ final class DetectorConfigurationBuilderTest extends TestCase
         ], $result['blockedPeriods']);
     }
 
+    #[WithTypo3ConfVars(['BE' => ['warning_email_addr' => 'admin@example.com']])]
     public function testBuildNotificationConfigWithDefaults(): void
     {
         $this->extensionConfiguration
             ->method('get')
             ->with(Configuration::EXT_KEY)
             ->willReturn([]);
-
-        $GLOBALS['TYPO3_CONF_VARS']['BE']['warning_email_addr'] = 'admin@example.com';
 
         $result = $this->subject->buildNotificationConfig();
 

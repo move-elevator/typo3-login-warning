@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace MoveElevator\Typo3LoginWarning\Tests\Unit\Utility;
 
+use KonradMichalik\Ttt\Attribute\WithTypo3ConfVars;
 use MoveElevator\Typo3LoginWarning\Utility\DeviceInfoParser;
 use PHPUnit\Framework\Attributes\{DataProvider, Test};
 use PHPUnit\Framework\TestCase;
@@ -258,11 +259,9 @@ final class DeviceInfoParserTest extends TestCase
     }
 
     #[Test]
+    #[WithTypo3ConfVars(['SYS' => ['ddmmyy' => 'Y-m-d', 'hhmm' => 'H:i']])]
     public function parseFromRequestIncludesFormattedDate(): void
     {
-        $GLOBALS['TYPO3_CONF_VARS']['SYS']['ddmmyy'] = 'Y-m-d';
-        $GLOBALS['TYPO3_CONF_VARS']['SYS']['hhmm'] = 'H:i';
-
         $userAgent = 'Mozilla/5.0 (Test) AppleWebKit/537.36';
         $request = $this->createMock(ServerRequestInterface::class);
         $request->method('getHeaderLine')->with('User-Agent')->willReturn($userAgent);
