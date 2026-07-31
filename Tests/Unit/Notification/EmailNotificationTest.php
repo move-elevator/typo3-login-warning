@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace MoveElevator\Typo3LoginWarning\Tests\Unit\Notification;
 
+use KonradMichalik\Ttt\Attribute\WithTypo3ConfVars;
 use MoveElevator\Typo3LoginWarning\Notification\{EmailNotification, NotifierInterface};
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -29,6 +30,7 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  * @author Konrad Michalik <km@move-elevator.de>
  * @license GPL-2.0-or-later
  */
+#[WithTypo3ConfVars(['BE' => ['warning_email_addr' => '']])]
 final class EmailNotificationTest extends TestCase
 {
     private MailerInterface&MockObject $mailer;
@@ -44,9 +46,6 @@ final class EmailNotificationTest extends TestCase
 
         $this->subject = new EmailNotification($this->mailer);
         $this->subject->setLogger($this->logger);
-
-        // Initialize TYPO3_CONF_VARS to prevent warnings
-        $GLOBALS['TYPO3_CONF_VARS']['BE']['warning_email_addr'] = '';
     }
 
     public function testImplementsNotifierInterface(): void
@@ -70,8 +69,6 @@ final class EmailNotificationTest extends TestCase
     {
         $user = $this->createMockBackendUser(['uid' => 123]);
         $configuration = [];
-
-        $GLOBALS['TYPO3_CONF_VARS']['BE']['warning_email_addr'] = '';
 
         $this->logger
             ->expects(self::once())
@@ -101,12 +98,11 @@ final class EmailNotificationTest extends TestCase
         $this->subject->notify($user, $this->request, 'TestTrigger', $configuration);
     }
 
+    #[WithTypo3ConfVars(['BE' => ['warning_email_addr' => 'global@example.com']])]
     public function testNotifyFallsBackToGlobalConfiguration(): void
     {
         $user = $this->createMockBackendUser(['uid' => 123]);
         $configuration = [];
-
-        $GLOBALS['TYPO3_CONF_VARS']['BE']['warning_email_addr'] = 'global@example.com';
 
         $fluidEmail = $this->createMock(FluidEmail::class);
         $fluidEmail->expects(self::once())->method('to')->with('global@example.com')->willReturnSelf();

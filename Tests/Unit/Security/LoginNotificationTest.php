@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace MoveElevator\Typo3LoginWarning\Tests\Unit\Security;
 
+use KonradMichalik\Ttt\Attribute\WithTypo3ConfVars;
 use MoveElevator\Typo3LoginWarning\Configuration;
 use MoveElevator\Typo3LoginWarning\Configuration\DetectorConfigurationBuilder;
 use MoveElevator\Typo3LoginWarning\Event\ModifyLoginNotificationEvent;
@@ -33,6 +34,10 @@ use TYPO3\CMS\Core\Authentication\Event\AfterUserLoggedInEvent;
  * @author Konrad Michalik <km@move-elevator.de>
  * @license GPL-2.0-or-later
  */
+#[WithTypo3ConfVars([
+    'EXTCONF' => [Configuration::EXT_KEY => ['_notification' => [], '_detector' => []]],
+    'EXTENSIONS' => [Configuration::EXT_KEY => []],
+])]
 final class LoginNotificationTest extends TestCase
 {
     private LoggerInterface&MockObject $logger;
@@ -63,16 +68,6 @@ final class LoginNotificationTest extends TestCase
             $this->eventDispatcher,
         );
         $this->subject->setLogger($this->logger);
-
-        $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['_notification'] = [];
-        $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['_detector'] = [];
-        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS'][Configuration::EXT_KEY] = [];
-    }
-
-    protected function tearDown(): void
-    {
-        unset($GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]);
-        unset($GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS'][Configuration::EXT_KEY]);
     }
 
     public function testWarningAtLoginDoesNothingForNonBackendUsers(): void
@@ -99,18 +94,17 @@ final class LoginNotificationTest extends TestCase
         $this->addToAssertionCount(1);
     }
 
+    #[WithTypo3ConfVars(['EXTENSIONS' => [Configuration::EXT_KEY => [
+        'newIp' => ['active' => false],
+        'longTimeNoSee' => ['active' => false],
+        'outOfOffice' => ['active' => false],
+    ]]])]
     public function testWarningAtLoginHandlesNoActiveDetectors(): void
     {
         $user = $this->createMock(BackendUserAuthentication::class);
         $user->user = ['uid' => 123];
         $request = $this->createMock(ServerRequestInterface::class);
         $event = new AfterUserLoggedInEvent($user, $request);
-
-        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS'][Configuration::EXT_KEY] = [
-            'newIp' => ['active' => false],
-            'longTimeNoSee' => ['active' => false],
-            'outOfOffice' => ['active' => false],
-        ];
 
         ($this->subject)($event);
 

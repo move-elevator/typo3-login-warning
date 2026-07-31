@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace MoveElevator\Typo3LoginWarning\Tests\Unit\Detector;
 
+use KonradMichalik\Ttt\Attribute\WithTypo3ConfVars;
 use MoveElevator\Typo3LoginWarning\Detector\AbstractDetector;
 use PHPUnit\Framework\TestCase;
 
@@ -52,17 +53,17 @@ final class AbstractDetectorTest extends TestCase
         self::assertFalse($this->subject->exposeShouldDetectForUser($userArray, ['affectedUsers' => 'admins']));
     }
 
+    #[WithTypo3ConfVars(['SYS' => ['systemMaintainers' => [1, 2]]])]
     public function testShouldDetectForUserReturnsTrueForSystemMaintainerWhenAffectedUsersIsMaintainers(): void
     {
-        $GLOBALS['TYPO3_CONF_VARS']['SYS']['systemMaintainers'] = [1, 2];
         $userArray = $this->createUserArray(uid: 1);
 
         self::assertTrue($this->subject->exposeShouldDetectForUser($userArray, ['affectedUsers' => 'maintainers']));
     }
 
+    #[WithTypo3ConfVars(['SYS' => ['systemMaintainers' => [2, 3]]])]
     public function testShouldDetectForUserReturnsFalseForNonSystemMaintainerWhenAffectedUsersIsMaintainers(): void
     {
-        $GLOBALS['TYPO3_CONF_VARS']['SYS']['systemMaintainers'] = [2, 3];
         $userArray = $this->createUserArray(uid: 1);
 
         self::assertFalse($this->subject->exposeShouldDetectForUser($userArray, ['affectedUsers' => 'maintainers']));

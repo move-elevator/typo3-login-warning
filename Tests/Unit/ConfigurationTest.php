@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace MoveElevator\Typo3LoginWarning\Tests\Unit;
 
+use KonradMichalik\Ttt\Attribute\WithTypo3ConfVars;
 use MoveElevator\Typo3LoginWarning\Configuration;
 use PHPUnit\Framework\TestCase;
 
@@ -22,15 +23,9 @@ use PHPUnit\Framework\TestCase;
  * @author Konrad Michalik <km@move-elevator.de>
  * @license GPL-2.0-or-later
  */
+#[WithTypo3ConfVars([])]
 final class ConfigurationTest extends TestCase
 {
-    protected function tearDown(): void
-    {
-        // Clean up global state
-        unset($GLOBALS['TYPO3_CONF_VARS']['MAIL']['templateRootPaths'][500]);
-        unset($GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]);
-    }
-
     public function testExtKeyConstant(): void
     {
         self::assertSame('typo3_login_warning', Configuration::EXT_KEY);
@@ -58,9 +53,9 @@ final class ConfigurationTest extends TestCase
         );
     }
 
+    #[WithTypo3ConfVars(['SYS' => ['encryptionKey' => 'test-encryption-key-12345']])] // gitleaks:allow
     public function testRegisterHmacKeyUsesEncryptionKeyWhenNotSet(): void
     {
-        $GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey'] = 'test-encryption-key-12345';
         unset($GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['hmacKey']);
 
         Configuration::registerHmacKey();
@@ -71,11 +66,12 @@ final class ConfigurationTest extends TestCase
         );
     }
 
+    #[WithTypo3ConfVars([
+        'SYS' => ['encryptionKey' => 'test-encryption-key-12345'], // gitleaks:allow
+        'EXTCONF' => [Configuration::EXT_KEY => ['hmacKey' => 'existing-hmac-key']],
+    ])]
     public function testRegisterHmacKeyDoesNotOverwriteExistingKey(): void
     {
-        $GLOBALS['TYPO3_CONF_VARS']['EXTCONF'][Configuration::EXT_KEY]['hmacKey'] = 'existing-hmac-key';
-        $GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey'] = 'test-encryption-key-12345';
-
         Configuration::registerHmacKey();
 
         self::assertSame(

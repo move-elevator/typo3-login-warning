@@ -1,0 +1,8 @@
+# Test fixtures, not real secrets: TYPO3 SYS.encryptionKey values used only in unit tests.
+# Migrating ConfigurationTest to ttt's #[WithTypo3ConfVars] turned the previous
+# $GLOBALS[...]['encryptionKey'] = '...' assignment into an array-arrow literal, which trips
+# gitleaks' generic-api-key rule where the bracket assignment did not. The literals are the
+# obviously-fake string "test-encryption-key-12345"; the HEAD occurrences also carry an inline
+# `gitleaks:allow`, these fingerprints cover the same lines in the historical integration commit.
+f9381041121ecaefabe744efa9b3014d2446277b:Tests/Unit/ConfigurationTest.php:generic-api-key:56
+f9381041121ecaefabe744efa9b3014d2446277b:Tests/Unit/ConfigurationTest.php:generic-api-key:70

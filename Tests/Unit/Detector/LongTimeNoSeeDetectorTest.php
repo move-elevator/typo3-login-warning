@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace MoveElevator\Typo3LoginWarning\Tests\Unit\Detector;
 
 use DateTime;
+use KonradMichalik\Ttt\Attribute\WithTypo3ConfVars;
 use MoveElevator\Typo3LoginWarning\Configuration;
 use MoveElevator\Typo3LoginWarning\Detector\{DetectorInterface, LongTimeNoSeeDetector};
 use PHPUnit\Framework\TestCase;
@@ -384,10 +385,9 @@ final class LongTimeNoSeeDetectorTest extends TestCase
         self::assertTrue($result);
     }
 
+    #[WithTypo3ConfVars(['SYS' => ['systemMaintainers' => [2, 3]]])]
     public function testShouldDetectForUserReturnsFalseForNonMaintainer(): void
     {
-        $GLOBALS['TYPO3_CONF_VARS']['SYS']['systemMaintainers'] = [2, 3];
-
         $user = $this->createMockUser(['uid' => 123]);
         $configuration = ['affectedUsers' => 'maintainers'];
 
@@ -396,14 +396,11 @@ final class LongTimeNoSeeDetectorTest extends TestCase
         $result = $subject->shouldDetectForUser($user, $configuration);
 
         self::assertFalse($result);
-
-        unset($GLOBALS['TYPO3_CONF_VARS']['SYS']['systemMaintainers']);
     }
 
+    #[WithTypo3ConfVars(['SYS' => ['systemMaintainers' => [123, 456]]])]
     public function testShouldDetectForUserReturnsTrueForMaintainer(): void
     {
-        $GLOBALS['TYPO3_CONF_VARS']['SYS']['systemMaintainers'] = [123, 456];
-
         $user = $this->createMockUser(['uid' => 123]);
         $configuration = ['affectedUsers' => 'maintainers'];
 
@@ -412,8 +409,6 @@ final class LongTimeNoSeeDetectorTest extends TestCase
         $result = $subject->shouldDetectForUser($user, $configuration);
 
         self::assertTrue($result);
-
-        unset($GLOBALS['TYPO3_CONF_VARS']['SYS']['systemMaintainers']);
     }
 
     /**
