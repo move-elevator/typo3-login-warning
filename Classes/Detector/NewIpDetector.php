@@ -57,15 +57,10 @@ class NewIpDetector extends AbstractDetector
         }
 
         $userId = (int) ($userArray['uid'] ?? 0);
+        $identifierHash = $this->generateIdentifierHash($userId, $rawIpAddress);
 
-        $shouldHashIp = !array_key_exists('hashIpAddress', $configuration) || (bool) $configuration['hashIpAddress'];
-        $ipForStorage = $shouldHashIp ? hash_hmac('sha256', $rawIpAddress, $this->getHmacKey()) : $rawIpAddress;
-
-        $identifierHash = $this->generateIdentifierHash($userId, $ipForStorage);
-
-        if (!$this->ipLogRepository->findByHash($identifierHash)) {
+        if ($this->ipLogRepository->registerIdentifier($identifierHash)) {
             $this->collectAdditionalData($configuration, $rawIpAddress, $request);
-            $this->ipLogRepository->addHash($identifierHash);
 
             return true;
         }
@@ -108,9 +103,12 @@ class NewIpDetector extends AbstractDetector
 
     private function generateIdentifierHash(int $userId, string $ipAddress): string
     {
-        $identifier = $userId.':'.$ipAddress;
+        // The IP is HMAC-hashed on its own before being combined with the user id.
+        // This double-HMAC scheme must be kept for compatibility with identifier
+        // hashes stored by previous versions.
+        $hashedIp = hash_hmac('sha256', $ipAddress, $this->getHmacKey());
 
-        return hash_hmac('sha256', $identifier, $this->getHmacKey());
+        return hash_hmac('sha256', $userId.':'.$hashedIp, $this->getHmacKey());
     }
 
     private function getHmacKey(): string

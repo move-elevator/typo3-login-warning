@@ -54,7 +54,7 @@ final class NewIpDetectorTest extends TestCase
         unset($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['typo3_login_warning']['hmacKey']);
 
         $user = $this->createMockUser(['uid' => 123]);
-        $configuration = ['hashIpAddress' => true];
+        $configuration = [];
 
         $request = $this->createMockRequest(ip: '192.168.1.100');
 
@@ -62,7 +62,7 @@ final class NewIpDetectorTest extends TestCase
         // Should not be called as exception is thrown earlier
         $ipLogRepository
             ->expects(self::never())
-            ->method('findByHash');
+            ->method('registerIdentifier');
 
         $subject = new NewIpDetector($ipLogRepository);
 
@@ -82,8 +82,7 @@ final class NewIpDetectorTest extends TestCase
         $request = $this->createMockRequest(ip: '192.168.1.1');
 
         $ipLogRepository = $this->createMock(IpLogRepository::class);
-        $ipLogRepository->expects(self::never())->method('findByHash');
-        $ipLogRepository->expects(self::never())->method('addHash');
+        $ipLogRepository->expects(self::never())->method('registerIdentifier');
 
         $subject = new NewIpDetector($ipLogRepository);
         $result = $subject->detect($user, $configuration, $request);
@@ -94,21 +93,16 @@ final class NewIpDetectorTest extends TestCase
     public function testDetectReturnsTrueWhenIpIsNew(): void
     {
         $user = $this->createMockUser(['uid' => 123]);
-        $configuration = ['hashIpAddress' => true];
+        $configuration = [];
 
         $request = $this->createMockRequest(ip: '192.168.1.100');
 
         $ipLogRepository = $this->createMock(IpLogRepository::class);
         $ipLogRepository
             ->expects(self::once())
-            ->method('findByHash')
+            ->method('registerIdentifier')
             ->with(self::matchesRegularExpression('/^[a-f0-9]{64}$/'))
-            ->willReturn(false);
-
-        $ipLogRepository
-            ->expects(self::once())
-            ->method('addHash')
-            ->with(self::matchesRegularExpression('/^[a-f0-9]{64}$/'));
+            ->willReturn(true);
 
         $subject = new NewIpDetector($ipLogRepository);
         $result = $subject->detect($user, $configuration, $request);
@@ -119,55 +113,6 @@ final class NewIpDetectorTest extends TestCase
     public function testDetectReturnsFalseWhenIpExists(): void
     {
         $user = $this->createMockUser(['uid' => 123]);
-        $configuration = ['hashIpAddress' => true];
-
-        $request = $this->createMockRequest(ip: '192.168.1.100');
-
-        $ipLogRepository = $this->createMock(IpLogRepository::class);
-        $ipLogRepository
-            ->expects(self::once())
-            ->method('findByHash')
-            ->with(self::matchesRegularExpression('/^[a-f0-9]{64}$/'))
-            ->willReturn(true);
-
-        $ipLogRepository
-            ->expects(self::never())
-            ->method('addHash');
-
-        $subject = new NewIpDetector($ipLogRepository);
-        $result = $subject->detect($user, $configuration, $request);
-
-        self::assertFalse($result);
-    }
-
-    public function testDetectWithoutHashingWhenConfigured(): void
-    {
-        $user = $this->createMockUser(['uid' => 123]);
-        $configuration = ['hashIpAddress' => false];
-
-        $request = $this->createMockRequest(ip: '192.168.1.100');
-
-        $ipLogRepository = $this->createMock(IpLogRepository::class);
-        $ipLogRepository
-            ->expects(self::once())
-            ->method('findByHash')
-            ->with(self::matchesRegularExpression('/^[a-f0-9]{64}$/'))
-            ->willReturn(false);
-
-        $ipLogRepository
-            ->expects(self::once())
-            ->method('addHash')
-            ->with(self::matchesRegularExpression('/^[a-f0-9]{64}$/'));
-
-        $subject = new NewIpDetector($ipLogRepository);
-        $result = $subject->detect($user, $configuration, $request);
-
-        self::assertTrue($result);
-    }
-
-    public function testDetectDefaultsToHashingWhenNotConfigured(): void
-    {
-        $user = $this->createMockUser(['uid' => 123]);
         $configuration = [];
 
         $request = $this->createMockRequest(ip: '192.168.1.100');
@@ -175,17 +120,35 @@ final class NewIpDetectorTest extends TestCase
         $ipLogRepository = $this->createMock(IpLogRepository::class);
         $ipLogRepository
             ->expects(self::once())
-            ->method('findByHash')
+            ->method('registerIdentifier')
             ->with(self::matchesRegularExpression('/^[a-f0-9]{64}$/'))
             ->willReturn(false);
 
-        $ipLogRepository
-            ->expects(self::once())
-            ->method('addHash')
-            ->with(self::matchesRegularExpression('/^[a-f0-9]{64}$/'));
-
         $subject = new NewIpDetector($ipLogRepository);
         $result = $subject->detect($user, $configuration, $request);
+
+        self::assertFalse($result);
+    }
+
+    public function testGeneratedIdentifierHashIsStableAcrossVersions(): void
+    {
+        // Fixed expectation: hash_hmac('sha256', '123:'.hash_hmac('sha256', '192.168.1.100', $key), $key)
+        // with $key = 'test-encryption-key-for-phpunit'. This pins the double-HMAC scheme —
+        // changing it would invalidate all identifier hashes stored by previous versions.
+        $expectedHash = '99a822428a0de79adf5fcc118f5f6c86d104c468ac9dee67ca7eb2bc95c2efb4';
+
+        $user = $this->createMockUser(['uid' => 123]);
+        $request = $this->createMockRequest(ip: '192.168.1.100');
+
+        $ipLogRepository = $this->createMock(IpLogRepository::class);
+        $ipLogRepository
+            ->expects(self::once())
+            ->method('registerIdentifier')
+            ->with($expectedHash)
+            ->willReturn(true);
+
+        $subject = new NewIpDetector($ipLogRepository);
+        $result = $subject->detect($user, [], $request);
 
         self::assertTrue($result);
     }
@@ -194,7 +157,6 @@ final class NewIpDetectorTest extends TestCase
     {
         $user = $this->createMockUser(['uid' => 123]);
         $configuration = [
-            'hashIpAddress' => true,
             'fetchGeolocation' => false,
         ];
 
@@ -205,16 +167,12 @@ final class NewIpDetectorTest extends TestCase
 
         $ipLogRepository
             ->expects(self::once())
-            ->method('findByHash')
-            ->willReturn(false);
+            ->method('registerIdentifier')
+            ->willReturn(true);
 
         $geolocationService
             ->expects(self::never())
             ->method('getLocationData');
-
-        $ipLogRepository
-            ->expects(self::once())
-            ->method('addHash');
 
         $subject = new NewIpDetector($ipLogRepository, $geolocationService);
         $result = $subject->detect($user, $configuration, $request);
@@ -234,7 +192,6 @@ final class NewIpDetectorTest extends TestCase
     {
         $user = $this->createMockUser(['uid' => 123]);
         $configuration = [
-            'hashIpAddress' => true,
             'fetchGeolocation' => true,
         ];
 
@@ -245,16 +202,12 @@ final class NewIpDetectorTest extends TestCase
 
         $ipLogRepository
             ->expects(self::once())
-            ->method('findByHash')
-            ->willReturn(false);
+            ->method('registerIdentifier')
+            ->willReturn(true);
 
         $geolocationService
             ->expects(self::never())
             ->method('getLocationData');
-
-        $ipLogRepository
-            ->expects(self::once())
-            ->method('addHash');
 
         $subject = new NewIpDetector($ipLogRepository, $geolocationService);
         $result = $subject->detect($user, $configuration, $request);
@@ -325,10 +278,8 @@ final class NewIpDetectorTest extends TestCase
 
         $ipLogRepository = $this->createMock(IpLogRepository::class);
         $ipLogRepository->expects(self::once())
-            ->method('findByHash')
-            ->willReturn(false);
-        $ipLogRepository->expects(self::once())
-            ->method('addHash');
+            ->method('registerIdentifier')
+            ->willReturn(true);
 
         $subject = new NewIpDetector($ipLogRepository);
         $result = $subject->detect($user, $configuration, $request);
@@ -354,10 +305,8 @@ final class NewIpDetectorTest extends TestCase
 
         $ipLogRepository = $this->createMock(IpLogRepository::class);
         $ipLogRepository->expects(self::once())
-            ->method('findByHash')
-            ->willReturn(false);
-        $ipLogRepository->expects(self::once())
-            ->method('addHash');
+            ->method('registerIdentifier')
+            ->willReturn(true);
 
         $subject = new NewIpDetector($ipLogRepository);
         $result = $subject->detect($user, $configuration, $request);
@@ -380,10 +329,8 @@ final class NewIpDetectorTest extends TestCase
 
         $ipLogRepository = $this->createMock(IpLogRepository::class);
         $ipLogRepository->expects(self::once())
-            ->method('findByHash')
-            ->willReturn(false);
-        $ipLogRepository->expects(self::once())
-            ->method('addHash');
+            ->method('registerIdentifier')
+            ->willReturn(true);
 
         $subject = new NewIpDetector($ipLogRepository);
         $result = $subject->detect($user, $configuration, $request);
@@ -403,10 +350,8 @@ final class NewIpDetectorTest extends TestCase
 
         $ipLogRepository = $this->createMock(IpLogRepository::class);
         $ipLogRepository->expects(self::once())
-            ->method('findByHash')
-            ->willReturn(false);
-        $ipLogRepository->expects(self::once())
-            ->method('addHash');
+            ->method('registerIdentifier')
+            ->willReturn(true);
 
         $subject = new NewIpDetector($ipLogRepository);
         $result = $subject->detect($user, $configuration, null);
@@ -426,10 +371,8 @@ final class NewIpDetectorTest extends TestCase
 
         $ipLogRepository = $this->createMock(IpLogRepository::class);
         $ipLogRepository->expects(self::once())
-            ->method('findByHash')
-            ->willReturn(false);
-        $ipLogRepository->expects(self::once())
-            ->method('addHash');
+            ->method('registerIdentifier')
+            ->willReturn(true);
 
         $subject = new NewIpDetector($ipLogRepository);
         $result = $subject->detect($user, $configuration, $request);
@@ -449,10 +392,8 @@ final class NewIpDetectorTest extends TestCase
 
         $ipLogRepository = $this->createMock(IpLogRepository::class);
         $ipLogRepository->expects(self::once())
-            ->method('findByHash')
-            ->willReturn(false);
-        $ipLogRepository->expects(self::once())
-            ->method('addHash');
+            ->method('registerIdentifier')
+            ->willReturn(true);
 
         $subject = new NewIpDetector($ipLogRepository);
         $result = $subject->detect($user, $configuration, $request);
@@ -473,10 +414,8 @@ final class NewIpDetectorTest extends TestCase
 
         $ipLogRepository = $this->createMock(IpLogRepository::class);
         $ipLogRepository->expects(self::once())
-            ->method('findByHash')
-            ->willReturn(false);
-        $ipLogRepository->expects(self::once())
-            ->method('addHash');
+            ->method('registerIdentifier')
+            ->willReturn(true);
 
         $subject = new NewIpDetector($ipLogRepository);
         $result = $subject->detect($user, $configuration, $request);

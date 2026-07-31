@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace MoveElevator\Typo3LoginWarning\Domain\Repository;
 
 use Doctrine\DBAL\Exception;
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use TYPO3\CMS\Core\Database\{Connection, ConnectionPool};
 
 /**
@@ -29,49 +30,104 @@ class IpLogRepository
     public function __construct(private readonly ConnectionPool $connectionPool) {}
 
     /**
+     * Registers a sighting of the given identifier and returns whether it was seen
+     * for the first time. Updates the timestamp first and only inserts when no row
+     * was touched, so concurrent logins racing on the same identifier cannot fail
+     * on the unique identifier_hash constraint.
+     *
      * @throws Exception
      */
-    public function findByHash(string $identifierHash): bool
+    public function registerIdentifier(string $identifierHash): bool
     {
-        $queryBuilder = $this->connectionPool->getQueryBuilderForTable(self::TABLE_NAME);
+        $connection = $this->connectionPool->getConnectionForTable(self::TABLE_NAME);
 
-        $result = $queryBuilder
-            ->select('*')
-            ->from(self::TABLE_NAME)
-            ->where(
-                $queryBuilder->expr()->eq('identifier_hash', $queryBuilder->createNamedParameter($identifierHash, Connection::PARAM_STR)),
-            )
-            ->executeQuery()->fetchAssociative();
+        $affectedRows = $connection->update(
+            self::TABLE_NAME,
+            ['tstamp' => time()],
+            ['identifier_hash' => $identifierHash],
+        );
 
-        if (false !== $result) {
-            $this->updateTimestamp($identifierHash);
-
-            return true;
+        if ($affectedRows > 0) {
+            return false;
         }
 
-        return false;
-    }
-
-    public function addHash(string $identifierHash): void
-    {
-        $queryBuilder = $this->connectionPool->getQueryBuilderForTable(self::TABLE_NAME);
-        $queryBuilder
-            ->insert(self::TABLE_NAME)
-            ->values([
+        try {
+            $connection->insert(self::TABLE_NAME, [
                 'identifier_hash' => $identifierHash,
-            ])
-            ->executeStatement();
+                'tstamp' => time(),
+            ]);
+        } catch (UniqueConstraintViolationException) {
+            // A concurrent login registered the identifier in the meantime.
+            return false;
+        }
+
+        return true;
     }
 
-    private function updateTimestamp(string $identifierHash): void
+    /**
+     * Entries with tstamp = 0 stem from extension versions that did not track the
+     * last sighting. Their real age is unknown, so they are excluded here and must
+     * be initialized via initializeMissingTimestamps() before any cleanup.
+     *
+     * @throws Exception
+     */
+    public function countEntriesLastSeenBefore(int $timestamp): int
     {
         $queryBuilder = $this->connectionPool->getQueryBuilderForTable(self::TABLE_NAME);
-        $queryBuilder
-            ->update(self::TABLE_NAME)
-            ->set('tstamp', time())
+
+        return (int) $queryBuilder
+            ->count('uid')
+            ->from(self::TABLE_NAME)
             ->where(
-                $queryBuilder->expr()->eq('identifier_hash', $queryBuilder->createNamedParameter($identifierHash, Connection::PARAM_STR)),
+                $queryBuilder->expr()->lt('tstamp', $queryBuilder->createNamedParameter($timestamp, Connection::PARAM_INT)),
+                $queryBuilder->expr()->gt('tstamp', $queryBuilder->createNamedParameter(0, Connection::PARAM_INT)),
+            )
+            ->executeQuery()->fetchOne();
+    }
+
+    public function deleteEntriesLastSeenBefore(int $timestamp): int
+    {
+        $queryBuilder = $this->connectionPool->getQueryBuilderForTable(self::TABLE_NAME);
+
+        return $queryBuilder
+            ->delete(self::TABLE_NAME)
+            ->where(
+                $queryBuilder->expr()->lt('tstamp', $queryBuilder->createNamedParameter($timestamp, Connection::PARAM_INT)),
+                $queryBuilder->expr()->gt('tstamp', $queryBuilder->createNamedParameter(0, Connection::PARAM_INT)),
             )
             ->executeStatement();
+    }
+
+    /**
+     * @throws Exception
+     */
+    public function countEntriesWithMissingTimestamp(): int
+    {
+        $queryBuilder = $this->connectionPool->getQueryBuilderForTable(self::TABLE_NAME);
+
+        return (int) $queryBuilder
+            ->count('uid')
+            ->from(self::TABLE_NAME)
+            ->where(
+                $queryBuilder->expr()->eq('tstamp', $queryBuilder->createNamedParameter(0, Connection::PARAM_INT)),
+            )
+            ->executeQuery()->fetchOne();
+    }
+
+    /**
+     * Backfills the last-seen timestamp of legacy entries with the current time,
+     * granting them a full retention period before they become cleanup candidates.
+     *
+     * @throws Exception
+     */
+    public function initializeMissingTimestamps(): int
+    {
+        $connection = $this->connectionPool->getConnectionForTable(self::TABLE_NAME);
+
+        return $connection->update(
+            self::TABLE_NAME,
+            ['tstamp' => time()],
+            ['tstamp' => 0],
+        );
     }
 }

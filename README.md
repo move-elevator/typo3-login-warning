@@ -78,7 +78,7 @@ Detects logins from new IP addresses and triggers a warning email.
 
 > The user "admin" logged in from a new IP address 192.168.97.5 at the site "EXT:typo3-login-warning Dev Environment".
 
-The IP address will be stored and can be hashed for privacy reasons. You can also define a whitelist of IP addresses that will not trigger a warning. 
+Only an HMAC-SHA-256 hash of the user/IP combination is stored — never the raw IP address. You can also define a whitelist of IP addresses that will not trigger a warning. 
 An IP geolocation lookup and a device information check can be enabled to add more information to the notification email.
 
 > [!IMPORTANT]
@@ -90,23 +90,40 @@ An IP geolocation lookup and a device information check can be enabled to add mo
 | Setting | Description | Default     |
 |---------|-------------|-------------|
 | **Active** | Enable New IP detector | `true`      |
-| **Hash IP Addresses** | Hash IP addresses for privacy (HMAC‑SHA‑256) | `true`      |
-| **Fetch Geolocation** | Enable IP geolocation lookup | `true`      |
+| **Fetch Geolocation** | Enable IP geolocation lookup (opt-in, see [Geolocation](#geolocation)) | `false`     |
 | **Include Device Information** | Include browser and OS information in notification emails | `true`      |
 | **IP Whitelist** | Comma-separated list of whitelisted IPs/networks (supports CIDR notation like `192.168.1.0/24`) | `127.0.0.1` |
 | **Affected Users** | Which users should trigger this detector: `All Users`, `Only Admins`, `Only System Maintainers` | `All Users` |
 | **Notification Receiver** | Who should receive the notification: `Email Recipients`, `Logged-In User`, `Both` | `Email Recipients` |
 
 > [!NOTE]
-> IP address hashing requires an HMAC key. The extension automatically uses TYPO3's `$GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey']` as fallback. For additional security, you can set a dedicated key.
+> IP address hashing requires an HMAC key. The extension automatically uses TYPO3's `$GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey']` as fallback. Setting a dedicated random key is recommended so the stored hashes are not tied to the global encryption key. Note that changing the key invalidates all stored hashes — every known IP will trigger one new-IP notification again.
 
 ```php
 $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['typo3_login_warning']['hmacKey'] = 'your-secure-random-key';
 ```
 
+#### IP log cleanup
+
+The IP log table grows with every new (user, IP) combination — especially when clients use IPv6 privacy extensions with rotating addresses. To enforce a retention period, delete entries that have not been seen for a given number of days:
+
+``` bash
+vendor/bin/typo3 typo3loginwarning:iplog:cleanup --days 365
+```
+
+Use `--dry-run` to only report how many entries would be deleted. The command is schedulable, e.g. via the TYPO3 scheduler "Execute console commands" task.
+
+> [!NOTE]
+> After an entry has been deleted, the next login from that IP address triggers a new-IP notification again — that is the intended effect of a retention period.
+
+Entries created by older extension versions (1.0.3 and below) may lack a last-seen timestamp. The cleanup command initializes such legacy entries with the current time instead of deleting them, so they are granted a full retention period before becoming cleanup candidates — otherwise every already-known IP would be reported as new again after the first cleanup run.
+
 #### Geolocation
 
 If `Fetch Geolocation` is enabled, the extension will use the [ip-api.com](https://ip-api.com/) service to fetch geolocation information for the IP address. Only public IP addresses will be looked up to respect privacy.
+
+> [!WARNING]
+> Geolocation lookup is **disabled by default** and is an explicit opt-in: it transfers the login IP address (personal data under GDPR) to the external ip-api.com service, using unencrypted HTTP on the free tier. Before enabling it, check your data protection requirements (third-country transfer, privacy policy, data processing agreement) and note that the free ip-api.com endpoint is limited to non-commercial use. Consider providing your own `GeolocationServiceInterface` implementation (see below) if you need an EU-hosted or TLS-secured provider.
 
 > [!TIP]
 > You can implement your own geolocation service by implementing the `GeolocationServiceInterface` and registering it in the DI container.

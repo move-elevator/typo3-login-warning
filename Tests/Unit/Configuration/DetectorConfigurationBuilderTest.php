@@ -111,8 +111,7 @@ final class DetectorConfigurationBuilderTest extends TestCase
         $result = $this->subject->build(NewIpDetector::class);
 
         self::assertSame([
-            'hashIpAddress' => true,
-            'fetchGeolocation' => true,
+            'fetchGeolocation' => false,
             'affectedUsers' => 'all',
             'notificationReceiver' => 'recipients',
             'whitelist' => ['127.0.0.1'],
@@ -127,8 +126,7 @@ final class DetectorConfigurationBuilderTest extends TestCase
             ->willReturn([
                 'newIp' => [
                     'active' => true,
-                    'hashIpAddress' => false,
-                    'fetchGeolocation' => false,
+                    'fetchGeolocation' => true,
                     'affectedUsers' => 'admins',
                     'notificationReceiver' => 'both',
                     'whitelist' => '192.168.1.1, 10.0.0.1',
@@ -138,8 +136,7 @@ final class DetectorConfigurationBuilderTest extends TestCase
         $result = $this->subject->build(NewIpDetector::class);
 
         self::assertSame([
-            'hashIpAddress' => false,
-            'fetchGeolocation' => false,
+            'fetchGeolocation' => true,
             'affectedUsers' => 'admins',
             'notificationReceiver' => 'both',
             'whitelist' => ['192.168.1.1', '10.0.0.1'],
@@ -320,8 +317,7 @@ final class DetectorConfigurationBuilderTest extends TestCase
 
         // Should get defaults from buildNewIpConfig
         self::assertSame([
-            'hashIpAddress' => true,
-            'fetchGeolocation' => true,
+            'fetchGeolocation' => false,
             'affectedUsers' => 'all',
             'notificationReceiver' => 'recipients',
             'whitelist' => ['127.0.0.1'],
@@ -339,8 +335,7 @@ final class DetectorConfigurationBuilderTest extends TestCase
         $result = $this->subject->build(NewIpDetector::class);
 
         self::assertSame([
-            'hashIpAddress' => true,
-            'fetchGeolocation' => true,
+            'fetchGeolocation' => false,
             'affectedUsers' => 'all',
             'notificationReceiver' => 'recipients',
             'whitelist' => ['127.0.0.1'],

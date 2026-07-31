@@ -35,6 +35,13 @@ class EmailNotification implements NotifierInterface, LoggerAwareInterface
 {
     use LoggerAwareTrait;
 
+    /**
+     * User record fields exposed to the (overridable) email templates. The full
+     * be_users row must never reach the template context as it contains sensitive
+     * data like the password hash and the MFA configuration.
+     */
+    private const TEMPLATE_USER_FIELDS = ['uid', 'username', 'realName', 'email', 'admin', 'lang'];
+
     public function __construct(
         private readonly MailerInterface $mailer,
     ) {}
@@ -112,12 +119,13 @@ class EmailNotification implements NotifierInterface, LoggerAwareInterface
     private function sendNotificationEmails(BackendUserAuthentication $user, ServerRequestInterface $request, string $triggerClass, array $recipientsList, array $additionalValues): void
     {
         $userEmail = trim($user->user['email'] ?? '');
+        $templateUser = array_intersect_key($user->user ?? [], array_flip(self::TEMPLATE_USER_FIELDS));
 
         foreach ($recipientsList as $recipient) {
             $isUserNotification = '' !== $userEmail && $recipient === $userEmail;
 
             $values = [
-                'user' => $user->user,
+                'user' => $templateUser,
                 'prefix' => $user->isAdmin() ? '[AdminLoginWarning]' : '[LoginWarning]',
                 'language' => $user->user['lang'] ?? 'default',
                 'headline' => 'TYPO3 Backend Login notification',
