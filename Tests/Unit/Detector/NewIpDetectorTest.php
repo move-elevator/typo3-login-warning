@@ -44,7 +44,7 @@ final class NewIpDetectorTest extends TestCase
     public function testImplementsDetectorInterface(): void
     {
         $ipLogRepository = $this->createMock(IpLogRepository::class);
-        $subject = new NewIpDetector($ipLogRepository);
+        $subject = new NewIpDetector($ipLogRepository, null);
         self::assertInstanceOf(DetectorInterface::class, $subject);
     }
 
@@ -56,7 +56,7 @@ final class NewIpDetectorTest extends TestCase
         $user = $this->createMockUser(['uid' => 123]);
         $configuration = [];
 
-        $request = $this->createMockRequest(ip: '192.168.1.100');
+        $request = $this->createMockRequest('192.168.1.100');
 
         $ipLogRepository = $this->createMock(IpLogRepository::class);
         // Should not be called as exception is thrown earlier
@@ -64,7 +64,7 @@ final class NewIpDetectorTest extends TestCase
             ->expects(self::never())
             ->method('registerIdentifier');
 
-        $subject = new NewIpDetector($ipLogRepository);
+        $subject = new NewIpDetector($ipLogRepository, null);
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('No HMAC key configured for login warning extension');
@@ -79,12 +79,12 @@ final class NewIpDetectorTest extends TestCase
             'whitelist' => ['192.168.1.1'],
         ];
 
-        $request = $this->createMockRequest(ip: '192.168.1.1');
+        $request = $this->createMockRequest('192.168.1.1');
 
         $ipLogRepository = $this->createMock(IpLogRepository::class);
         $ipLogRepository->expects(self::never())->method('registerIdentifier');
 
-        $subject = new NewIpDetector($ipLogRepository);
+        $subject = new NewIpDetector($ipLogRepository, null);
         $result = $subject->detect($user, $configuration, $request);
 
         self::assertFalse($result);
@@ -95,7 +95,7 @@ final class NewIpDetectorTest extends TestCase
         $user = $this->createMockUser(['uid' => 123]);
         $configuration = [];
 
-        $request = $this->createMockRequest(ip: '192.168.1.100');
+        $request = $this->createMockRequest('192.168.1.100');
 
         $ipLogRepository = $this->createMock(IpLogRepository::class);
         $ipLogRepository
@@ -104,7 +104,7 @@ final class NewIpDetectorTest extends TestCase
             ->with(self::matchesRegularExpression('/^[a-f0-9]{64}$/'))
             ->willReturn(true);
 
-        $subject = new NewIpDetector($ipLogRepository);
+        $subject = new NewIpDetector($ipLogRepository, null);
         $result = $subject->detect($user, $configuration, $request);
 
         self::assertTrue($result);
@@ -115,7 +115,7 @@ final class NewIpDetectorTest extends TestCase
         $user = $this->createMockUser(['uid' => 123]);
         $configuration = [];
 
-        $request = $this->createMockRequest(ip: '192.168.1.100');
+        $request = $this->createMockRequest('192.168.1.100');
 
         $ipLogRepository = $this->createMock(IpLogRepository::class);
         $ipLogRepository
@@ -124,7 +124,7 @@ final class NewIpDetectorTest extends TestCase
             ->with(self::matchesRegularExpression('/^[a-f0-9]{64}$/'))
             ->willReturn(false);
 
-        $subject = new NewIpDetector($ipLogRepository);
+        $subject = new NewIpDetector($ipLogRepository, null);
         $result = $subject->detect($user, $configuration, $request);
 
         self::assertFalse($result);
@@ -138,7 +138,7 @@ final class NewIpDetectorTest extends TestCase
         $expectedHash = '99a822428a0de79adf5fcc118f5f6c86d104c468ac9dee67ca7eb2bc95c2efb4';
 
         $user = $this->createMockUser(['uid' => 123]);
-        $request = $this->createMockRequest(ip: '192.168.1.100');
+        $request = $this->createMockRequest('192.168.1.100');
 
         $ipLogRepository = $this->createMock(IpLogRepository::class);
         $ipLogRepository
@@ -147,7 +147,7 @@ final class NewIpDetectorTest extends TestCase
             ->with($expectedHash)
             ->willReturn(true);
 
-        $subject = new NewIpDetector($ipLogRepository);
+        $subject = new NewIpDetector($ipLogRepository, null);
         $result = $subject->detect($user, [], $request);
 
         self::assertTrue($result);
@@ -160,7 +160,7 @@ final class NewIpDetectorTest extends TestCase
             'fetchGeolocation' => false,
         ];
 
-        $request = $this->createMockRequest(ip: '192.168.1.1');
+        $request = $this->createMockRequest('192.168.1.1');
 
         $ipLogRepository = $this->createMock(IpLogRepository::class);
         $geolocationService = $this->createMock(GeolocationServiceInterface::class);
@@ -184,7 +184,7 @@ final class NewIpDetectorTest extends TestCase
     public function testGetAdditionalDataReturnsEmptyArrayInitially(): void
     {
         $ipLogRepository = $this->createMock(IpLogRepository::class);
-        $subject = new NewIpDetector($ipLogRepository);
+        $subject = new NewIpDetector($ipLogRepository, null);
         self::assertSame([], $subject->getAdditionalData());
     }
 
@@ -195,7 +195,7 @@ final class NewIpDetectorTest extends TestCase
             'fetchGeolocation' => true,
         ];
 
-        $request = $this->createMockRequest(ip: '192.168.1.1');
+        $request = $this->createMockRequest('192.168.1.1');
 
         $ipLogRepository = $this->createMock(IpLogRepository::class);
         $geolocationService = $this->createMock(GeolocationServiceInterface::class);
@@ -222,7 +222,7 @@ final class NewIpDetectorTest extends TestCase
         $configuration = ['affectedUsers' => 'admins'];
 
         $ipLogRepository = $this->createMock(IpLogRepository::class);
-        $subject = new NewIpDetector($ipLogRepository);
+        $subject = new NewIpDetector($ipLogRepository, null);
         $result = $subject->shouldDetectForUser($user, $configuration);
 
         self::assertFalse($result);
@@ -234,7 +234,7 @@ final class NewIpDetectorTest extends TestCase
         $configuration = ['affectedUsers' => 'admins'];
 
         $ipLogRepository = $this->createMock(IpLogRepository::class);
-        $subject = new NewIpDetector($ipLogRepository);
+        $subject = new NewIpDetector($ipLogRepository, null);
         $result = $subject->shouldDetectForUser($user, $configuration);
 
         self::assertTrue($result);
@@ -247,7 +247,7 @@ final class NewIpDetectorTest extends TestCase
         $configuration = ['affectedUsers' => 'maintainers'];
 
         $ipLogRepository = $this->createMock(IpLogRepository::class);
-        $subject = new NewIpDetector($ipLogRepository);
+        $subject = new NewIpDetector($ipLogRepository, null);
         $result = $subject->shouldDetectForUser($user, $configuration);
 
         self::assertFalse($result);
@@ -260,7 +260,7 @@ final class NewIpDetectorTest extends TestCase
         $configuration = ['affectedUsers' => 'maintainers'];
 
         $ipLogRepository = $this->createMock(IpLogRepository::class);
-        $subject = new NewIpDetector($ipLogRepository);
+        $subject = new NewIpDetector($ipLogRepository, null);
         $result = $subject->shouldDetectForUser($user, $configuration);
 
         self::assertTrue($result);
@@ -269,8 +269,8 @@ final class NewIpDetectorTest extends TestCase
     public function testDetectAddsDeviceInfoWhenEnabled(): void
     {
         $request = $this->createMockRequest(
-            userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            ip: '203.0.113.42',
+            '203.0.113.42',
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         );
 
         $user = $this->createMockUser(['uid' => 123]);
@@ -281,7 +281,7 @@ final class NewIpDetectorTest extends TestCase
             ->method('registerIdentifier')
             ->willReturn(true);
 
-        $subject = new NewIpDetector($ipLogRepository);
+        $subject = new NewIpDetector($ipLogRepository, null);
         $result = $subject->detect($user, $configuration, $request);
 
         self::assertTrue($result);
@@ -298,7 +298,7 @@ final class NewIpDetectorTest extends TestCase
 
     public function testDetectDoesNotAddDeviceInfoWhenDisabled(): void
     {
-        $request = $this->createMockRequest(userAgent: 'Mozilla/5.0', ip: '203.0.113.42');
+        $request = $this->createMockRequest('203.0.113.42', 'Mozilla/5.0');
 
         $user = $this->createMockUser(['uid' => 123]);
         $configuration = ['includeDeviceInfo' => false];
@@ -308,7 +308,7 @@ final class NewIpDetectorTest extends TestCase
             ->method('registerIdentifier')
             ->willReturn(true);
 
-        $subject = new NewIpDetector($ipLogRepository);
+        $subject = new NewIpDetector($ipLogRepository, null);
         $result = $subject->detect($user, $configuration, $request);
 
         self::assertTrue($result);
@@ -320,8 +320,8 @@ final class NewIpDetectorTest extends TestCase
     public function testDetectAddsDeviceInfoByDefaultWhenNotConfigured(): void
     {
         $request = $this->createMockRequest(
-            userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:120.0) Gecko/20100101 Firefox/120.0',
-            ip: '203.0.113.42',
+            '203.0.113.42',
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:120.0) Gecko/20100101 Firefox/120.0',
         );
 
         $user = $this->createMockUser(['uid' => 123]);
@@ -332,7 +332,7 @@ final class NewIpDetectorTest extends TestCase
             ->method('registerIdentifier')
             ->willReturn(true);
 
-        $subject = new NewIpDetector($ipLogRepository);
+        $subject = new NewIpDetector($ipLogRepository, null);
         $result = $subject->detect($user, $configuration, $request);
 
         self::assertTrue($result);
@@ -353,7 +353,7 @@ final class NewIpDetectorTest extends TestCase
             ->method('registerIdentifier')
             ->willReturn(true);
 
-        $subject = new NewIpDetector($ipLogRepository);
+        $subject = new NewIpDetector($ipLogRepository, null);
         $result = $subject->detect($user, $configuration, null);
 
         self::assertTrue($result);
@@ -364,7 +364,7 @@ final class NewIpDetectorTest extends TestCase
 
     public function testDetectDoesNotAddDeviceInfoWhenUserAgentIsEmpty(): void
     {
-        $request = $this->createMockRequest(userAgent: '', ip: '203.0.113.42');
+        $request = $this->createMockRequest('203.0.113.42', '');
 
         $user = $this->createMockUser(['uid' => 123]);
         $configuration = ['includeDeviceInfo' => true];
@@ -374,7 +374,7 @@ final class NewIpDetectorTest extends TestCase
             ->method('registerIdentifier')
             ->willReturn(true);
 
-        $subject = new NewIpDetector($ipLogRepository);
+        $subject = new NewIpDetector($ipLogRepository, null);
         $result = $subject->detect($user, $configuration, $request);
 
         self::assertTrue($result);
@@ -385,7 +385,7 @@ final class NewIpDetectorTest extends TestCase
 
     public function testDetectParsesUnknownBrowser(): void
     {
-        $request = $this->createMockRequest(userAgent: 'UnknownBot/1.0', ip: '203.0.113.42');
+        $request = $this->createMockRequest('203.0.113.42', 'UnknownBot/1.0');
 
         $user = $this->createMockUser(['uid' => 123]);
         $configuration = ['includeDeviceInfo' => true];
@@ -395,7 +395,7 @@ final class NewIpDetectorTest extends TestCase
             ->method('registerIdentifier')
             ->willReturn(true);
 
-        $subject = new NewIpDetector($ipLogRepository);
+        $subject = new NewIpDetector($ipLogRepository, null);
         $result = $subject->detect($user, $configuration, $request);
 
         self::assertTrue($result);
@@ -407,7 +407,7 @@ final class NewIpDetectorTest extends TestCase
 
     public function testDetectParsesUnknownOperatingSystem(): void
     {
-        $request = $this->createMockRequest(userAgent: 'UnknownOS/1.0', ip: '203.0.113.42');
+        $request = $this->createMockRequest('203.0.113.42', 'UnknownOS/1.0');
 
         $user = $this->createMockUser(['uid' => 123]);
         $configuration = ['includeDeviceInfo' => true];
@@ -417,7 +417,7 @@ final class NewIpDetectorTest extends TestCase
             ->method('registerIdentifier')
             ->willReturn(true);
 
-        $subject = new NewIpDetector($ipLogRepository);
+        $subject = new NewIpDetector($ipLogRepository, null);
         $result = $subject->detect($user, $configuration, $request);
 
         self::assertTrue($result);
@@ -437,7 +437,7 @@ final class NewIpDetectorTest extends TestCase
         return $userData;
     }
 
-    private function createMockRequest(?string $userAgent = null, string $ip = '127.0.0.1'): \Psr\Http\Message\ServerRequestInterface&MockObject
+    private function createMockRequest(string $ip = '127.0.0.1', ?string $userAgent = null): \Psr\Http\Message\ServerRequestInterface&MockObject
     {
         $request = $this->createMock(\Psr\Http\Message\ServerRequestInterface::class);
         $request->method('getServerParams')->willReturn(['REMOTE_ADDR' => $ip]);

@@ -10,3 +10,8 @@ parameters:
 			path: ../../Classes/Upgrades/IpLogHashDeduplicationUpgradeWizard.php
 			message: '#TYPO3\\CMS\\Install\\Updates\\UpgradeWizardInterface#'
 			count: 1
+		-
+			identifier: assign.propertyType
+			path: ../Unit/Security/LoginNotificationTest.php
+			message: '#^Property TYPO3\\CMS\\Core\\Authentication\\AbstractUserAuthentication\:\:\$user \(array\|null\) does not accept string\.$#'
+			count: 1
