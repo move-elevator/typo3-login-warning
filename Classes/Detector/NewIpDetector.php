@@ -35,7 +35,7 @@ class NewIpDetector extends AbstractDetector
 {
     public function __construct(
         private readonly IpLogRepository $ipLogRepository,
-        private readonly ?GeolocationServiceInterface $geolocationService = null,
+        private readonly ?GeolocationServiceInterface $geolocationService,
     ) {}
 
     /**

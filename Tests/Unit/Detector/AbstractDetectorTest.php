@@ -41,14 +41,14 @@ final class AbstractDetectorTest extends TestCase
 
     public function testShouldDetectForUserReturnsTrueForAdminWhenAffectedUsersIsAdmins(): void
     {
-        $userArray = $this->createUserArray(isAdmin: true);
+        $userArray = $this->createUserArray(true);
 
         self::assertTrue($this->subject->exposeShouldDetectForUser($userArray, ['affectedUsers' => 'admins']));
     }
 
     public function testShouldDetectForUserReturnsFalseForNonAdminWhenAffectedUsersIsAdmins(): void
     {
-        $userArray = $this->createUserArray(isAdmin: false);
+        $userArray = $this->createUserArray(false);
 
         self::assertFalse($this->subject->exposeShouldDetectForUser($userArray, ['affectedUsers' => 'admins']));
     }
@@ -56,7 +56,7 @@ final class AbstractDetectorTest extends TestCase
     #[WithTypo3ConfVars(['SYS' => ['systemMaintainers' => [1, 2]]])]
     public function testShouldDetectForUserReturnsTrueForSystemMaintainerWhenAffectedUsersIsMaintainers(): void
     {
-        $userArray = $this->createUserArray(uid: 1);
+        $userArray = $this->createUserArray(false, 1);
 
         self::assertTrue($this->subject->exposeShouldDetectForUser($userArray, ['affectedUsers' => 'maintainers']));
     }
@@ -64,14 +64,14 @@ final class AbstractDetectorTest extends TestCase
     #[WithTypo3ConfVars(['SYS' => ['systemMaintainers' => [2, 3]]])]
     public function testShouldDetectForUserReturnsFalseForNonSystemMaintainerWhenAffectedUsersIsMaintainers(): void
     {
-        $userArray = $this->createUserArray(uid: 1);
+        $userArray = $this->createUserArray(false, 1);
 
         self::assertFalse($this->subject->exposeShouldDetectForUser($userArray, ['affectedUsers' => 'maintainers']));
     }
 
     public function testShouldDetectForUserReturnsTrueWhenAffectedUsersIsAll(): void
     {
-        $userArray = $this->createUserArray(isAdmin: false);
+        $userArray = $this->createUserArray(false);
 
         self::assertTrue($this->subject->exposeShouldDetectForUser($userArray, [
             'affectedUsers' => 'all',

@@ -84,7 +84,6 @@ final class LoginNotificationTest extends TestCase
     public function testWarningAtLoginDoesNothingWhenUserArrayIsNotArray(): void
     {
         $user = $this->createMock(BackendUserAuthentication::class);
-        // @phpstan-ignore assign.propertyType
         $user->user = 'not-an-array'; // Tests line 51 - user is not an array
         $request = $this->createMock(ServerRequestInterface::class);
         $event = new AfterUserLoggedInEvent($user, $request);

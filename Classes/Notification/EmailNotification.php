@@ -83,31 +83,13 @@ class EmailNotification implements NotifierInterface, LoggerAwareInterface
 
         $notificationReceiver = $configuration['notificationReceiver'] ?? 'recipients';
         $userEmail = trim($user->user['email'] ?? '');
-        $recipientsList = [];
+        $explodedRecipients = ('' !== $recipients && null !== $recipients) ? explode(',', $recipients) : [];
 
-        switch ($notificationReceiver) {
-            case 'user':
-                if ('' !== $userEmail) {
-                    $recipientsList[] = $userEmail;
-                }
-                break;
-
-            case 'both':
-                if ('' !== $recipients && null !== $recipients) {
-                    $recipientsList = explode(',', $recipients);
-                }
-                if ('' !== $userEmail) {
-                    $recipientsList[] = $userEmail;
-                }
-                break;
-
-            case 'recipients':
-            default:
-                if ('' !== $recipients && null !== $recipients) {
-                    $recipientsList = explode(',', $recipients);
-                }
-                break;
-        }
+        $recipientsList = match ($notificationReceiver) {
+            'user' => '' !== $userEmail ? [$userEmail] : [],
+            'both' => '' !== $userEmail ? [...$explodedRecipients, $userEmail] : $explodedRecipients,
+            default => $explodedRecipients,
+        };
 
         return array_unique(array_filter(array_map(trim(...), $recipientsList), static fn (string $email): bool => '' !== $email));
     }

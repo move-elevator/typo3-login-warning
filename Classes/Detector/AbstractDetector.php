@@ -32,7 +32,7 @@ abstract class AbstractDetector implements DetectorInterface
      * @param array<string, mixed> $userArray
      * @param array<string, mixed> $configuration
      */
-    public function shouldDetectForUser(array $userArray, array $configuration = []): bool
+    final public function shouldDetectForUser(array $userArray, array $configuration = []): bool
     {
         $affectedUsers = $configuration['affectedUsers'] ?? 'all';
 
@@ -46,7 +46,7 @@ abstract class AbstractDetector implements DetectorInterface
     /**
      * @return array<string, mixed>
      */
-    public function getAdditionalData(): array
+    final public function getAdditionalData(): array
     {
         return $this->additionalData;
     }
