@@ -21,7 +21,7 @@ TYPO3 extension `typo3_login_warning` (`move-elevator/typo3-login-warning`). It 
 - `Configuration/` `Services.yaml`, `RequestMiddlewares.php`
 - `Resources/Private/Templates/Email/` Fluid email templates, named after the detector class (`.html` and `.txt`)
 - `Tests/Unit/` PHPUnit tests, mirrors `Classes/`
-- `Tests/CGL/` separate Composer project with all linters, PHPStan and Rector
+- `Tests/CGL/` separate Composer project with all linters, PHPStan and Rector. Its `composer.lock` is committed and updated by Renovate, so tool releases only reach CI through a Renovate PR
 - `Documentation/` extension documentation
 
 ## Development commands

@@ -234,7 +234,7 @@ class OutOfOfficeDetector extends AbstractDetector
      */
     private function isMultipleTimeRanges(array $hours): bool
     {
-        return isset($hours[0]) && is_array($hours[0]);
+        return is_array($hours[0] ?? null);
     }
 
     /**
