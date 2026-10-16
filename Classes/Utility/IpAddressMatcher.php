@@ -49,16 +49,17 @@ final class IpAddressMatcher
                 continue;
             }
 
-            if (str_contains($entry, '/')) {
-                if (self::matchesCidr($ipAddress, $entry)) {
-                    return true;
-                }
-            } elseif ($ipAddress === $entry) {
+            if (self::matchesEntry($ipAddress, $entry)) {
                 return true;
             }
         }
 
         return false;
+    }
+
+    private static function matchesEntry(string $ipAddress, string $entry): bool
+    {
+        return str_contains($entry, '/') ? self::matchesCidr($ipAddress, $entry) : $ipAddress === $entry;
     }
 
     private static function matchesCidr(string $ipAddress, string $cidr): bool

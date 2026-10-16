@@ -56,36 +56,18 @@ final class LoginNotification implements LoggerAwareInterface
             return;
         }
 
-        $currentDetector = null;
-        $currentDetectorConfiguration = [];
         if (null !== $this->logger) {
             $this->configBuilder->setLogger($this->logger);
         }
 
         $globalNotificationConfig = $this->configBuilder->buildNotificationConfig();
 
-        foreach ($this->detectorRegistry->getDetectors() as $detector) {
-            $detectorClass = $detector::class;
-
-            if (!$this->configBuilder->isActive($detectorClass)) {
-                continue;
-            }
-
-            $currentDetectorConfiguration = $this->configBuilder->build($detectorClass);
-
-            if (!$detector->shouldDetectForUser($currentUserArray, $currentDetectorConfiguration)) {
-                continue;
-            }
-
-            if ($this->detectSafely($detector, $currentUserArray, $currentDetectorConfiguration, $event->getRequest())) {
-                $currentDetector = $detector;
-                break;
-            }
-        }
-
-        if (null === $currentDetector) {
+        $triggered = $this->findTriggeredDetector($currentUserArray, $event->getRequest());
+        if (null === $triggered) {
             return;
         }
+
+        [$currentDetector, $currentDetectorConfiguration] = $triggered;
 
         try {
             $this->sendNotification(
@@ -103,6 +85,32 @@ final class LoginNotification implements LoggerAwareInterface
                 'exception' => $exception,
             ]);
         }
+    }
+
+    /**
+     * @param array<string, mixed> $userArray
+     *
+     * @return array{DetectorInterface, array<string, mixed>}|null
+     */
+    private function findTriggeredDetector(array $userArray, ?ServerRequestInterface $request): ?array
+    {
+        foreach ($this->detectorRegistry->getDetectors() as $detector) {
+            $detectorClass = $detector::class;
+
+            if (!$this->configBuilder->isActive($detectorClass)) {
+                continue;
+            }
+
+            $configuration = $this->configBuilder->build($detectorClass);
+
+            if ($detector->shouldDetectForUser($userArray, $configuration)
+                && $this->detectSafely($detector, $userArray, $configuration, $request)
+            ) {
+                return [$detector, $configuration];
+            }
+        }
+
+        return null;
     }
 
     /**
